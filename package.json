@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@types/node": "^22.9.1",
+    "drizzle-kit": "^0.28.1",
+    "drizzle-orm": "^0.36.3",
+    "pg": "^8.13.1"
+  }
+}
