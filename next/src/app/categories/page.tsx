@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const sql = await db();
   const categories = await sql.query<DBCategory>("SELECT * FROM categories");
