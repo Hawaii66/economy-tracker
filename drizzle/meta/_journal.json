@@ -15,6 +15,34 @@
       "when": 1732231221553,
       "tag": "20241121232021_chunky_red_ghost",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1732392991558,
+      "tag": "20241123201631_curious_slapstick",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1732400050381,
+      "tag": "20241123221410_stiff_lyja",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1732400187781,
+      "tag": "20241123221627_bizarre_frog_thor",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1732401717978,
+      "tag": "20241123224157_dark_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

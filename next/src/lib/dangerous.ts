@@ -1,1 +1,1 @@
-export const DEFAULT_USER_ID = "ad4b5889-c6cd-4e27-b62f-9a9030d8fd7d";
+export const DEFAULT_USER_ID = "dbe9fc1b-537c-492a-a04b-b777e1d5ed0c";

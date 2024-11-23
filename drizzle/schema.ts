@@ -1,4 +1,12 @@
-import { pgTable, uuid, varchar, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  uuid,
+  varchar,
+  timestamp,
+  date,
+  integer,
+  pgEnum,
+} from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 export const users = pgTable("users", {
@@ -66,5 +74,91 @@ export const refreshTokens = pgTable("refresh_tokens", {
   token: varchar("token", { length: 255 }).notNull(),
   userId: uuid("user_id")
     .references(() => users.id)
+    .notNull(),
+});
+
+export const importedTransactions = pgTable("imported_transactions", {
+  id: uuid("id")
+    .default(sql`gen_random_uuid()`)
+    .primaryKey(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  verificationNumber: varchar("verification_number", { length: 100 }).notNull(),
+  date: date("date").notNull(),
+  amount: integer("amount").notNull(),
+  text: varchar("text", { length: 255 }).notNull(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  customerId: uuid("customer_id")
+    .references(() => customers.id)
+    .notNull(),
+});
+
+export const transactions = pgTable("transactions", {
+  id: uuid("id")
+    .default(sql`gen_random_uuid()`)
+    .primaryKey(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  verificationNumber: varchar("verification_number", { length: 100 }).notNull(),
+  date: date("date").notNull(),
+  amount: integer("amount").notNull(),
+  text: varchar("text", { length: 255 }).notNull(),
+  userId: uuid("user_id")
+    .references(() => users.id)
+    .notNull(),
+  categoryId: uuid("category_id")
+    .references(() => categories.id)
+    .notNull(),
+  customerId: uuid("customer_id")
+    .references(() => customers.id)
+    .notNull(),
+});
+
+export const transaction_tags = pgTable("transaction_tags", {
+  id: uuid("id")
+    .default(sql`gen_random_uuid()`)
+    .primaryKey(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  transactionId: uuid("transaction_id")
+    .references(() => transactions.id)
+    .notNull(),
+  tagId: uuid("tag_id")
+    .references(() => tags.id)
+    .notNull(),
+});
+
+export const customerType = pgEnum("customer_type", ["company", "personal"]);
+
+export const customers = pgTable("customers", {
+  id: uuid("id")
+    .default(sql`gen_random_uuid()`)
+    .primaryKey(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  name: varchar("name", { length: 255 }),
+  rename: varchar("rename", { length: 255 }),
+  categoryId: uuid("category_id").references(() => categories.id),
+  type: customerType("type"),
+});
+
+export const customerTags = pgTable("customer_tags", {
+  id: uuid("id")
+    .default(sql`gen_random_uuid()`)
+    .primaryKey(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  customerId: uuid("customer_id")
+    .references(() => customers.id)
+    .notNull(),
+  tagId: uuid("tag_id")
+    .references(() => tags.id)
     .notNull(),
 });

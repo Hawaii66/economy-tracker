@@ -1,3 +1,5 @@
+import { CustomerType } from "./category";
+
 export type DBCategory = {
   id: string;
   created_at: Date;
@@ -21,4 +23,13 @@ export type DBCategoryTag = {
   created_at: Date;
   category_id: string;
   tag_id: string;
+};
+
+export type DBCustomer = {
+  id: string;
+  created_at: Date;
+  name: string;
+  category_id: string | null;
+  rename: string;
+  type: CustomerType;
 };
