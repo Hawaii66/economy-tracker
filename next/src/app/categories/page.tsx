@@ -12,9 +12,12 @@ import { Button } from "@/components/ui/button";
 import { getCategories } from "@/lib/serverCategory";
 import { colors } from "@/components/TagEditDialog";
 import CategoryBadge from "@/components/CategoryBadge";
+import { getTags } from "@/lib/serverTag";
+import TagBadge from "@/components/TagBadge";
 
 export default async function Page() {
   const categories = await getCategories();
+  const tags = await getTags();
 
   return (
     <div className="flex flex-col justify-end items-end gap-2 px-12 py-12">
@@ -30,18 +33,30 @@ export default async function Page() {
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Description</TableHead>
+            <TableHead>Tags</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {categories
             .sort((a, b) => a.name.localeCompare(b.name))
             .map((category) => (
-              <CategoryEditDialog category={category} key={category.id}>
+              <CategoryEditDialog
+                tags={tags}
+                category={category}
+                key={category.id}
+              >
                 <TableRow>
                   <TableCell>
                     <CategoryBadge category={category} />
                   </TableCell>
                   <TableCell>{category.description}</TableCell>
+                  <TableCell className="flex flex-row flex-wrap gap-2">
+                    {category.tags
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map((tag) => (
+                        <TagBadge tag={tag} key={tag.id} />
+                      ))}
+                  </TableCell>
                 </TableRow>
               </CategoryEditDialog>
             ))}

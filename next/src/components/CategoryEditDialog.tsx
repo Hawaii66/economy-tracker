@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Category } from "../../types/category";
+import { Category, CategoryWithTags } from "../../types/category";
 import { Children } from "../../types/children";
 import { Button } from "./ui/button";
 import {
@@ -16,29 +16,48 @@ import {
 } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { onCreateCategory, onEditCategory } from "@/lib/serverCategory";
+import {
+  onAddTag,
+  onCreateCategory,
+  onEditCategory,
+  onRemoveTag,
+} from "@/lib/serverCategory";
 import { colors } from "./TagEditDialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { Plus, Trash } from "lucide-react";
+import { Tag } from "../../types/tag";
+import TagBadge from "./TagBadge";
 
 type Props = PropsEdit | PropsCreate;
 
 type PropsEdit = {
-  category: Category;
+  category: CategoryWithTags;
   isCreate?: false;
+  tags: Tag[];
 };
 
 type PropsCreate = {
   category: Omit<Category, "id">;
   isCreate: true;
+  tags?: undefined;
 };
 
 export default function CategoryEditDialog({
   children,
   category,
   isCreate,
+  tags,
 }: Props & Children) {
   const [name, setName] = useState(category.name);
   const [description, setDescription] = useState(category.description);
   const [color, setColor] = useState(category.color);
+  const [tagId, setTagId] = useState<Tag["id"] | undefined>(undefined);
   const [isMutating, setIsMutating] = useState(false);
 
   return (
@@ -86,6 +105,64 @@ export default function CategoryEditDialog({
               </div>
             ))}
           </div>
+          {!isCreate && (
+            <>
+              <Label>Add tag</Label>
+              <Select value={tagId} onValueChange={setTagId}>
+                <div className="flex flex-row gap-2">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <Button
+                    disabled={!tagId}
+                    onClick={async () => {
+                      if (!tagId) return;
+
+                      setIsMutating(true);
+                      await onAddTag(category.id, tagId);
+                      setIsMutating(false);
+                      setTagId(undefined);
+                    }}
+                    variant={"secondary"}
+                  >
+                    {isMutating ? "" : <Plus />}
+                  </Button>
+                </div>
+
+                <SelectContent>
+                  {tags
+                    .filter(
+                      (i) => !category.tags.map((i) => i.id).includes(i.id)
+                    )
+                    .map((tag) => (
+                      <SelectItem key={tag.id} value={tag.id}>
+                        <TagBadge tag={tag} />
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+              <Label>Tags</Label>
+              <div className="flex flex-row flex-wrap gap-1">
+                {category.tags.map((tag) => (
+                  <TagBadge
+                    key={tag.id}
+                    onClick={async () => {
+                      setIsMutating(true);
+                      await onRemoveTag(category.id, tag.id);
+                      setIsMutating(false);
+                    }}
+                    className="cursor-pointer group"
+                    tag={tag}
+                  >
+                    <Trash
+                      size={12}
+                      className="group-hover:scale-110 group-hover:text-red-500 transition-all"
+                    />
+                  </TagBadge>
+                ))}
+              </div>
+            </>
+          )}
         </div>
         <DialogFooter>
           <DialogClose />
