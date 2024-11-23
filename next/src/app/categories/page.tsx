@@ -7,11 +7,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import CategoryEditDialog from "@/components/CategoryEditDialog";
 import { Button } from "@/components/ui/button";
 import { getCategories } from "@/lib/serverCategory";
 import { colors } from "@/components/TagEditDialog";
+import CategoryBadge from "@/components/CategoryBadge";
 
 export default async function Page() {
   const categories = await getCategories();
@@ -39,9 +39,7 @@ export default async function Page() {
               <CategoryEditDialog category={category} key={category.id}>
                 <TableRow>
                   <TableCell>
-                    <Badge style={{ backgroundColor: category.color }}>
-                      {category.name}
-                    </Badge>
+                    <CategoryBadge category={category} />
                   </TableCell>
                   <TableCell>{category.description}</TableCell>
                 </TableRow>

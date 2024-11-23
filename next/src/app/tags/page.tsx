@@ -7,10 +7,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import TagEditDialog, { colors } from "@/components/TagEditDialog";
 import { getTags } from "@/lib/serverTag";
+import TagBadge from "@/components/TagBadge";
 
 export default async function Page() {
   const tags = await getTags();
@@ -38,9 +38,7 @@ export default async function Page() {
               <TagEditDialog tag={tag} key={tag.id}>
                 <TableRow>
                   <TableCell>
-                    <Badge style={{ backgroundColor: tag.color }}>
-                      {tag.name}
-                    </Badge>
+                    <TagBadge tag={tag} />
                   </TableCell>
                   <TableCell>{tag.description}</TableCell>
                 </TableRow>
