@@ -8,24 +8,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import CategoryEditDialog from "@/components/CategoryEditDialog";
 import { Button } from "@/components/ui/button";
-import { getCategories } from "@/lib/serverCategory";
-import { colors } from "@/components/TagEditDialog";
+import TagEditDialog, { colors } from "@/components/TagEditDialog";
+import { getTags } from "@/lib/serverTag";
 
 export default async function Page() {
-  const categories = await getCategories();
+  const tags = await getTags();
 
   return (
     <div className="flex flex-col justify-end items-end gap-2 px-12 py-12">
-      <CategoryEditDialog
+      <TagEditDialog
         isCreate
-        category={{ color: colors[0], description: "", name: "" }}
+        tag={{ color: colors[0], description: "", name: "" }}
       >
-        <Button variant={"outline"}>New Category</Button>
-      </CategoryEditDialog>
+        <Button variant={"outline"}>New Tag</Button>
+      </TagEditDialog>
       <Table className="border">
-        <TableCaption>Categories</TableCaption>
+        <TableCaption>Tags</TableCaption>
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
@@ -33,19 +32,19 @@ export default async function Page() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {categories
+          {tags
             .sort((a, b) => a.name.localeCompare(b.name))
-            .map((category) => (
-              <CategoryEditDialog category={category} key={category.id}>
+            .map((tag) => (
+              <TagEditDialog tag={tag} key={tag.id}>
                 <TableRow>
                   <TableCell>
-                    <Badge style={{ backgroundColor: category.color }}>
-                      {category.name}
+                    <Badge style={{ backgroundColor: tag.color }}>
+                      {tag.name}
                     </Badge>
                   </TableCell>
-                  <TableCell>{category.description}</TableCell>
+                  <TableCell>{tag.description}</TableCell>
                 </TableRow>
-              </CategoryEditDialog>
+              </TagEditDialog>
             ))}
         </TableBody>
       </Table>
