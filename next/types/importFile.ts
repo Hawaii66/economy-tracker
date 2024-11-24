@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CustomerType } from "./category";
+import { Category, CustomerType } from "./category";
 
 export const ImportRow = z.object({
   date: z.date(),
@@ -15,3 +15,10 @@ export const ImportedCustomer = z.object({
   type: CustomerType,
 });
 export type ImportedCustomer = z.infer<typeof ImportedCustomer>;
+
+export const ImportedCustomerWithCategory = ImportedCustomer.extend({
+  categoryId: Category.shape.id,
+});
+export type ImportedCustomerWithCategory = z.infer<
+  typeof ImportedCustomerWithCategory
+>;

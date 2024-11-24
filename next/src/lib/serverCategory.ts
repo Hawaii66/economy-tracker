@@ -50,6 +50,7 @@ export const onEditCategory = async (
   );
   await sql.end();
   revalidatePath("/categories");
+  revalidatePath("/import");
 };
 
 export const onCreateCategory = async (
@@ -68,6 +69,7 @@ export const onCreateCategory = async (
   );
   await sql.end();
   revalidatePath("/categories");
+  revalidatePath("/import");
 };
 
 export const getTagConnections = async (ids: Category["id"][]) => {
@@ -106,6 +108,7 @@ export const onAddTag = async (id: Category["id"], tagId: Tag["id"]) => {
   );
   await sql.end();
   revalidatePath("/categories");
+  revalidatePath("/import");
 };
 
 export const onRemoveTag = async (id: Category["id"], tagId: Tag["id"]) => {
@@ -123,4 +126,5 @@ export const onRemoveTag = async (id: Category["id"], tagId: Tag["id"]) => {
   );
   await sql.end();
   revalidatePath("/categories");
+  revalidatePath("/import");
 };

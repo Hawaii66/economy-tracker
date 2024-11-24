@@ -91,9 +91,7 @@ export const importedTransactions = pgTable("imported_transactions", {
   userId: uuid("user_id")
     .references(() => users.id)
     .notNull(),
-  customerId: uuid("customer_id")
-    .references(() => customers.id)
-    .notNull(),
+  customerId: uuid("customer_id").references(() => customers.id),
 });
 
 export const transactions = pgTable("transactions", {
@@ -113,9 +111,7 @@ export const transactions = pgTable("transactions", {
   categoryId: uuid("category_id")
     .references(() => categories.id)
     .notNull(),
-  customerId: uuid("customer_id")
-    .references(() => customers.id)
-    .notNull(),
+  customerId: uuid("customer_id").references(() => customers.id),
 });
 
 export const transaction_tags = pgTable("transaction_tags", {
@@ -142,9 +138,22 @@ export const customers = pgTable("customers", {
   createdAt: timestamp("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
-  name: varchar("name", { length: 255 }),
-  rename: varchar("rename", { length: 255 }),
-  categoryId: uuid("category_id").references(() => categories.id),
+  name: varchar("name", { length: 255 }).notNull(),
+  rename: varchar("rename", { length: 255 }).notNull(),
+  categoryId: uuid("category_id")
+    .references(() => categories.id)
+    .notNull(),
+  type: customerType("type"),
+});
+
+export const ignoredCustomers = pgTable("ignored_customers", {
+  id: uuid("id")
+    .default(sql`gen_random_uuid()`)
+    .primaryKey(),
+  createdAt: timestamp("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
   type: customerType("type"),
 });
 

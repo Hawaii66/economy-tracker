@@ -28,8 +28,8 @@ export const getImportedCustomers = (rows: ImportRow[]): ImportedCustomer[] => {
   return ImportedCustomer.array().parse(customers);
 };
 
-const maybeRemoveDate = (str: string) => {
-  return str.replace(/\/\d{2}-\d{2}-\d{2}$/, "");
+export const maybeRemoveDate = (str: string) => {
+  return str.replace(/\/\d{2}-\d{2}-\d{2}$/, "").trim();
 };
 
 const isPersonal = (str: string) => {

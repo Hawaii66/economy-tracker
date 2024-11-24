@@ -10,13 +10,11 @@ export const DBCustomerToCustomer = (
     name: db.name,
     rename: db.rename,
     type: db.type,
-    category: db.category_id
-      ? {
-          color: db.color,
-          description: db.description,
-          id: db.category_id,
-          name: db.name,
-        }
-      : null,
+    category: {
+      color: db.color,
+      description: db.description,
+      id: db.category_id,
+      name: db.catagoryName,
+    },
   };
 };
