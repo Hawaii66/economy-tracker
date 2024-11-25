@@ -6,6 +6,7 @@ import { getCategories } from "@/lib/serverCategory";
 import { getCustomers } from "@/lib/serverCustomers";
 import PerCustomer from "@/components/home/PerCustomer";
 import PerGoal from "@/components/home/PerGoal";
+import { Label } from "@/components/ui/label";
 
 type QueryParams = {
   month: string | undefined;
@@ -38,11 +39,20 @@ export default async function Home({ searchParams: _searchParams }: Props) {
   return (
     <div className="flex flex-col gap-6 p-12">
       <div className="items-center gap-4 grid grid-cols-2">
-        <div className="flex flex-col justify-evenly items-center gap-4">
+        <div className="flex flex-col justify-evenly items-center">
+          <Label className="font-bold text-center text-lg">
+            Transactions / Category
+          </Label>
           <PerCategory transactions={transactions} categories={categories} />
+          <Label className="font-bold text-center text-lg">
+            Transactions / Customer
+          </Label>
           <PerCustomer transactions={transactions} customers={customers} />
         </div>
-        <PerGoal transactions={transactions} categories={categories} />
+        <div className="flex flex-col gap-4 h-full">
+          <Label className="font-bold text-center text-lg">Spend Goal</Label>
+          <PerGoal transactions={transactions} categories={categories} />
+        </div>
       </div>
       <TransactionList transactions={transactions} />
     </div>
