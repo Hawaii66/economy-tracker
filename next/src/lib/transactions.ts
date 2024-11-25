@@ -6,19 +6,13 @@ import { db } from "./db";
 export const getTransactionsCount = async () => {
   const sql = await db();
 
-  const count = await sql.query<{ estimated_rows: number }>(`
-		SELECT 
-			reltuples AS estimated_rows
-		FROM 
-			pg_class
-		WHERE 
-			relname = 'transactions';
-
+  const count = await sql.query<{ exact_count: number }>(`
+		SELECT COUNT(*) as exact_count FROM transactions;
 		`);
 
   await sql.end();
 
-  return count.rows[0].estimated_rows ?? 0;
+  return count.rows[0].exact_count ?? 0;
 };
 
 export const getTransactios = async (filters: FilterOptions) => {
