@@ -34,7 +34,8 @@ export const getImportedTransactions = async (): Promise<
 			c.type,
 			cat.color,
 			cat.description,
-			cat.name
+			cat.name,
+			cat.expected_per_month
 		FROM
 			imported_transactions t
 		LEFT JOIN
@@ -151,8 +152,11 @@ export const getImportedTransaction = async (
 };
 
 export const insertImportedTransactions = async (csv: string) => {
+  console.log("insert");
   const transactions = parseCSV(csv);
+  console.log("transa");
   const customers = await getCustomers();
+  console.log("cuomst");
   const customerMap = new Map(customers.map((i) => [i.name, i.id]));
 
   const imported = transactions.map((transaction) => ({
