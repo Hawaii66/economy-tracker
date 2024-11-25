@@ -115,9 +115,8 @@ export const getTransactios = async (filters: FilterOptions) => {
       }
   >(query, params);
 
-  console.log(rows.rows[0]);
-
   await sql.end();
+
   const array: Transaction[] = rows.rows.map((row) => ({
     amount: row.amount,
     customer: row.customer_id
