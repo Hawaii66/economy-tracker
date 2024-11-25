@@ -9,7 +9,7 @@ import { getCustomers } from "@/lib/serverCustomers";
 export default async function Page({
   searchParams: _searchParams,
 }: {
-  searchParams: QueryParams;
+  searchParams: Promise<QueryParams>;
 }) {
   const searchParams = await _searchParams;
   const filter: FilterOptions = {

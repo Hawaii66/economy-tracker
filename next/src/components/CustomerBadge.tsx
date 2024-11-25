@@ -1,4 +1,4 @@
-import { Building, Folder } from "lucide-react";
+import { Building } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Customer } from "../../types/customer";
 

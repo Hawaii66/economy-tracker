@@ -36,8 +36,8 @@ export const shiftHue = (hexColor: string) => {
     const delta = max - min;
 
     let h = 0,
-      s = 0,
-      l = (max + min) / 2;
+      s = 0;
+    const l = (max + min) / 2;
 
     if (delta !== 0) {
       s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);
@@ -92,7 +92,8 @@ export const shiftHue = (hexColor: string) => {
 
   // Process the color
   const rgb = hexToRgb(hexColor);
-  let { h, s, l } = rgbToHsl(rgb);
+  const { h: _h, s, l } = rgbToHsl(rgb);
+  let h = _h;
 
   // Randomly shift the hue slightly (±10 degrees)
   const randomShift = Math.random() * 50 - 25; // range [-10, 10]
@@ -123,8 +124,8 @@ export function uuidToPastelColor(uuid: string) {
     const delta = max - min;
 
     let h = 0,
-      s = 0,
-      l = (max + min) / 2;
+      s = 0;
+    const l = (max + min) / 2;
 
     if (delta !== 0) {
       s = l > 0.5 ? delta / (2 - max - min) : delta / (max + min);

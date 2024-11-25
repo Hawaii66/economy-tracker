@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FilterOptions } from "../../../types/transaction";
 import { Input } from "@/components/ui/input";
-import { Check, ChevronLeft, Loader } from "lucide-react";
 import {
   Select,
   SelectContent,

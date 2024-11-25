@@ -12,7 +12,7 @@ type QueryParams = {
 };
 
 type Props = {
-  searchParams: QueryParams;
+  searchParams: Promise<QueryParams>;
 };
 
 export default async function Home({ searchParams: _searchParams }: Props) {
