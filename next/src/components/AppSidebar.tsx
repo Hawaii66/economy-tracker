@@ -17,6 +17,7 @@ import {
   Clock,
   CreditCard,
   Folder,
+  Home,
   Tag,
   Upload,
 } from "lucide-react";
@@ -53,6 +54,13 @@ export default async function AppSidebar() {
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link href={"/"}>
+                        <Home /> Home
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <Link href={"/transactions"}>

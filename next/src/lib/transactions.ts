@@ -121,7 +121,7 @@ export const getTransactios = async (filters: FilterOptions) => {
             id: row.category_id,
             name: row.name,
           },
-          id: row.category_id,
+          id: row.customer_id,
           name: row.name,
           rename: row.rename,
           type: row.type,
