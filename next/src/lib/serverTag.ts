@@ -1,11 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { DBTag } from "../../types/Database";
 import { Tag } from "../../types/tag";
 import { DEFAULT_USER_ID } from "./dangerous";
 import { db } from "./db";
 import { DBTagToTag } from "./tag";
+import { revalidateAll } from "./paths";
 
 export const getTags = async () => {
   const sql = await db();
@@ -40,7 +40,7 @@ export const onEditTag = async (
   );
 
   await sql.end();
-  revalidatePath("/tags");
+  revalidateAll();
 };
 
 export const onCreateTag = async (
@@ -59,5 +59,5 @@ export const onCreateTag = async (
   );
 
   await sql.end();
-  revalidatePath("/tags");
+  revalidateAll();
 };

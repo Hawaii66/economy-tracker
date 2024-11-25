@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { DBCategory, DBCustomer, DBTransaction } from "../../types/Database";
 import { ImportedTransaction } from "../../types/transaction";
 import { maybeRemoveDate, parseCSV } from "./csv";
@@ -8,6 +7,7 @@ import { DEFAULT_USER_ID } from "./dangerous";
 import { db } from "./db";
 import { getCustomers } from "./serverCustomers";
 import { Category } from "../../types/category";
+import { revalidateAll } from "./paths";
 
 export const getImportedTransactions = async (): Promise<
   ImportedTransaction[]
@@ -187,6 +187,7 @@ export const insertImportedTransactions = async (csv: string) => {
   await sql.query(statement, params);
 
   await sql.end();
+  revalidateAll();
 };
 
 export const approveTransaction = async (
@@ -228,5 +229,5 @@ export const approveTransaction = async (
     [transactionId]
   );
 
-  revalidatePath("/pending-transaction");
+  revalidateAll();
 };

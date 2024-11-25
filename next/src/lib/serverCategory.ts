@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { Category, CategoryWithTags } from "../../types/category";
 import { db } from "./db";
 import { DEFAULT_USER_ID } from "./dangerous";
@@ -8,6 +7,7 @@ import { DBCategory, DBCategoryTag } from "../../types/Database";
 import { DBCategoryToCategory } from "./cateogory";
 import { Tag } from "../../types/tag";
 import { getTags } from "./serverTag";
+import { revalidateAll } from "./paths";
 
 export const getCategories = async (): Promise<CategoryWithTags[]> => {
   const sql = await db();
@@ -59,8 +59,7 @@ export const onEditCategory = async (
     ]
   );
   await sql.end();
-  revalidatePath("/categories");
-  revalidatePath("/import");
+  revalidateAll();
 };
 
 export const onCreateCategory = async (
@@ -87,8 +86,7 @@ export const onCreateCategory = async (
     ]
   );
   await sql.end();
-  revalidatePath("/categories");
-  revalidatePath("/import");
+  revalidateAll();
 };
 
 export const getTagConnections = async (ids: Category["id"][]) => {
@@ -126,8 +124,7 @@ export const onAddTag = async (id: Category["id"], tagId: Tag["id"]) => {
     [id, tagId]
   );
   await sql.end();
-  revalidatePath("/categories");
-  revalidatePath("/import");
+  revalidateAll();
 };
 
 export const onRemoveTag = async (id: Category["id"], tagId: Tag["id"]) => {
@@ -144,6 +141,5 @@ export const onRemoveTag = async (id: Category["id"], tagId: Tag["id"]) => {
     [id, tagId]
   );
   await sql.end();
-  revalidatePath("/categories");
-  revalidatePath("/import");
+  revalidateAll();
 };

@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { Customer } from "../../types/customer";
 import { DBCategory, DBCustomer } from "../../types/Database";
 import {
@@ -10,6 +9,7 @@ import {
 import { getImportedCustomers, parseCSV } from "./csv";
 import { DBCustomerToCustomer } from "./customer";
 import { db } from "./db";
+import { revalidateAll } from "./paths";
 
 export const getNewCustomersFromCSV = async (csv: string) => {
   const transactions = parseCSV(csv);
@@ -94,7 +94,7 @@ export const insertCustomer = async (
   );
 
   await sql.end();
-  revalidatePath("/customers");
+  revalidateAll();
 };
 
 export const insertIgnoredCustomer = async (customer: ImportedCustomer) => {
@@ -111,6 +111,7 @@ export const insertIgnoredCustomer = async (customer: ImportedCustomer) => {
     [customer.name, customer.type]
   );
   await sql.end();
+  revalidateAll();
 };
 
 export const updateCustomer = async (
@@ -133,5 +134,5 @@ export const updateCustomer = async (
   );
 
   await sql.end();
-  revalidatePath("/customers");
+  revalidateAll();
 };
