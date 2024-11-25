@@ -40,13 +40,14 @@ export default function PerGoal({ categories, transactions }: Props) {
 
   const data = categories.map((category) => {
     const actual = map.get(category.id) ?? 0;
-    const expected = 2000;
+    const expected = category.expectedPerMonth / 100;
 
     return {
       category: category.name,
       display: actual * 100,
       actual: Math.min(Math.abs(actual) / expected, 1),
       fill: category.color,
+      expected: category.expectedPerMonth,
     };
   });
   data.push({
@@ -54,23 +55,31 @@ export default function PerGoal({ categories, transactions }: Props) {
     display: 0,
     actual: 1,
     fill: "#00000000",
+    expected: 0,
   });
 
   return (
     <ResponsiveContainer>
       <ChartContainer config={config}>
-        <RadialBarChart data={data} innerRadius={30} outerRadius={200}>
+        <RadialBarChart
+          data={data.sort((a, b) =>
+            a.category === "" ? 1 : b.actual - a.actual
+          )}
+          innerRadius={30}
+          outerRadius={200}
+        >
           <ChartTooltip
             cursor={false}
             content={
               <ChartTooltipContent
                 hideLabel
                 nameKey="category"
-                formatter={(value, name, props) =>
-                  `${props.payload.category}: ${formatCentSEK(
+                formatter={(value, name, props) => {
+                  if (props.payload.category === "") return undefined;
+                  return `${props.payload.category}: ${formatCentSEK(
                     props.payload.display
-                  )}`
-                }
+                  )} (Expected: ${formatCentSEK(props.payload.expected)})`;
+                }}
               />
             }
           />

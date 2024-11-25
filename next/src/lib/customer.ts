@@ -3,7 +3,9 @@ import { DBCategory, DBCustomer } from "../../types/Database";
 
 export const DBCustomerToCustomer = (
   db: Pick<DBCustomer, "id" | "name" | "rename" | "category_id" | "type"> &
-    Pick<DBCategory, "color" | "description"> & { catagoryName: string }
+    Pick<DBCategory, "color" | "description" | "expected_per_month"> & {
+      catagoryName: string;
+    }
 ): Customer => {
   return {
     id: db.id,
@@ -15,6 +17,7 @@ export const DBCustomerToCustomer = (
       description: db.description,
       id: db.category_id,
       name: db.catagoryName,
+      expectedPerMonth: db.expected_per_month,
     },
   };
 };

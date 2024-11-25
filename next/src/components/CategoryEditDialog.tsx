@@ -57,6 +57,9 @@ export default function CategoryEditDialog({
   const [name, setName] = useState(category.name);
   const [description, setDescription] = useState(category.description);
   const [color, setColor] = useState(category.color);
+  const [perMonth, setPerMonth] = useState(
+    category.expectedPerMonth.toString()
+  );
   const [tagId, setTagId] = useState<Tag["id"] | undefined>(undefined);
   const [isMutating, setIsMutating] = useState(false);
 
@@ -86,6 +89,13 @@ export default function CategoryEditDialog({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Description"
+          />
+          <Label>Expected / month</Label>
+          <Input
+            min={0}
+            value={perMonth}
+            onChange={(e) => setPerMonth(e.target.value)}
+            placeholder="Expected / month"
           />
           <Label>Color</Label>
           <div className="flex flex-row flex-wrap gap-1">
@@ -171,9 +181,19 @@ export default function CategoryEditDialog({
             onClick={async () => {
               setIsMutating(true);
               if (isCreate) {
-                await onCreateCategory({ color, description, name });
+                await onCreateCategory({
+                  color,
+                  description,
+                  name,
+                  expectedPerMonth: parseInt(perMonth) * 100,
+                });
               } else {
-                await onEditCategory(category.id, { description, name, color });
+                await onEditCategory(category.id, {
+                  description,
+                  name,
+                  color,
+                  expectedPerMonth: parseInt(perMonth) * 100,
+                });
               }
               setIsMutating(false);
             }}

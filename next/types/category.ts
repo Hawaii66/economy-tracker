@@ -6,6 +6,7 @@ export const Category = z.object({
   name: z.string(),
   description: z.string(),
   color: z.string(),
+  expectedPerMonth: z.number().int(),
 });
 export type Category = z.infer<typeof Category>;
 

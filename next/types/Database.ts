@@ -7,6 +7,7 @@ export type DBCategory = {
   description: string;
   color: string;
   user_id: string;
+  expected_per_month: number;
 };
 
 export type DBTag = {

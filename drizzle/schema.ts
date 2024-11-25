@@ -32,6 +32,7 @@ export const categories = pgTable("categories", {
   name: varchar("name", { length: 255 }).notNull(),
   color: varchar("color", { length: 7 }),
   description: varchar("description", { length: 1024 }),
+  expectedPerMonth: integer("expected_per_month").notNull(),
 });
 
 export const tags = pgTable("tags", {

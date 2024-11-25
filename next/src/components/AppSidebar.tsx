@@ -34,11 +34,17 @@ import { getTransactionsCount } from "@/lib/transactions";
 import { formatLargeNumber } from "@/lib/format";
 
 export default async function AppSidebar() {
+  console.log("start");
   const categories = await getCategories();
+  console.log("start");
   const tags = await getTags();
+  console.log("start");
   const customers = await getCustomers();
+  console.log("start");
   const importedTransactions = await getImportedTransactions();
+  console.log("start");
   const transactionsRoughCount = await getTransactionsCount();
+  console.log("start");
 
   return (
     <Sidebar collapsible="icon">

@@ -2,7 +2,6 @@ import { format } from "date-fns";
 import { DBCategory, DBCustomer, DBTransaction } from "../../types/Database";
 import { FilterOptions, Transaction } from "../../types/transaction";
 import { db } from "./db";
-import { formatCentSEK } from "./format";
 
 export const getTransactionsCount = async () => {
   const sql = await db();
@@ -47,10 +46,12 @@ export const getTransactios = async (filters: FilterOptions) => {
     cat.color,
     cat.description,
     cat.name,
+	cat.expected_per_month,
     p.id as "picked_category_id",
     p.name as "picked_category_name",
     p.description as "picked_category_description",
-    p.color as "picked_category_color"
+    p.color as "picked_category_color",
+	p.expected_per_month as "picked_expected_per_month"
   FROM
     transactions t
   LEFT JOIN
@@ -102,13 +103,19 @@ export const getTransactios = async (filters: FilterOptions) => {
       "id" | "verification_number" | "date" | "amount" | "text" | "customer_id"
     > &
       Pick<DBCustomer, "name" | "category_id" | "rename" | "type"> &
-      Pick<DBCategory, "color" | "description" | "name"> & {
+      Pick<
+        DBCategory,
+        "color" | "description" | "name" | "expected_per_month"
+      > & {
         picked_category_id: string;
         picked_category_color: string;
         picked_category_name: string;
         picked_category_description: string;
+        picked_expected_per_month: number;
       }
   >(query, params);
+
+  console.log(rows.rows[0]);
 
   await sql.end();
   const array: Transaction[] = rows.rows.map((row) => ({
@@ -120,6 +127,7 @@ export const getTransactios = async (filters: FilterOptions) => {
             description: row.description,
             id: row.category_id,
             name: row.name,
+            expectedPerMonth: row.expected_per_month,
           },
           id: row.customer_id,
           name: row.name,
@@ -137,6 +145,7 @@ export const getTransactios = async (filters: FilterOptions) => {
       name: row.picked_category_name,
       description: row.picked_category_description,
       color: row.picked_category_color,
+      expectedPerMonth: row.picked_expected_per_month,
     },
   }));
 

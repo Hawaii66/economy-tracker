@@ -99,7 +99,12 @@ export default function Import({ categories }: Props) {
         {newCustomers.length > 0 && (
           <CategoryEditDialog
             isCreate
-            category={{ color: colors[0], description: "", name: "" }}
+            category={{
+              color: colors[0],
+              description: "",
+              name: "",
+              expectedPerMonth: 0,
+            }}
           >
             <Button>Add category</Button>
           </CategoryEditDialog>

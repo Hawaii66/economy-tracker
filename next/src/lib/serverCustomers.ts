@@ -50,7 +50,9 @@ export const getCustomers = async () => {
 
   const customers = await sql.query<
     Pick<DBCustomer, "id" | "name" | "rename" | "category_id" | "type"> &
-      Pick<DBCategory, "color" | "description"> & { catagoryName: string }
+      Pick<DBCategory, "color" | "description" | "expected_per_month"> & {
+        catagoryName: string;
+      }
   >(`
 		SELECT
 			cus.id,
@@ -60,7 +62,8 @@ export const getCustomers = async () => {
 			cus.type,
 			cat.color,
 			cat.description,
-			cat.name as "catagoryName"
+			cat.name as "catagoryName",
+			cat.expected_per_month
 		FROM
 			customers cus
 		LEFT JOIN

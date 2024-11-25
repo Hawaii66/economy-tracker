@@ -19,7 +19,7 @@ export const getImportedTransactions = async (): Promise<
       "id" | "verification_number" | "date" | "amount" | "text" | "customer_id"
     > &
       Pick<DBCustomer, "name" | "category_id" | "rename" | "type"> &
-      Pick<DBCategory, "color" | "description" | "name">
+      Pick<DBCategory, "color" | "description" | "name" | "expected_per_month">
   >(`
 		SELECT
 			t.id,
@@ -57,6 +57,7 @@ export const getImportedTransactions = async (): Promise<
             description: row.description,
             id: row.category_id,
             name: row.name,
+            expectedPerMonth: row.expected_per_month,
           },
           id: row.category_id,
           name: row.name,
@@ -83,7 +84,7 @@ export const getImportedTransaction = async (
       "id" | "verification_number" | "date" | "amount" | "text" | "customer_id"
     > &
       Pick<DBCustomer, "name" | "category_id" | "rename" | "type"> &
-      Pick<DBCategory, "color" | "description" | "name">
+      Pick<DBCategory, "color" | "description" | "name" | "expected_per_month">
   >(
     `
 		  SELECT
@@ -99,7 +100,8 @@ export const getImportedTransaction = async (
 			  c.type,
 			  cat.color,
 			  cat.description,
-			  cat.name
+			  cat.name,
+			  cat.expected_per_month
 		  FROM
 			  imported_transactions t
 		  LEFT JOIN
@@ -132,6 +134,7 @@ export const getImportedTransaction = async (
             description: transactionRow.description,
             id: transactionRow.category_id,
             name: transactionRow.name,
+            expectedPerMonth: transactionRow.expected_per_month,
           },
           id: transactionRow.customer_id,
           name: transactionRow.name,

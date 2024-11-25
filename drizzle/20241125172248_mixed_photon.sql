@@ -1,0 +1,1 @@
+ALTER TABLE "categories" ADD COLUMN "expected_per_month" integer NOT NULL DEFAULT 0;

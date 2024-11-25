@@ -7,6 +7,7 @@ export const DBCategoryToCategory = (db: DBCategory): Category => {
     description: db.description,
     id: db.id,
     name: db.name,
+    expectedPerMonth: db.expected_per_month,
   };
 
   return Category.parse(category);

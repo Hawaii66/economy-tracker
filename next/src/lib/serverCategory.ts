@@ -32,7 +32,10 @@ export const getCategories = async (): Promise<CategoryWithTags[]> => {
 
 export const onEditCategory = async (
   id: Category["id"],
-  toUpdate: Pick<Category, "name" | "description" | "color">
+  toUpdate: Pick<
+    Category,
+    "name" | "description" | "color" | "expectedPerMonth"
+  >
 ) => {
   const sql = await db();
   await sql.query(
@@ -42,11 +45,18 @@ export const onEditCategory = async (
 		  SET
 			  name=$1,
 			  description=$2,
-			  color=$3
+			  color=$3,
+			  expected_per_month=$4
 		  WHERE
-			  id=$4
+			  id=$5
 		  `,
-    [toUpdate.name, toUpdate.description, toUpdate.color, id]
+    [
+      toUpdate.name,
+      toUpdate.description,
+      toUpdate.color,
+      toUpdate.expectedPerMonth,
+      id,
+    ]
   );
   await sql.end();
   revalidatePath("/categories");
@@ -54,18 +64,27 @@ export const onEditCategory = async (
 };
 
 export const onCreateCategory = async (
-  toCreate: Pick<Category, "name" | "description" | "color">
+  toCreate: Pick<
+    Category,
+    "name" | "description" | "color" | "expectedPerMonth"
+  >
 ) => {
   const sql = await db();
   await sql.query(
     `
 			INSERT INTO
 				categories
-				(name,description,color,user_id)
+				(name,description,color,user_id,expected_per_month)
 			VALUES
-				($1,$2,$3,$4)
+				($1,$2,$3,$4,$5)
 			`,
-    [toCreate.name, toCreate.description, toCreate.color, DEFAULT_USER_ID]
+    [
+      toCreate.name,
+      toCreate.description,
+      toCreate.color,
+      DEFAULT_USER_ID,
+      toCreate.expectedPerMonth,
+    ]
   );
   await sql.end();
   revalidatePath("/categories");
