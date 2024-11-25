@@ -6,6 +6,6 @@ export const Customer = z.object({
   name: z.string(),
   rename: z.string(),
   type: CustomerType,
-  category: Category.nullable(),
+  category: Category,
 });
 export type Customer = z.infer<typeof Customer>;

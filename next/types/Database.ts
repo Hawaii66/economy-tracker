@@ -33,3 +33,13 @@ export type DBCustomer = {
   rename: string;
   type: CustomerType;
 };
+
+export type DBTransaction = {
+  id: string;
+  created_at: Date;
+  date: Date;
+  verification_number: string;
+  customer_id: string | null;
+  amount: number;
+  text: string;
+};

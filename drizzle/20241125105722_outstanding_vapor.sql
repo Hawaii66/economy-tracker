@@ -1,0 +1,2 @@
+ALTER TABLE "imported_transactions" ALTER COLUMN "verification_number" SET DATA TYPE varchar(100);--> statement-breakpoint
+ALTER TABLE "transactions" ALTER COLUMN "verification_number" SET DATA TYPE varchar(100);

@@ -4,10 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
-import {
-  ImportedCustomer,
-  ImportedCustomerWithCategory,
-} from "../../../types/importFile";
+import { ImportedCustomer } from "../../../types/importFile";
 import {
   Table,
   TableBody,
@@ -36,11 +33,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import TagBadge from "@/components/TagBadge";
-import { onAddTag } from "@/lib/serverCategory";
 import CategoryBadge from "@/components/CategoryBadge";
 import CategoryEditDialog from "@/components/CategoryEditDialog";
 import { colors } from "@/lib/colors";
+import { insertImportedTransactions } from "@/lib/serverImportedTransaction";
 
 const readFileAsText = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -66,6 +62,7 @@ export default function Import({ categories }: Props) {
   const [categoryId, setCategoryId] = useState<Category["id"] | undefined>(
     undefined
   );
+  const [fileText, setFileText] = useState("");
 
   useEffect(() => {
     if (newCustomers.length === 0 && stage === "insert-customers") {
@@ -86,6 +83,7 @@ export default function Import({ categories }: Props) {
               if (!file) return;
               setIsMutating(true);
               const text = await readFileAsText(file);
+              setFileText(text);
               const newCustomers = await getNewCustomersFromCSV(text);
               if (newCustomers.length === 0) {
                 setStage("upload-transactions");
@@ -198,7 +196,23 @@ export default function Import({ categories }: Props) {
           </TableBody>
         </Table>
       )}
-      {stage === "upload-transactions" && <Button>Upload transactions</Button>}
+      {stage === "upload-transactions" && (
+        <Button
+          disabled={isMutating}
+          onClick={async () => {
+            setIsMutating(true);
+
+            await insertImportedTransactions(fileText);
+            setNewCustomers([]);
+            setStage("select-file");
+            setCategoryId(undefined);
+
+            setIsMutating(false);
+          }}
+        >
+          Upload transactions
+        </Button>
+      )}
     </div>
   );
 }

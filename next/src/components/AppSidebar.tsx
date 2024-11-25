@@ -11,7 +11,14 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "./ui/sidebar";
-import { Building, ChevronDown, Folder, Tag, Upload } from "lucide-react";
+import {
+  Building,
+  ChevronDown,
+  Folder,
+  NotebookPen,
+  Tag,
+  Upload,
+} from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -20,11 +27,13 @@ import {
 import { getCategories } from "@/lib/serverCategory";
 import { getTags } from "@/lib/serverTag";
 import { getCustomers } from "@/lib/serverCustomers";
+import { getImportedTransactions } from "@/lib/serverImportedTransaction";
 
 export default async function AppSidebar() {
   const categories = await getCategories();
   const tags = await getTags();
   const customers = await getCustomers();
+  const transactions = await getImportedTransactions();
 
   return (
     <Sidebar collapsible="icon">
@@ -40,6 +49,14 @@ export default async function AppSidebar() {
             <CollapsibleContent>
               <SidebarGroupContent>
                 <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link href={"/pending-transactions"}>
+                        <NotebookPen /> Pending Transactions
+                      </Link>
+                    </SidebarMenuButton>
+                    <SidebarMenuBadge>{transactions.length}</SidebarMenuBadge>
+                  </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
                       <Link href={"/import"}>
