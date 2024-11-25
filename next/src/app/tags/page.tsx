@@ -12,6 +12,8 @@ import TagEditDialog, { colors } from "@/components/TagEditDialog";
 import { getTags } from "@/lib/serverTag";
 import TagBadge from "@/components/TagBadge";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const tags = await getTags();
 

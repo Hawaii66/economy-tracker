@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/table";
 import PendingTransactionRow from "./PendingTransactionRow";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const transactions = await getImportedTransactions();
   const categories = await getCategories();

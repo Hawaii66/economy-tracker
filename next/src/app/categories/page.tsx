@@ -16,6 +16,8 @@ import { getTags } from "@/lib/serverTag";
 import TagBadge from "@/components/TagBadge";
 import { formatCentSEK } from "@/lib/format";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page() {
   const categories = await getCategories();
   const tags = await getTags();

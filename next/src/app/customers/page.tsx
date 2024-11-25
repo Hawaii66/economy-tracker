@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/table";
 import { getCustomers } from "@/lib/serverCustomers";
 
+export const dynamic = "force-dynamic";
+
 export default async function Customers() {
   const customers = await getCustomers();
 

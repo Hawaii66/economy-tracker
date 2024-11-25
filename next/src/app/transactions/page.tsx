@@ -6,6 +6,8 @@ import TransactionList from "./TransactionList";
 import { getCategories } from "@/lib/serverCategory";
 import { getCustomers } from "@/lib/serverCustomers";
 
+export const dynamic = "force-dynamic";
+
 export default async function Page({
   searchParams: _searchParams,
 }: {

@@ -16,6 +16,8 @@ type Props = {
   searchParams: Promise<QueryParams>;
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function Home({ searchParams: _searchParams }: Props) {
   const searchParams = await _searchParams;
 
