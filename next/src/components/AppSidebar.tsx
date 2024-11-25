@@ -14,8 +14,9 @@ import {
 import {
   Building,
   ChevronDown,
+  Clock,
+  CreditCard,
   Folder,
-  NotebookPen,
   Tag,
   Upload,
 } from "lucide-react";
@@ -28,12 +29,15 @@ import { getCategories } from "@/lib/serverCategory";
 import { getTags } from "@/lib/serverTag";
 import { getCustomers } from "@/lib/serverCustomers";
 import { getImportedTransactions } from "@/lib/serverImportedTransaction";
+import { getTransactionsCount } from "@/lib/transactions";
+import { formatLargeNumber } from "@/lib/format";
 
 export default async function AppSidebar() {
   const categories = await getCategories();
   const tags = await getTags();
   const customers = await getCustomers();
-  const transactions = await getImportedTransactions();
+  const importedTransactions = await getImportedTransactions();
+  const transactionsRoughCount = await getTransactionsCount();
 
   return (
     <Sidebar collapsible="icon">
@@ -51,11 +55,23 @@ export default async function AppSidebar() {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
-                      <Link href={"/pending-transactions"}>
-                        <NotebookPen /> Pending Transactions
+                      <Link href={"/transactions"}>
+                        <CreditCard /> Transactions
                       </Link>
                     </SidebarMenuButton>
-                    <SidebarMenuBadge>{transactions.length}</SidebarMenuBadge>
+                    <SidebarMenuBadge>
+                      {formatLargeNumber(transactionsRoughCount)}
+                    </SidebarMenuBadge>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild>
+                      <Link href={"/pending-transactions"}>
+                        <Clock /> Pending Transactions
+                      </Link>
+                    </SidebarMenuButton>
+                    <SidebarMenuBadge>
+                      {importedTransactions.length}
+                    </SidebarMenuBadge>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild>
