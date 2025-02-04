@@ -5,10 +5,11 @@ import Navbar from "./components/Navbar";
 import Home from "./pages/Home";
 import DashboardNavigation from "./components/DashboardNavigation";
 import { SidebarProvider } from "./components/ui/sidebar";
+import UploadTransactions from "./pages/UploadTransactions";
+import SwishRecipients from "./pages/SwishRecipients";
+import Customers from "./pages/Customers";
 
 const Dashboard = () => <h1>Dashboard Home</h1>;
-const PageOne = () => <h1>Dashboard - Page One</h1>;
-const PageTwo = () => <h1>Dashboard - Page Two</h1>;
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -16,7 +17,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       <SignedIn>
         <SidebarProvider>
           <DashboardNavigation />
-          {children}
+          <div className="w-full min-h-screen">{children}</div>
         </SidebarProvider>
       </SignedIn>
       <SignedOut>
@@ -48,18 +49,26 @@ export default function App() {
           }
         />
         <Route
-          path="/dashboard/page-one"
+          path="/dashboard/upload-transactions"
           element={
             <ProtectedRoute>
-              <PageOne />
+              <UploadTransactions />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/dashboard/page-two"
+          path="/dashboard/swish-recipients"
           element={
             <ProtectedRoute>
-              <PageTwo />
+              <SwishRecipients />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/customers"
+          element={
+            <ProtectedRoute>
+              <Customers />
             </ProtectedRoute>
           }
         />

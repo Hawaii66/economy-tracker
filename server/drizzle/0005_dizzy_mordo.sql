@@ -1,0 +1,1 @@
+ALTER TABLE "imported_transactions" ADD CONSTRAINT "imported_transactions_collisionMitigator_unique" UNIQUE("collisionMitigator");

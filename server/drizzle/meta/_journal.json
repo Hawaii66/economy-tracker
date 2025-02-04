@@ -29,6 +29,34 @@
       "when": 1738601989413,
       "tag": "0003_bright_zarda",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1738695166614,
+      "tag": "0004_high_night_thrasher",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1738695358382,
+      "tag": "0005_dizzy_mordo",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1738696752262,
+      "tag": "0006_nosy_skullbuster",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1738704682015,
+      "tag": "0007_breezy_wallflower",
+      "breakpoints": true
     }
   ]
 }

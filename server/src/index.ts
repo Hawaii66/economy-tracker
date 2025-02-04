@@ -1,8 +1,10 @@
 import express from "express";
 import { importRouter } from "./services/import/router";
 import cookieParser from "cookie-parser";
-import { authRouter } from "./services/auth/router";
 import cors from "cors";
+import { clerkMiddleware, requireAuth } from "@clerk/express";
+import { swishRouter } from "./services/swish/router";
+import { customerRouter } from "./services/customers/router";
 
 const server = express();
 
@@ -20,9 +22,12 @@ server.use(
     origin: "http://localhost:5173",
   })
 );
+server.use(clerkMiddleware());
+server.use(requireAuth());
 
 server.use("/import", importRouter);
-server.use("/auth", authRouter);
+server.use("/swish", swishRouter);
+server.use("/customer", customerRouter);
 
 server.listen({ port: PORT }, () => {
   console.log(`Server listening at http://localhost:${PORT}`);
