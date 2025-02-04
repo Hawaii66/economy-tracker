@@ -1,1 +1,0 @@
-ALTER TABLE "customers" ADD COLUMN "rename" varchar(255);
