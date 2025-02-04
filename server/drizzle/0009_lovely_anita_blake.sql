@@ -1,0 +1,2 @@
+ALTER TABLE "transactions" ADD COLUMN "transferedAccountId" uuid;--> statement-breakpoint
+ALTER TABLE "transactions" ADD CONSTRAINT "transactions_transferedAccountId_accounts_id_fk" FOREIGN KEY ("transferedAccountId") REFERENCES "public"."accounts"("id") ON DELETE no action ON UPDATE no action;

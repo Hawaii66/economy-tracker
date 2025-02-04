@@ -20,16 +20,13 @@ export default function UploadTransactions() {
     formData.append("account-id", "5a0d8040-38be-43ce-8965-23d704232646");
 
     try {
-      const response = await fetch(
-        "http://localhost:8000/import/upload-transactions",
-        {
-          method: "POST",
-          body: formData,
-          headers: {
-            Authorization: `Bearer ${await getToken()}`,
-          },
-        }
-      );
+      const response = await fetch("http://localhost:8000/transaction/upload", {
+        method: "POST",
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      });
 
       if (response.ok) {
         alert("File uploaded successfully");

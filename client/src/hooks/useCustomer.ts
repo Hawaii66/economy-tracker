@@ -13,7 +13,7 @@ export const useCustomer = () => {
   };
 
   const insertCustomer = async (
-    data: Pick<Customer, "name" | "color" | "rename">
+    data: Pick<Customer, "name" | "color" | "rename" | "categoryId">
   ) => {
     await _insertCustomer(data, getToken);
     await load();

@@ -1,0 +1,1 @@
+ALTER TABLE "transactions" ALTER COLUMN "category" SET DATA TYPE varchar(255);

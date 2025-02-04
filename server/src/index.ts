@@ -1,10 +1,12 @@
 import express from "express";
-import { importRouter } from "./services/import/router";
+import { transactionRouter } from "./services/transaction/router";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import { clerkMiddleware, requireAuth } from "@clerk/express";
 import { swishRouter } from "./services/swish/router";
 import { customerRouter } from "./services/customers/router";
+import { accountRouter } from "./services/account/router";
+import { categoryRouter } from "./services/category/router";
 
 const server = express();
 
@@ -25,9 +27,11 @@ server.use(
 server.use(clerkMiddleware());
 server.use(requireAuth());
 
-server.use("/import", importRouter);
+server.use("/transaction", transactionRouter);
 server.use("/swish", swishRouter);
 server.use("/customer", customerRouter);
+server.use("/account", accountRouter);
+server.use("/category", categoryRouter);
 
 server.listen({ port: PORT }, () => {
   console.log(`Server listening at http://localhost:${PORT}`);

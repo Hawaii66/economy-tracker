@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "./ui/sidebar";
-import { Building, Clock, Phone, Upload } from "lucide-react";
+import { Building, Clock, Folder, Phone, Upload } from "lucide-react";
 
 export default function DashboardNavigation() {
   return (
@@ -64,6 +64,13 @@ export default function DashboardNavigation() {
               <SidebarMenuButton asChild>
                 <NavLink to="/dashboard/customers">
                   <Building /> Customers
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/dashboard/categories">
+                  <Folder /> Categories
                 </NavLink>
               </SidebarMenuButton>
             </SidebarMenuItem>

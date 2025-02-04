@@ -21,6 +21,7 @@ customerRouter.post("/", async (req, res) => {
       name: z.string(),
       color: z.string().min(7).max(7),
       rename: z.string(),
+      categoryId: z.string().uuid().nullable(),
     })
     .parse(req.body);
 

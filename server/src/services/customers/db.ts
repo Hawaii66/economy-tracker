@@ -14,12 +14,13 @@ export const getCustomers = async (userId: string): Promise<Customer[]> => {
     name: i.name,
     color: i.color,
     rename: i.rename,
+    categoryId: i.categoryId,
   }));
 };
 
 export const insertCustomer = async (
   userId: string,
-  data: Pick<Customer, "color" | "name" | "rename">
+  data: Pick<Customer, "color" | "name" | "rename" | "categoryId">
 ): Promise<void> => {
   await db.insert(customersTable).values({
     color: data.color,
@@ -27,5 +28,6 @@ export const insertCustomer = async (
     name: data.name,
     rename: data.rename,
     userId,
+    categoryId: data.categoryId,
   });
 };

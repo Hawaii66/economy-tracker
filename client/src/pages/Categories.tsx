@@ -11,55 +11,45 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useCategory } from "@/hooks/useCategory";
-import { useCustomer } from "@/hooks/useCustomer";
+import { formatSEK } from "@/lib/utils";
 import { useState } from "react";
 
-export default function Customers() {
-  const { customers, insertCustomer } = useCustomer();
-  const { categories } = useCategory();
+export default function Categories() {
+  const { categories, insertCategory } = useCategory();
 
   const [name, setName] = useState("");
-  const [rename, setRename] = useState("");
+  const [target, setTarget] = useState("");
   const [color, setColor] = useState("");
-  const [category, setCategory] = useState("--none--");
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
 
   return (
     <div className="flex flex-col justify-center items-center gap-4 w-full">
-      <h1>Customers</h1>
+      <h1>Categories</h1>
       <div className="flex flex-row flex-wrap justify-center items-center gap-2 px-12">
-        {customers.map((customer) => (
-          <Card key={customer.id}>
+        {categories.map((category) => (
+          <Card key={category.id}>
             <CardHeader>
-              <CardTitle>{customer.rename}</CardTitle>
+              <CardTitle>{category.name}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-row justify-start items-center gap-2">
               <div
                 className="rounded-full w-4 h-4"
-                style={{ backgroundColor: customer.color }}
+                style={{ backgroundColor: category.color }}
               />
-              <p>{customer.name}</p>
+              <p>{formatSEK(category.target)}</p>
             </CardContent>
           </Card>
         ))}
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <Button>Add customer</Button>
+          <Button>Add category</Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add customer</DialogTitle>
+            <DialogTitle>Add category</DialogTitle>
           </DialogHeader>
           <div>
             <Label>Name</Label>
@@ -68,11 +58,12 @@ export default function Customers() {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <Label>Rename</Label>
+            <Label>Target</Label>
             <Input
+              type="number"
               disabled={loading}
-              value={rename}
-              onChange={(e) => setRename(e.target.value)}
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
             />
             <Label>Rename</Label>
             <Input
@@ -81,34 +72,16 @@ export default function Customers() {
               value={color}
               onChange={(e) => setColor(e.target.value)}
             />
-            <Label>Default Category</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="--none--">None</SelectItem>
-                </SelectGroup>
-                <SelectGroup>
-                  {categories.map((i) => (
-                    <SelectItem value={i.id}>{i.name}</SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
           </div>
           <DialogFooter>
             <DialogClose />
             <Button
               onClick={async () => {
-                console.log(color);
                 setLoading(true);
-                await insertCustomer({
+                await insertCategory({
                   name,
                   color,
-                  rename,
-                  categoryId: category,
+                  target: Math.round(parseInt(target) * 100),
                 });
                 setOpen(false);
                 setLoading(false);
