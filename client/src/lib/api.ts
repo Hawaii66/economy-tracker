@@ -5,6 +5,7 @@ import {
   ClassifyTransaction,
   Customer,
   SwishRecipient,
+  Transaction,
 } from "@/types";
 
 type GetToken = () => Promise<string | null>;
@@ -44,7 +45,7 @@ export const getCustomers = async (getToken: GetToken): Promise<Customer[]> => {
 };
 
 export const insertCustomer = async (
-  data: Pick<Customer, "name" | "color" | "rename" | "categoryId">,
+  data: Pick<Customer, "name" | "color" | "categoryId">,
   getToken: GetToken
 ): Promise<void> => {
   await fetch("http://localhost:8000/customer", {
@@ -54,6 +55,24 @@ export const insertCustomer = async (
       "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
+  });
+};
+
+export const insertCustomerDetection = async (
+  customerId: string,
+  name: string,
+  getToken: GetToken
+) => {
+  await fetch("http://localhost:8000/customer/detection", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${await getToken()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      customerId,
+      name,
+    }),
   });
 };
 
@@ -131,4 +150,20 @@ export const insertCategory = async (
     },
     body: JSON.stringify(data),
   });
+};
+
+export const getTransactions = async (
+  from: Date,
+  to: Date,
+  getToken: GetToken
+) => {
+  const response = await fetch(
+    `http://localhost:8000/transaction?from=${from}&to=${to}`,
+    {
+      headers: {
+        Authorization: `Bearer ${await getToken()}`,
+      },
+    }
+  );
+  return (await response.json()) as Transaction[];
 };

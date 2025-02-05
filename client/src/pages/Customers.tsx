@@ -1,5 +1,5 @@
+import Customer from "@/components/Customer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogClose,
@@ -24,11 +24,10 @@ import { useCustomer } from "@/hooks/useCustomer";
 import { useState } from "react";
 
 export default function Customers() {
-  const { customers, insertCustomer } = useCustomer();
+  const { customers, insertCustomer, insertCustomerDetection } = useCustomer();
   const { categories } = useCategory();
 
   const [name, setName] = useState("");
-  const [rename, setRename] = useState("");
   const [color, setColor] = useState("");
   const [category, setCategory] = useState("--none--");
   const [loading, setLoading] = useState(false);
@@ -39,18 +38,12 @@ export default function Customers() {
       <h1>Customers</h1>
       <div className="flex flex-row flex-wrap justify-center items-center gap-2 px-12">
         {customers.map((customer) => (
-          <Card key={customer.id}>
-            <CardHeader>
-              <CardTitle>{customer.rename}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-row justify-start items-center gap-2">
-              <div
-                className="rounded-full w-4 h-4"
-                style={{ backgroundColor: customer.color }}
-              />
-              <p>{customer.name}</p>
-            </CardContent>
-          </Card>
+          <Customer
+            categories={categories}
+            customer={customer}
+            insertCustomerDetection={insertCustomerDetection}
+            key={customer.id}
+          />
         ))}
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
@@ -68,13 +61,7 @@ export default function Customers() {
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-            <Label>Rename</Label>
-            <Input
-              disabled={loading}
-              value={rename}
-              onChange={(e) => setRename(e.target.value)}
-            />
-            <Label>Rename</Label>
+            <Label>Color</Label>
             <Input
               type="color"
               disabled={loading}
@@ -92,7 +79,9 @@ export default function Customers() {
                 </SelectGroup>
                 <SelectGroup>
                   {categories.map((i) => (
-                    <SelectItem value={i.id}>{i.name}</SelectItem>
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.name}
+                    </SelectItem>
                   ))}
                 </SelectGroup>
               </SelectContent>
@@ -102,14 +91,15 @@ export default function Customers() {
             <DialogClose />
             <Button
               onClick={async () => {
-                console.log(color);
                 setLoading(true);
                 await insertCustomer({
                   name,
                   color,
-                  rename,
-                  categoryId: category,
+                  categoryId: category === "--none--" ? null : category,
                 });
+                setName("");
+                setColor("");
+                setCategory("--none--");
                 setOpen(false);
                 setLoading(false);
               }}

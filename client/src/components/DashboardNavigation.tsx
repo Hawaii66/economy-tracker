@@ -11,7 +11,14 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "./ui/sidebar";
-import { Building, Clock, Folder, Phone, Upload } from "lucide-react";
+import {
+  Building,
+  Clock,
+  CreditCard,
+  Folder,
+  Phone,
+  Upload,
+} from "lucide-react";
 
 export default function DashboardNavigation() {
   return (
@@ -28,6 +35,15 @@ export default function DashboardNavigation() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Main</SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/dashboard/transactions">
+                  <CreditCard /> Transactions
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarGroup>
         <SidebarGroup>
           <SidebarGroupLabel>Import</SidebarGroupLabel>

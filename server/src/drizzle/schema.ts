@@ -82,7 +82,14 @@ export const customersTable = pgTable("customers", {
   userId: uuid()
     .notNull()
     .references(() => usersTable.id),
-  rename: varchar({ length: 255 }).notNull(),
   color: varchar({ length: 7 }).notNull(),
   categoryId: uuid().references(() => categoriesTable.id),
+});
+
+export const customerDetectionsTable = pgTable("customer_detections", {
+  id: uuid().primaryKey(),
+  name: varchar({ length: 255 }).notNull(),
+  customerId: uuid()
+    .notNull()
+    .references(() => customersTable.id),
 });

@@ -1,4 +1,8 @@
-import { getCustomers, insertCustomer as _insertCustomer } from "@/lib/api";
+import {
+  getCustomers,
+  insertCustomer as _insertCustomer,
+  insertCustomerDetection as _insertCustomerDetection,
+} from "@/lib/api";
 import { Customer } from "@/types";
 import { useAuth } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
@@ -13,9 +17,14 @@ export const useCustomer = () => {
   };
 
   const insertCustomer = async (
-    data: Pick<Customer, "name" | "color" | "rename" | "categoryId">
+    data: Pick<Customer, "name" | "color" | "categoryId">
   ) => {
     await _insertCustomer(data, getToken);
+    await load();
+  };
+
+  const insertCustomerDetection = async (customerId: string, name: string) => {
+    await _insertCustomerDetection(customerId, name, getToken);
     await load();
   };
 
@@ -27,5 +36,6 @@ export const useCustomer = () => {
     customers,
     refetch: load,
     insertCustomer,
+    insertCustomerDetection,
   };
 };

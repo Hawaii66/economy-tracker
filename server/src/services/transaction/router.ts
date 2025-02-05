@@ -5,6 +5,7 @@ import { filterTransactions, parseSEBCSV } from "./csv";
 import {
   classifyTransaction,
   getImportedTransactions,
+  getTransactions,
   importTransactions,
 } from "./db";
 import { requestToUserId } from "../user/db";
@@ -73,3 +74,17 @@ transactionRouter.post(
     response.json(result);
   }
 );
+
+transactionRouter.get("/", async (req, res) => {
+  const userId = await requestToUserId(req);
+
+  const { from, to } = z
+    .object({
+      from: z.coerce.date(),
+      to: z.coerce.date(),
+    })
+    .parse(req.query);
+
+  const transactions = await getTransactions(from, to, userId);
+  res.json(transactions);
+});

@@ -7,9 +7,9 @@ export type SwishRecipient = {
 export type Customer = {
   id: string;
   name: string;
-  rename: string;
   color: string;
-  categoryId: string;
+  categoryId: string | null;
+  detections: string[];
 };
 
 export type Account = {
@@ -70,5 +70,45 @@ export type ClassifiedChoice = {
   | {
       type: "Swish" | "Customer" | "Internal";
       otherId: string;
+    }
+);
+
+export type Transaction = {
+  id: string;
+  account: {
+    name: string;
+    id: string;
+  };
+  date: Date;
+  text: string;
+  amount: number;
+  category: {
+    id: string;
+    name: string;
+    color: string;
+  };
+} & (
+  | {
+      type: "Swish";
+      swish: {
+        id: string;
+        name: string;
+        swishNumber: string;
+      };
+    }
+  | {
+      type: "Customer";
+      customer: {
+        id: string;
+        name: string;
+        color: string;
+      };
+    }
+  | {
+      type: "Internal";
+      otherAccount: {
+        id: string;
+        name: string;
+      };
     }
 );

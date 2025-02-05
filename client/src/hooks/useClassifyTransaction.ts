@@ -35,7 +35,9 @@ const classifyTransaction = (
     };
   }
   const customer = customers.find((customer) =>
-    transaction.text.includes(customer.name)
+    customer.detections.some((detection) =>
+      transaction.text.includes(detection)
+    )
   );
   if (customer) {
     return {

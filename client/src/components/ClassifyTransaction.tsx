@@ -102,7 +102,7 @@ export default function ClassifyTransaction({
               )}
               {type === "Customer" &&
                 transaction.classed.type === "Customer" && (
-                  <p>{transaction.classed.customer.rename}</p>
+                  <p>{transaction.classed.customer.name}</p>
                 )}
               {type === "Internal" && (
                 <Select
@@ -167,7 +167,7 @@ export default function ClassifyTransaction({
                     case "Swish": {
                       if (transaction.classed.type !== "Swish") return;
                       onClassify({
-                        type: "Customer",
+                        type: "Swish",
                         transactionId: transaction.id,
                         otherId: transaction.classed.swish.id,
                         categoryId: category,
@@ -178,7 +178,7 @@ export default function ClassifyTransaction({
                       if (account === null) return;
 
                       onClassify({
-                        type: "Customer",
+                        type: "Internal",
                         transactionId: transaction.id,
                         otherId: account,
                         categoryId: category,

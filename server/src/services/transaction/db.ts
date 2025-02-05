@@ -1,13 +1,22 @@
 import {
   accountsTable,
+  categoriesTable,
+  customersTable,
   db,
   importedTransactionsTable,
+  swishRecipientsTable,
   transactionsTable,
   usersTable,
 } from "src/drizzle/schema";
-import { ClassifiedChoice, ClassifyTransaction, TransactionRow } from "./types";
+import {
+  ClassifiedChoice,
+  ClassifyTransaction,
+  Transaction,
+  TransactionRow,
+} from "./types";
 import { uuid } from "../utils";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
+import { isWithinInterval } from "date-fns";
 
 export const getImportedTransactions = async (
   userId: string
@@ -115,4 +124,90 @@ export const classifyTransaction = async (data: ClassifiedChoice) => {
     .where(eq(importedTransactionsTable.id, data.transactionId));
 
   return id;
+};
+
+export const getTransactions = async (
+  from: Date,
+  to: Date,
+  userId: string
+): Promise<Transaction[]> => {
+  const categoriesPromise = db
+    .select()
+    .from(categoriesTable)
+    .where(eq(categoriesTable.userId, userId));
+  const customersPromise = db
+    .select()
+    .from(customersTable)
+    .where(eq(customersTable.userId, userId));
+  const swishRecipientsPromise = db
+    .select()
+    .from(swishRecipientsTable)
+    .where(eq(swishRecipientsTable.userId, userId));
+  const accountsPromise = db
+    .select()
+    .from(accountsTable)
+    .where(eq(accountsTable.userId, userId));
+
+  const [categories, customers, swishRecipients, accounts] = await Promise.all([
+    categoriesPromise,
+    customersPromise,
+    swishRecipientsPromise,
+    accountsPromise,
+  ]);
+
+  const accountIds = accounts.map((i) => i.id);
+
+  const categoriesMap = new Map(categories.map((i) => [i.id, i]));
+  const customersMap = new Map(customers.map((i) => [i.id, i]));
+  const swishRecipientsMap = new Map(swishRecipients.map((i) => [i.id, i]));
+  const accountsMap = new Map(accounts.map((i) => [i.id, i]));
+
+  const transactions = await db
+    .select()
+    .from(transactionsTable)
+    .where(inArray(transactionsTable.accountId, accountIds));
+
+  return transactions
+    .map((i) => {
+      switch (i.type) {
+        case "Swish": {
+          return {
+            account: accountsMap.get(i.accountId)!,
+            amount: i.amount,
+            category: categoriesMap.get(i.categoryId)!,
+            date: new Date(i.date),
+            id: i.id,
+            text: i.text,
+            type: "Swish" as const,
+            swish: swishRecipientsMap.get(i.swishRecipientId ?? "")!,
+          };
+        }
+        case "Customer": {
+          return {
+            account: accountsMap.get(i.accountId)!,
+            amount: i.amount,
+            category: categoriesMap.get(i.categoryId)!,
+            date: new Date(i.date),
+            id: i.id,
+            text: i.text,
+            type: "Customer" as const,
+            customer: customersMap.get(i.customerId ?? "")!,
+          };
+        }
+        case "Internal": {
+          return {
+            account: accountsMap.get(i.accountId)!,
+            amount: i.amount,
+            category: categoriesMap.get(i.categoryId)!,
+            date: new Date(i.date),
+            id: i.id,
+            text: i.text,
+            type: "Internal" as const,
+            otherAccount: accountsMap.get(i.transferedAccountId ?? "")!,
+          };
+        }
+      }
+      throw new Error("Wrong type: " + i.type + " . " + i.id);
+    })
+    .filter((i) => isWithinInterval(i.date, { start: from, end: to }));
 };

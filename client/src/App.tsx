@@ -10,6 +10,7 @@ import SwishRecipients from "./pages/SwishRecipients";
 import Customers from "./pages/Customers";
 import ClassifyTransactions from "./pages/ClassifyTransactions";
 import Categories from "./pages/Categories";
+import Transactions from "./pages/Transactions";
 
 const Dashboard = () => <h1>Dashboard Home</h1>;
 
@@ -87,6 +88,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Categories />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/transactions"
+          element={
+            <ProtectedRoute>
+              <Transactions />
             </ProtectedRoute>
           }
         />
