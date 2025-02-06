@@ -16,6 +16,7 @@ import {
   Clock,
   CreditCard,
   Folder,
+  LayoutDashboard,
   Phone,
   Upload,
 } from "lucide-react";
@@ -36,6 +37,13 @@ export default function DashboardNavigation() {
         <SidebarGroup>
           <SidebarGroupLabel>Main</SidebarGroupLabel>
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <NavLink to="/dashboard">
+                  <LayoutDashboard /> Dashboard
+                </NavLink>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
                 <NavLink to="/dashboard/transactions">

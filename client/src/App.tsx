@@ -11,8 +11,7 @@ import Customers from "./pages/Customers";
 import ClassifyTransactions from "./pages/ClassifyTransactions";
 import Categories from "./pages/Categories";
 import Transactions from "./pages/Transactions";
-
-const Dashboard = () => <h1>Dashboard Home</h1>;
+import Dashboard from "./pages/Dashboard";
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return (
