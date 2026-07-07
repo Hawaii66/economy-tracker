@@ -13,7 +13,7 @@ type ImportReviewTableProps = {
   categories: CategoryOption[]
   tags: TagOption[]
   rulesById: Record<string, { name: string; keywords: string[] }>
-  accountName: string
+  accountNames: Record<string, string>
   onRowsChange: (rows: ImportReviewRow[]) => void
   disabled?: boolean
 }
@@ -249,7 +249,7 @@ export default function ImportReviewTable({
   categories,
   tags,
   rulesById,
-  accountName,
+  accountNames,
   onRowsChange,
   disabled = false,
 }: ImportReviewTableProps) {
@@ -381,7 +381,7 @@ export default function ImportReviewTable({
                       {row.date}
                     </td>
                     <td className="truncate px-3 py-2.5 align-middle text-[var(--text-muted)]">
-                      {accountName}
+                      {accountNames[row.accountId] ?? row.accountId}
                     </td>
                     <td className="truncate px-3 py-2.5 align-middle text-[var(--text)]">
                       {row.description || '—'}

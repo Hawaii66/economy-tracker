@@ -2,18 +2,26 @@ import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation } from 'convex/react'
-import { Import } from 'lucide-react'
+import { Import, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '@economy-tracker/convex/api'
 import type { Id } from '@economy-tracker/convex/dataModel'
-import CsvDropzone from '@/components/CsvDropzone'
+import { ImportUploadModal } from '@/components/import/ImportUploadModal'
 import ImportReviewTable from '@/components/import/ImportReviewTable'
 import TransactionTable from '@/components/TransactionTable'
 import { Button } from '@/components/ui/button'
 import { type CsvParseResult, parseCsvText, readCsvText } from '@/lib/csv-import'
 import { getAccounts, getRawTransactions } from '@/lib/budget-types'
 import { createEntityId } from '@/lib/entity-id'
-import { buildImportReviewRows, type ImportReviewRow } from '@/lib/import-review'
+import {
+  applyReviewRowUpdates,
+  buildImportReviewRows,
+  flattenReviewRows,
+  groupApprovedRowsByAccount,
+  type CsvParsePreview,
+  type ImportReviewBatch,
+  type ImportReviewRow,
+} from '@/lib/import-review'
 import type { MatchableRule } from 'budget-core'
 
 export const Route = createFileRoute('/dashboard/budgets/$budgetId/import')({
@@ -34,12 +42,16 @@ function ImportPage() {
   )
   const appendEvents = useMutation(api.budgets.appendEvents)
 
+  const [reviewBatches, setReviewBatches] = useState<ImportReviewBatch[]>([])
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
-  const [parseResult, setParseResult] = useState<CsvParseResult | null>(null)
-  const [reviewRows, setReviewRows] = useState<ImportReviewRow[]>([])
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [pendingParse, setPendingParse] = useState<CsvParseResult | null>(null)
+  const [parsePreview, setParsePreview] = useState<CsvParsePreview | null>(null)
   const [parseError, setParseError] = useState<string | null>(null)
   const [selectedAccountId, setSelectedAccountId] = useState<string>('')
-  const [newAccountName, setNewAccountName] = useState('')
+  const [uploadModalOpen, setUploadModalOpen] = useState(false)
+  const [isPreviewing, setIsPreviewing] = useState(false)
+  const [isParsing, setIsParsing] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
@@ -65,7 +77,6 @@ function ImportPage() {
   const accounts = getAccounts(data.state.accounts)
   const accountNames = Object.fromEntries(accounts.map((account) => [account.id, account.name]))
   const rawTransactions = getRawTransactions(data.state.rawTransactions)
-  const isCreatingAccount = selectedAccountId === '__new__'
 
   const rules = (Object.values(data.state.rules ?? {}) as Rule[]).sort((left, right) =>
     (left.keywords[0] ?? left.name).localeCompare(right.keywords[0] ?? right.name),
@@ -97,34 +108,100 @@ function ImportPage() {
     })),
   ].sort((left, right) => left.name.localeCompare(right.name))
 
+  const reviewRows = flattenReviewRows(reviewBatches)
   const approvedRows = reviewRows.filter((row) => row.approved)
-  const targetAccountName = isCreatingAccount
-    ? newAccountName.trim() || 'New account'
-    : accountNames[selectedAccountId] ?? 'Selected account'
-  const canImport =
-    approvedRows.length > 0 &&
-    (isCreatingAccount ? newAccountName.trim().length > 0 : selectedAccountId.length > 0)
+  const canImport = approvedRows.length > 0
 
-  async function handleFile(file: File) {
-    setImportMessage(null)
-    setImportError(null)
+  function clearModalDraft() {
+    setSelectedFileName(null)
+    setPendingFile(null)
+    setPendingParse(null)
+    setParsePreview(null)
     setParseError(null)
+    setSelectedAccountId('')
+  }
+
+  function openUploadModal() {
+    clearModalDraft()
+    setUploadModalOpen(true)
+  }
+
+  async function handleFileSelect(file: File) {
+    setParseError(null)
+    setParsePreview(null)
+    setPendingParse(null)
+    setPendingFile(file)
     setSelectedFileName(file.name)
+    setIsPreviewing(true)
 
     try {
       const text = await readCsvText(file)
       const parsed = parseCsvText(text)
-      setParseResult(parsed)
-      setReviewRows(buildImportReviewRows(parsed.rows, rules))
+
+      if (parsed.rows.length === 0) {
+        setParseError('No valid transactions found in CSV file.')
+        return
+      }
+
+      setPendingParse(parsed)
+      setParsePreview({
+        rowCount: parsed.rows.length,
+        skippedRowCount: parsed.skippedRowCount,
+        delimiter: parsed.delimiter,
+      })
     } catch (error) {
-      setParseResult(null)
-      setReviewRows([])
       setParseError(error instanceof Error ? error.message : 'Failed to parse CSV file.')
+    } finally {
+      setIsPreviewing(false)
     }
   }
 
+  function handleAddToReview() {
+    if (!pendingFile || !pendingParse || !selectedAccountId) {
+      return
+    }
+
+    setIsParsing(true)
+
+    try {
+      const batchId = createEntityId('review-batch')
+      const batchOrder = reviewBatches.length
+      const batch: ImportReviewBatch = {
+        id: batchId,
+        accountId: selectedAccountId,
+        fileName: pendingFile.name,
+        delimiter: pendingParse.delimiter,
+        rowCount: pendingParse.rows.length,
+        skippedRowCount: pendingParse.skippedRowCount,
+        batchOrder,
+        rows: buildImportReviewRows(
+          pendingParse.rows,
+          rules,
+          batchId,
+          selectedAccountId,
+          batchOrder,
+        ),
+      }
+
+      setReviewBatches((current) => [...current, batch])
+      clearModalDraft()
+      setUploadModalOpen(false)
+    } finally {
+      setIsParsing(false)
+    }
+  }
+
+  function handleRowsChange(updatedRows: ImportReviewRow[]) {
+    setReviewBatches((current) => applyReviewRowUpdates(current, updatedRows))
+  }
+
+  function resetImportSession() {
+    setReviewBatches([])
+    clearModalDraft()
+  }
+
   async function handleImport() {
-    if (!parseResult || !canImport) {
+    if (!canImport) {
       return
     }
 
@@ -134,62 +211,51 @@ function ImportPage() {
 
     try {
       const events: Array<{ eventType: string; payload: Record<string, unknown> }> = []
-      const accountId = isCreatingAccount ? createEntityId('acct') : selectedAccountId
+      const approvedByAccount = groupApprovedRowsByAccount(reviewBatches)
 
-      if (isCreatingAccount) {
+      for (const [accountId, rows] of approvedByAccount) {
+        const importBatchId = createEntityId('batch')
+        const importedTransactions = rows.map((row) => ({
+          rawTransactionId: createEntityId('raw'),
+          date: row.date,
+          amount: row.amount,
+          description: row.description,
+          rawRow: row.rawRow,
+        }))
+
         events.push({
-          eventType: 'ACCOUNT_ADDED',
+          eventType: 'TRANSACTIONS_IMPORTED',
           payload: {
+            importBatchId,
             accountId,
-            name: newAccountName.trim(),
-            openingBalance: 0,
-            currency: 'SEK',
-            genesisDate: new Date().toISOString().slice(0, 10),
+            importedAt: new Date().toISOString(),
+            transactions: importedTransactions,
           },
         })
-      }
 
-      const importBatchId = createEntityId('batch')
-      const importedTransactions = approvedRows.map((row) => ({
-        rawTransactionId: createEntityId('raw'),
-        date: row.date,
-        amount: row.amount,
-        description: row.description,
-        rawRow: row.rawRow,
-      }))
+        for (let index = 0; index < rows.length; index += 1) {
+          const row = rows[index]
+          const rawTransaction = importedTransactions[index]
+          if (!row || !rawTransaction) {
+            continue
+          }
 
-      events.push({
-        eventType: 'TRANSACTIONS_IMPORTED',
-        payload: {
-          importBatchId,
-          accountId,
-          importedAt: new Date().toISOString(),
-          transactions: importedTransactions,
-        },
-      })
-
-      for (let index = 0; index < approvedRows.length; index += 1) {
-        const row = approvedRows[index]
-        const rawTransaction = importedTransactions[index]
-        if (!row || !rawTransaction) {
-          continue
+          events.push({
+            eventType: 'LEDGER_TRANSACTION_CREATED',
+            payload: {
+              ledgerTransactionId: createEntityId('txn'),
+              rawTransactionId: rawTransaction.rawTransactionId,
+              accountId,
+              date: row.date,
+              amount: row.amount,
+              description: row.description,
+              categoryId: row.assignment.categoryId,
+              sinkId: row.assignment.sinkId,
+              lifestyleTagIds: row.assignment.lifestyleTagIds,
+              eventTagIds: row.assignment.eventTagIds,
+            },
+          })
         }
-
-        events.push({
-          eventType: 'LEDGER_TRANSACTION_CREATED',
-          payload: {
-            ledgerTransactionId: createEntityId('txn'),
-            rawTransactionId: rawTransaction.rawTransactionId,
-            accountId,
-            date: row.date,
-            amount: row.amount,
-            description: row.description,
-            categoryId: row.assignment.categoryId,
-            sinkId: row.assignment.sinkId,
-            lifestyleTagIds: row.assignment.lifestyleTagIds,
-            eventTagIds: row.assignment.eventTagIds,
-          },
-        })
       }
 
       await appendEvents({
@@ -198,13 +264,9 @@ function ImportPage() {
       })
 
       setImportMessage(
-        `Imported ${approvedRows.length} transaction${approvedRows.length === 1 ? '' : 's'}.`,
+        `Imported ${approvedRows.length} transaction${approvedRows.length === 1 ? '' : 's'} from ${approvedByAccount.size} account${approvedByAccount.size === 1 ? '' : 's'}.`,
       )
-      setParseResult(null)
-      setReviewRows([])
-      setSelectedFileName(null)
-      setSelectedAccountId(isCreatingAccount ? accountId : selectedAccountId)
-      setNewAccountName('')
+      resetImportSession()
     } catch (error) {
       setImportError(error instanceof Error ? error.message : 'Import failed.')
     } finally {
@@ -227,58 +289,20 @@ function ImportPage() {
       </header>
 
       <section className="budget-panel">
-        <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Upload CSV</h2>
-        <p className="mt-2 mb-4 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
-          Drop a bank export to review each transaction. Import rules auto-apply categories and
-          tags. Assign a category, approve rows, then import.
-        </p>
-
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-          <label className="flex flex-col gap-1.5 text-sm font-semibold text-[var(--text)]">
-            Target account
-            <select
-              className="demo-select"
-              value={selectedAccountId}
-              onChange={(event) => setSelectedAccountId(event.target.value)}
-              disabled={isImporting}
-            >
-              <option value="">Select an account…</option>
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-              <option value="__new__">Create new account…</option>
-            </select>
-          </label>
-
-          {isCreatingAccount ? (
-            <label className="flex flex-col gap-1.5 text-sm font-semibold text-[var(--text)]">
-              New account name
-              <input
-                className="demo-input"
-                value={newAccountName}
-                onChange={(event) => setNewAccountName(event.target.value)}
-                placeholder="Checking, savings…"
-                disabled={isImporting}
-              />
-            </label>
-          ) : (
-            <div className="hidden lg:block" />
-          )}
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Review import</h2>
+            <p className="mt-2 mb-0 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
+              Add exports from multiple accounts (e.g. Maestro and budget) to review together.
+              Transfer linking will be added later.
+            </p>
+          </div>
+          <Button type="button" onClick={openUploadModal} disabled={isImporting}>
+            <Plus />
+            {reviewBatches.length > 0 ? 'Add CSV' : 'Import CSV'}
+          </Button>
         </div>
 
-        <div className="mt-4">
-          <CsvDropzone
-            onFile={(file) => void handleFile(file)}
-            disabled={isImporting}
-            fileName={selectedFileName}
-          />
-        </div>
-
-        {parseError ? (
-          <p className="demo-alert demo-alert-danger mt-4 mb-0 text-sm">{parseError}</p>
-        ) : null}
         {importError ? (
           <p className="demo-alert demo-alert-danger mt-4 mb-0 text-sm">{importError}</p>
         ) : null}
@@ -286,14 +310,15 @@ function ImportPage() {
           <p className="demo-alert mt-4 mb-0 text-sm">{importMessage}</p>
         ) : null}
 
-        {parseResult ? (
+        {reviewBatches.length > 0 ? (
           <div className="mt-6">
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              <span className="demo-pill">{parseResult.rows.length} rows ready</span>
-              {parseResult.skippedRowCount > 0 ? (
-                <span className="demo-pill">{parseResult.skippedRowCount} rows skipped</span>
-              ) : null}
-              <span className="demo-pill">Delimiter: {parseResult.delimiter}</span>
+              {reviewBatches.map((batch) => (
+                <span key={batch.id} className="demo-pill">
+                  {accountNames[batch.accountId] ?? batch.accountId} · {batch.fileName} ·{' '}
+                  {batch.rowCount} rows
+                </span>
+              ))}
             </div>
 
             <ImportReviewTable
@@ -301,12 +326,12 @@ function ImportPage() {
               categories={categoryOptions}
               tags={tagOptions}
               rulesById={rulesById}
-              accountName={targetAccountName}
-              onRowsChange={setReviewRows}
+              accountNames={accountNames}
+              onRowsChange={handleRowsChange}
               disabled={isImporting}
             />
 
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap gap-2">
               <Button
                 type="button"
                 disabled={!canImport || isImporting}
@@ -318,9 +343,21 @@ function ImportPage() {
                     ? `Import ${approvedRows.length} approved transaction${approvedRows.length === 1 ? '' : 's'}`
                     : 'Approve rows to import'}
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isImporting}
+                onClick={resetImportSession}
+              >
+                Clear review
+              </Button>
             </div>
           </div>
-        ) : null}
+        ) : (
+          <p className="mt-6 mb-0 text-sm text-[var(--text-muted)]">
+            No import in progress. Click Import CSV to get started.
+          </p>
+        )}
       </section>
 
       <section className="budget-panel">
@@ -331,6 +368,23 @@ function ImportPage() {
         </p>
         <TransactionTable transactions={rawTransactions} accountNames={accountNames} />
       </section>
+
+      <ImportUploadModal
+        open={uploadModalOpen}
+        onOpenChange={setUploadModalOpen}
+        accounts={accounts}
+        selectedAccountId={selectedAccountId}
+        fileName={selectedFileName}
+        parsePreview={parsePreview}
+        parseError={parseError}
+        isParsing={isParsing}
+        isPreviewing={isPreviewing}
+        hasExistingBatches={reviewBatches.length > 0}
+        disabled={isImporting || isParsing || isPreviewing}
+        onAccountChange={setSelectedAccountId}
+        onFile={(file) => void handleFileSelect(file)}
+        onContinue={handleAddToReview}
+      />
     </div>
   )
 }
