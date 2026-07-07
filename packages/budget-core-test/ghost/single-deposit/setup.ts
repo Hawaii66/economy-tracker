@@ -25,7 +25,7 @@ export const events = [
       rawTransactionId: null,
       accountId: "acct-checking",
       date: "2026-01-02",
-      amount: 100,
+      amount: 10_000,
       description: "Salary",
       categoryId: null,
       sinkId: null,

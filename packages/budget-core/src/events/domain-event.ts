@@ -7,6 +7,7 @@ import {
 import {
   AccountAddedPayloadSchema,
   AccountBalanceAdjustedPayloadSchema,
+  AccountUpdatedPayloadSchema,
   CategoryCreatedPayloadSchema,
   CategoryUpdatedPayloadSchema,
   EventTagArchivedPayloadSchema,
@@ -34,6 +35,7 @@ import {
 export const EVENT_TYPES = [
   "GENESIS_EPOCH_SET",
   "ACCOUNT_ADDED",
+  "ACCOUNT_UPDATED",
   "ACCOUNT_BALANCE_ADJUSTED",
   "SINK_CREATED",
   "SINK_FUNDED",
@@ -77,6 +79,12 @@ export const GenesisEpochSetEventSchema = z.object({
 export const AccountAddedEventSchema = z.object({
   eventType: z.literal("ACCOUNT_ADDED"),
   payload: AccountAddedPayloadSchema,
+  ...domainEventBase,
+});
+
+export const AccountUpdatedEventSchema = z.object({
+  eventType: z.literal("ACCOUNT_UPDATED"),
+  payload: AccountUpdatedPayloadSchema,
   ...domainEventBase,
 });
 
@@ -215,6 +223,7 @@ export const InternalTransferRecordedEventSchema = z.object({
 export const DomainEventSchema = z.discriminatedUnion("eventType", [
   GenesisEpochSetEventSchema,
   AccountAddedEventSchema,
+  AccountUpdatedEventSchema,
   AccountBalanceAdjustedEventSchema,
   SinkCreatedEventSchema,
   SinkFundedEventSchema,
@@ -261,6 +270,11 @@ export const AppendEventInputSchema = z.discriminatedUnion("eventType", [
   z.object({
     eventType: z.literal("ACCOUNT_ADDED"),
     payload: AccountAddedPayloadSchema,
+    ...appendEventBase,
+  }),
+  z.object({
+    eventType: z.literal("ACCOUNT_UPDATED"),
+    payload: AccountUpdatedPayloadSchema,
     ...appendEventBase,
   }),
   z.object({

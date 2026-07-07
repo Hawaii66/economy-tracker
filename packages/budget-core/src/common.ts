@@ -18,8 +18,7 @@ export const CurrencyCodeSchema = z
   .transform((value) => value.toUpperCase());
 export type CurrencyCode = z.infer<typeof CurrencyCodeSchema>;
 
-export const MoneyAmountSchema = z.number().finite();
-export type MoneyAmount = z.infer<typeof MoneyAmountSchema>;
+export { MoneyAmountSchema, type MoneyAmount } from "./money.ts";
 
 export const HexColorSchema = z
   .string()
@@ -28,6 +27,21 @@ export const HexColorSchema = z
 export type HexColor = z.infer<typeof HexColorSchema>;
 
 export const DEFAULT_ENTITY_COLOR = "#5EAEFF" as const;
+
+export const ACCOUNT_ICON_VALUES = [
+  "wallet",
+  "landmark",
+  "credit-card",
+  "piggy-bank",
+  "banknote",
+  "building-2",
+  "circle-dollar-sign",
+] as const;
+
+export const AccountIconSchema = z.enum(ACCOUNT_ICON_VALUES);
+export type AccountIcon = z.infer<typeof AccountIconSchema>;
+
+export const DEFAULT_ACCOUNT_ICON = "wallet" as const;
 
 export const MembershipRoleSchema = z.enum(["OWNER", "EDITOR", "VIEWER"]);
 export type MembershipRole = z.infer<typeof MembershipRoleSchema>;

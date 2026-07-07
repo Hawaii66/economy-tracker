@@ -8,7 +8,7 @@ export const events = [
     payload: {
       accountId: "acct-checking",
       name: "Checking",
-      openingBalance: 1000,
+      openingBalance: 100_000,
       currency: "SEK",
       genesisDate: "2026-01-01",
     },
@@ -20,7 +20,7 @@ export const events = [
     payload: {
       accountId: "acct-savings",
       name: "Savings",
-      openingBalance: 5000,
+      openingBalance: 500_000,
       currency: "SEK",
       genesisDate: "2026-01-01",
     },

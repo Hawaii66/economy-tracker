@@ -2,11 +2,13 @@
   "state": {
     "accounts": {
       "acct-checking": {
-        "balance": 100,
+        "balance": 10000,
+        "color": "#5EAEFF",
         "currency": "SEK",
+        "description": "",
         "genesisDate": "2026-01-01",
+        "icon": "wallet",
         "id": "acct-checking",
-        "isLiquid": true,
         "name": "Checking",
         "parserTemplateId": null
       }
@@ -17,7 +19,7 @@
     "ledgerTransactions": {
       "txn-salary": {
         "accountId": "acct-checking",
-        "amount": 100,
+        "amount": 10000,
         "categoryId": null,
         "date": "2026-01-02",
         "description": "Salary",

@@ -1,31 +1,44 @@
 export const BUDGET_CORE_VERSION = "0.0.0";
 
 export {
+  formatMinorUnits,
+  MINOR_UNITS_PER_MAJOR_UNIT,
+  minorUnitsToDecimalString,
+  MoneyAmountSchema,
+  parseDecimalStringToMinorUnits,
+  wholeMajorUnitsToMinorUnits,
+} from "./money.ts";
+export type { MoneyAmount } from "./money.ts";
+
+export {
   CURRENT_EVENT_VERSION,
   CURRENT_STATE_VERSION,
+  ACCOUNT_ICON_VALUES,
+  AccountIconSchema,
   CurrencyCodeSchema,
+  DEFAULT_ACCOUNT_ICON,
   DEFAULT_ENTITY_COLOR,
   EntityIdSchema,
   HexColorSchema,
   IsoDateSchema,
   IsoDateTimeSchema,
   MembershipRoleSchema,
-  MoneyAmountSchema,
 } from "./common.ts";
 export type {
+  AccountIcon,
   CurrencyCode,
   EntityId,
   HexColor,
   IsoDate,
   IsoDateTime,
   MembershipRole,
-  MoneyAmount,
 } from "./common.ts";
 
 export {
   AccountSchema,
   CategorySchema,
   ColumnMappingSchema,
+  DEFAULT_ACCOUNT_APPEARANCE,
   EventTagSchema,
   GenesisEpochSchema,
   LedgerTransactionSchema,
@@ -68,6 +81,7 @@ export type { BudgetState, BudgetStateV1 } from "./budget/state.ts";
 export {
   AccountAddedPayloadSchema,
   AccountBalanceAdjustedPayloadSchema,
+  AccountUpdatedPayloadSchema,
   CategoryCreatedPayloadSchema,
   CategoryUpdatedPayloadSchema,
   EventTagArchivedPayloadSchema,
@@ -96,6 +110,7 @@ export {
 export type {
   AccountAddedPayload,
   AccountBalanceAdjustedPayload,
+  AccountUpdatedPayload,
   CategoryCreatedPayload,
   CategoryUpdatedPayload,
   EventTagArchivedPayload,
@@ -124,6 +139,7 @@ export type {
 export {
   AccountAddedEventSchema,
   AccountBalanceAdjustedEventSchema,
+  AccountUpdatedEventSchema,
   AppendEventInputSchema,
   CategoryCreatedEventSchema,
   CategoryUpdatedEventSchema,

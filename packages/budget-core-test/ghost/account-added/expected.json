@@ -2,11 +2,13 @@
   "state": {
     "accounts": {
       "acct-checking": {
-        "balance": 1500,
+        "balance": 150000,
+        "color": "#5EAEFF",
         "currency": "SEK",
+        "description": "",
         "genesisDate": "2026-01-01",
+        "icon": "wallet",
         "id": "acct-checking",
-        "isLiquid": true,
         "name": "Checking",
         "parserTemplateId": null
       }

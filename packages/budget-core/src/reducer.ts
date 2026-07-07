@@ -1,5 +1,5 @@
 import { produce, type Draft } from "immer";
-import type { Sink } from "./budget/entities.ts";
+import { DEFAULT_ACCOUNT_APPEARANCE, type Sink } from "./budget/entities.ts";
 import type { BudgetState } from "./budget/state.ts";
 import type { EntityId } from "./common.ts";
 import type { DomainEvent } from "./events/domain-event.ts";
@@ -125,12 +125,24 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       draft.accounts[payload.accountId] = {
         id: payload.accountId,
         name: payload.name,
+        description: payload.description ?? DEFAULT_ACCOUNT_APPEARANCE.description,
+        color: payload.color ?? DEFAULT_ACCOUNT_APPEARANCE.color,
+        icon: payload.icon ?? DEFAULT_ACCOUNT_APPEARANCE.icon,
         balance: payload.openingBalance,
         currency: payload.currency ?? "SEK",
-        isLiquid: payload.isLiquid ?? true,
         genesisDate: payload.genesisDate,
         parserTemplateId: null,
       };
+      return;
+    }
+
+    case "ACCOUNT_UPDATED": {
+      const { payload } = event;
+      const account = requireAccount(draft, payload.accountId);
+      account.name = payload.name;
+      account.description = payload.description;
+      account.color = payload.color;
+      account.icon = payload.icon;
       return;
     }
 

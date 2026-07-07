@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  AccountIconSchema,
   CurrencyCodeSchema,
   EntityIdSchema,
   HexColorSchema,
@@ -19,12 +20,23 @@ export type GenesisEpochSetPayload = z.infer<typeof GenesisEpochSetPayloadSchema
 export const AccountAddedPayloadSchema = z.object({
   accountId: EntityIdSchema,
   name: z.string().min(1),
+  description: z.string().optional(),
+  color: HexColorSchema.optional(),
+  icon: AccountIconSchema.optional(),
   openingBalance: MoneyAmountSchema,
   currency: CurrencyCodeSchema.optional(),
-  isLiquid: z.boolean().optional(),
   genesisDate: IsoDateSchema,
 });
 export type AccountAddedPayload = z.infer<typeof AccountAddedPayloadSchema>;
+
+export const AccountUpdatedPayloadSchema = z.object({
+  accountId: EntityIdSchema,
+  name: z.string().min(1),
+  description: z.string(),
+  color: HexColorSchema,
+  icon: AccountIconSchema,
+});
+export type AccountUpdatedPayload = z.infer<typeof AccountUpdatedPayloadSchema>;
 
 export const AccountBalanceAdjustedPayloadSchema = z.object({
   accountId: EntityIdSchema,

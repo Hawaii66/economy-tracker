@@ -15,7 +15,7 @@ describe("account added", () => {
         payload: {
           accountId: "acct-checking",
           name: "Checking",
-          openingBalance: 1500,
+          openingBalance: 150_000,
           currency: "sek",
           genesisDate: "2026-01-01",
         },
@@ -25,9 +25,11 @@ describe("account added", () => {
     expect(state.accounts["acct-checking"]).toEqual({
       id: "acct-checking",
       name: "Checking",
-      balance: 1500,
+      description: "",
+      color: "#5EAEFF",
+      icon: "wallet",
+      balance: 150_000,
       currency: "SEK",
-      isLiquid: true,
       genesisDate: "2026-01-01",
       parserTemplateId: null,
     });

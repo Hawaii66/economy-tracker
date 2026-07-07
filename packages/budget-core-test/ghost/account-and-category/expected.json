@@ -3,16 +3,19 @@
     "accounts": {
       "acct-checking": {
         "balance": 0,
+        "color": "#5EAEFF",
         "currency": "SEK",
+        "description": "",
         "genesisDate": "2026-01-01",
+        "icon": "wallet",
         "id": "acct-checking",
-        "isLiquid": true,
         "name": "Checking",
         "parserTemplateId": null
       }
     },
     "categories": {
       "cat-rent": {
+        "color": "#5EAEFF",
         "id": "cat-rent",
         "name": "Rent"
       }

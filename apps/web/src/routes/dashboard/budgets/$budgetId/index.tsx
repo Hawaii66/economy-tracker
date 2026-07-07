@@ -77,8 +77,9 @@ function BudgetOverviewPage() {
       <section className="budget-panel budget-panel-wide">
         <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Budget guard-rail</h2>
         <p className="mt-2 mb-0 max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
-          Liquid account cash must cover total virtual sink balances. This dashboard will surface
-          allocation health, sink pacing, and account liquidity as features are built out.
+          Total cash across all physical accounts must cover total virtual sink balances. Sinks live
+          only in the app — money can sit in any account and move when needed. This dashboard will
+          surface allocation health and sink pacing as features are built out.
         </p>
       </section>
     </div>

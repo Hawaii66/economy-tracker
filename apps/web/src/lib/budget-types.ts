@@ -1,8 +1,12 @@
 export type BudgetAccount = {
   id: string
   name: string
+  description: string
+  color: string
+  icon: string
   balance: number
   currency: string
+  genesisDate: string
 }
 
 export type BudgetRawTransaction = {
