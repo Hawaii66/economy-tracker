@@ -12,6 +12,7 @@ import { ImportUploadModal } from '@/components/import/ImportUploadModal'
 import { Button } from '@/components/ui/button'
 import { type CsvParseResult, parseCsvText, readCsvText } from '@/lib/csv-import'
 import { getAccounts, getLedgerTransactions, getRawTransactions, getUnlinkedRawTransactions } from '@/lib/budget-types'
+import type { BudgetRawTransaction } from '@/lib/budget-types'
 import { createEntityId } from '@/lib/entity-id'
 import {
   applyReviewRowUpdates,
@@ -29,12 +30,18 @@ import {
   type ImportReviewRow,
 } from '@/lib/import-review'
 import type { MatchableRule } from 'budget-core'
+import {
+  type SaveImportedTransactionInput,
+} from '@/lib/transaction-split'
 
 export const Route = createFileRoute('/dashboard/budgets/$budgetId/import')({
   component: ImportPage,
 })
 
 type Rule = MatchableRule & { name: string }
+type Category = { id: string; name: string; color: string }
+type LifestyleTag = { id: string; name: string; color: string }
+type EventTag = { id: string; name: string; color: string; archived: boolean }
 
 function ImportPage() {
   const { budgetId } = Route.useParams()
@@ -58,6 +65,8 @@ function ImportPage() {
   const [isImporting, setIsImporting] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  const [ledgerMessage, setLedgerMessage] = useState<string | null>(null)
+  const [ledgerError, setLedgerError] = useState<string | null>(null)
 
   if (isPending) {
     return (
@@ -101,6 +110,30 @@ function ImportPage() {
   const rulesById = Object.fromEntries(
     rules.map((rule) => [rule.id, { name: rule.name, keywords: rule.keywords }]),
   )
+
+  const categoryOptions = (Object.values(data.state.categories ?? {}) as Category[]).sort(
+    (left, right) => left.name.localeCompare(right.name),
+  )
+
+  const lifestyleTags = Object.values(data.state.lifestyleTags ?? {}) as LifestyleTag[]
+  const eventTags = (Object.values(data.state.eventTags ?? {}) as EventTag[]).filter(
+    (tag) => !tag.archived,
+  )
+
+  const tagOptions = [
+    ...lifestyleTags.map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      color: tag.color,
+      kind: 'permanent' as const,
+    })),
+    ...eventTags.map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      color: tag.color,
+      kind: 'temporary' as const,
+    })),
+  ].sort((left, right) => left.name.localeCompare(right.name))
 
   const reviewRows = flattenReviewRows(reviewBatches)
   const approvedRows = reviewRows.filter((row) => row.approved)
@@ -334,6 +367,86 @@ function ImportPage() {
     }
   }
 
+  async function handleSaveToLedger(
+    transaction: BudgetRawTransaction,
+    input: SaveImportedTransactionInput,
+  ) {
+    setLedgerError(null)
+    setLedgerMessage(null)
+
+    const ledgerTransactionId = createEntityId('txn')
+
+    try {
+      if (input.mode === 'single') {
+        await appendEvents({
+          budgetId: budgetId as Id<'budgets'>,
+          events: [
+            {
+              eventType: 'LEDGER_TRANSACTION_CREATED',
+              payload: {
+                ledgerTransactionId,
+                rawTransactionId: transaction.id,
+                accountId: transaction.accountId,
+                date: transaction.date,
+                amount: transaction.amount,
+                description: transaction.description,
+                categoryId: input.assignment.categoryId,
+                sinkId: input.assignment.sinkId,
+                lifestyleTagIds: input.assignment.lifestyleTagIds,
+                eventTagIds: input.assignment.eventTagIds,
+              },
+            },
+          ],
+        })
+      } else {
+        await appendEvents({
+          budgetId: budgetId as Id<'budgets'>,
+          events: [
+            {
+              eventType: 'LEDGER_TRANSACTION_CREATED',
+              payload: {
+                ledgerTransactionId,
+                rawTransactionId: transaction.id,
+                accountId: transaction.accountId,
+                date: transaction.date,
+                amount: transaction.amount,
+                description: transaction.description,
+                categoryId: null,
+                sinkId: null,
+                lifestyleTagIds: [],
+                eventTagIds: [],
+              },
+            },
+            {
+              eventType: 'INCOME_SLICED',
+              payload: {
+                ledgerTransactionId,
+                slices: input.slices.map((slice) => ({
+                  sliceId: createEntityId('slice'),
+                  amount: slice.amount,
+                  description: transaction.description,
+                  categoryId: slice.assignment.categoryId,
+                  sinkId: slice.assignment.sinkId,
+                  lifestyleTagIds: slice.assignment.lifestyleTagIds,
+                  eventTagIds: slice.assignment.eventTagIds,
+                })),
+              },
+            },
+          ],
+        })
+      }
+
+      setLedgerMessage(
+        input.mode === 'split'
+          ? `Saved ${transaction.description || 'transaction'} to the ledger as ${input.slices.length} splits.`
+          : `Saved ${transaction.description || 'transaction'} to the ledger.`,
+      )
+    } catch (error) {
+      setLedgerError(error instanceof Error ? error.message : 'Failed to save to ledger.')
+      throw error
+    }
+  }
+
   return (
     <div className="budget-page">
       <header className="budget-page-header">
@@ -428,12 +541,24 @@ function ImportPage() {
         <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Imported transactions</h2>
         <p className="mt-2 mb-4 text-sm text-[var(--text-muted)]">
           {unlinkedRawTransactions.length === 0
-            ? 'No unprocessed imports. Categorization, tags, and splits will be added here.'
-            : `${unlinkedRawTransactions.length} imported transaction${unlinkedRawTransactions.length === 1 ? '' : 's'} waiting to be categorized.`}
+            ? 'No unprocessed imports. Expand a row after importing to categorize and save to the ledger.'
+            : `${unlinkedRawTransactions.length} imported transaction${unlinkedRawTransactions.length === 1 ? '' : 's'} waiting to be saved to the ledger.`}
         </p>
+        {ledgerError ? (
+          <p className="demo-alert demo-alert-danger mb-4 text-sm">{ledgerError}</p>
+        ) : null}
+        {ledgerMessage ? (
+          <p className="demo-alert mb-4 text-sm">{ledgerMessage}</p>
+        ) : null}
         <ImportedTransactionsTable
           transactions={unlinkedRawTransactions}
           accountNames={accountNames}
+          categories={categoryOptions}
+          tags={tagOptions}
+          rules={rules}
+          rulesById={rulesById}
+          onSave={handleSaveToLedger}
+          disabled={isImporting}
         />
       </section>
 
