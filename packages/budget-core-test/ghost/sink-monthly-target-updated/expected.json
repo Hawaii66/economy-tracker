@@ -1,0 +1,27 @@
+{
+  "state": {
+    "accounts": {},
+    "categories": {},
+    "eventTags": {},
+    "genesisEpoch": null,
+    "internalTransferGroups": {},
+    "ledgerTransactions": {},
+    "lifestyleTags": {},
+    "parserTemplates": {},
+    "rawTransactions": {},
+    "rules": {},
+    "sinks": {
+      "sink-car": {
+        "balance": 0,
+        "cap": 50000,
+        "id": "sink-car",
+        "lastFundedOn": null,
+        "monthlyTarget": 7500,
+        "name": "Car repairs",
+        "sinkType": "capped_reserve"
+      }
+    },
+    "splitGroups": {},
+    "version": 1
+  }
+}

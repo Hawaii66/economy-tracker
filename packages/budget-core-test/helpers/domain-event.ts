@@ -3,9 +3,15 @@ import {
   CategoryCreatedEventSchema,
   CURRENT_EVENT_VERSION,
   LedgerTransactionCreatedEventSchema,
+  SinkCreatedEventSchema,
+  SinkFundedEventSchema,
+  SinkMonthlyTargetUpdatedEventSchema,
   type AccountAddedPayload,
   type CategoryCreatedPayload,
   type LedgerTransactionCreatedPayload,
+  type SinkCreatedPayload,
+  type SinkFundedPayload,
+  type SinkMonthlyTargetUpdatedPayload,
 } from "budget-core";
 
 type DomainEventInput<TPayload> = {
@@ -38,6 +44,32 @@ export function ledgerTransactionCreatedEvent(
 ) {
   return LedgerTransactionCreatedEventSchema.parse({
     eventType: "LEDGER_TRANSACTION_CREATED",
+    v: CURRENT_EVENT_VERSION,
+    ...input,
+  });
+}
+
+export function sinkCreatedEvent(input: DomainEventInput<SinkCreatedPayload>) {
+  return SinkCreatedEventSchema.parse({
+    eventType: "SINK_CREATED",
+    v: CURRENT_EVENT_VERSION,
+    ...input,
+  });
+}
+
+export function sinkFundedEvent(input: DomainEventInput<SinkFundedPayload>) {
+  return SinkFundedEventSchema.parse({
+    eventType: "SINK_FUNDED",
+    v: CURRENT_EVENT_VERSION,
+    ...input,
+  });
+}
+
+export function sinkMonthlyTargetUpdatedEvent(
+  input: DomainEventInput<SinkMonthlyTargetUpdatedPayload>,
+) {
+  return SinkMonthlyTargetUpdatedEventSchema.parse({
+    eventType: "SINK_MONTHLY_TARGET_UPDATED",
     v: CURRENT_EVENT_VERSION,
     ...input,
   });

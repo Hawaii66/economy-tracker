@@ -92,6 +92,14 @@ export const SinkCapUpdatedPayloadSchema = z.object({
 });
 export type SinkCapUpdatedPayload = z.infer<typeof SinkCapUpdatedPayloadSchema>;
 
+export const SinkMonthlyTargetUpdatedPayloadSchema = z.object({
+  sinkId: EntityIdSchema,
+  monthlyTarget: MoneyAmountSchema,
+});
+export type SinkMonthlyTargetUpdatedPayload = z.infer<
+  typeof SinkMonthlyTargetUpdatedPayloadSchema
+>;
+
 export const CategoryCreatedPayloadSchema = z.object({
   categoryId: EntityIdSchema,
   name: z.string().min(1),

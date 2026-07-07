@@ -1,0 +1,39 @@
+{
+  "state": {
+    "accounts": {
+      "acct-checking": {
+        "balance": 100000,
+        "color": "#5EAEFF",
+        "currency": "SEK",
+        "description": "",
+        "genesisDate": "2026-01-01",
+        "icon": "wallet",
+        "id": "acct-checking",
+        "name": "Checking",
+        "parserTemplateId": null
+      }
+    },
+    "categories": {},
+    "eventTags": {},
+    "genesisEpoch": null,
+    "internalTransferGroups": {},
+    "ledgerTransactions": {},
+    "lifestyleTags": {},
+    "parserTemplates": {},
+    "rawTransactions": {},
+    "rules": {},
+    "sinks": {
+      "sink-car": {
+        "balance": 20000,
+        "cap": 50000,
+        "id": "sink-car",
+        "lastFundedOn": "2026-01-03",
+        "monthlyTarget": 5000,
+        "name": "Car repairs",
+        "sinkType": "capped_reserve"
+      }
+    },
+    "splitGroups": {},
+    "version": 1
+  }
+}

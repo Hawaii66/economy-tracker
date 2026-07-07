@@ -1,5 +1,9 @@
 import { produce, type Draft } from "immer";
 import { DEFAULT_ACCOUNT_APPEARANCE, type Sink } from "./budget/entities.ts";
+import {
+  assertGuardRailFundingAllowed,
+  assertGuardRailStateHealthy,
+} from "./budget/sinks.ts";
 import type { BudgetState } from "./budget/state.ts";
 import type { EntityId } from "./common.ts";
 import type { DomainEvent } from "./events/domain-event.ts";
@@ -133,6 +137,7 @@ function sinkFromCreatedPayload(payload: SinkCreatedPayload): Sink {
     id: payload.sinkId,
     name: payload.name,
     balance: 0,
+    lastFundedOn: null,
   };
 
   switch (payload.sinkType) {
@@ -177,8 +182,14 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       }
 
       for (const [sinkId, balance] of Object.entries(payload.sinkOpeningBalances)) {
-        requireSink(draft, sinkId).balance = balance;
+        const sink = requireSink(draft, sinkId);
+        sink.balance = balance;
+        if (balance > 0) {
+          sink.lastFundedOn = payload.establishedOn;
+        }
       }
+
+      assertGuardRailStateHealthy(draft.accounts, draft.sinks);
       return;
     }
 
@@ -222,7 +233,10 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
 
     case "SINK_FUNDED": {
       const { payload } = event;
-      requireSink(draft, payload.sinkId).balance += payload.amount;
+      assertGuardRailFundingAllowed(draft.accounts, draft.sinks, payload.amount);
+      const sink = requireSink(draft, payload.sinkId);
+      sink.balance += payload.amount;
+      sink.lastFundedOn = event.createdAt.slice(0, 10);
       return;
     }
 
@@ -238,7 +252,25 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       if (sink.sinkType !== "capped_reserve") {
         throw new Error(`Sink ${payload.sinkId} is not a capped reserve sink`);
       }
+      if (payload.cap < sink.balance) {
+        throw new Error(
+          `Cap (${payload.cap}) cannot be lower than current balance (${sink.balance})`,
+        );
+      }
       sink.cap = payload.cap;
+      return;
+    }
+
+    case "SINK_MONTHLY_TARGET_UPDATED": {
+      const { payload } = event;
+      const sink = requireSink(draft, payload.sinkId);
+      if (sink.sinkType !== "capped_reserve") {
+        throw new Error(`Sink ${payload.sinkId} is not a capped reserve sink`);
+      }
+      if (payload.monthlyTarget <= 0) {
+        throw new Error("Monthly target must be positive");
+      }
+      sink.monthlyTarget = payload.monthlyTarget;
       return;
     }
 

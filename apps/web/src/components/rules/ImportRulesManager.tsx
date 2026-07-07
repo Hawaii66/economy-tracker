@@ -8,6 +8,7 @@ import type { Id } from '@economy-tracker/convex/dataModel'
 import { RuleEditModal, type RuleFormValues } from '@/components/rules/RuleEditModal'
 import { Button } from '@/components/ui/button'
 import { useAppendBudgetEvents } from '@/hooks/use-append-budget-events'
+import { getSinks } from '@/lib/budget-types'
 import { createEntityId } from '@/lib/entity-id'
 
 type ImportRulesManagerProps = {
@@ -94,6 +95,11 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
     left.name.localeCompare(right.name),
   )
 
+  const sinkOptions = getSinks(data.state.sinks).map((sink) => ({
+    id: sink.id,
+    name: sink.name,
+  }))
+
   const tagOptions = [
     ...[...lifestyleTagsById.values()].map((tag) => ({
       id: tag.id,
@@ -135,7 +141,7 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
       keywords: [values.subtext],
       ruleType: values.ruleType,
       categoryId: values.categoryId,
-      sinkId: null,
+      sinkId: values.sinkId,
       lifestyleTagIds: values.lifestyleTagIds,
       eventTagIds: values.eventTagIds,
     }
@@ -272,6 +278,7 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
         onOpenChange={setModalOpen}
         rule={editingRule}
         categories={categoryOptions}
+        sinks={sinkOptions}
         tags={tagOptions}
         onSave={handleSaveRule}
         isSaving={isSaving}

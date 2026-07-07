@@ -1,0 +1,45 @@
+{
+  "state": {
+    "accounts": {},
+    "categories": {},
+    "eventTags": {},
+    "genesisEpoch": null,
+    "internalTransferGroups": {},
+    "ledgerTransactions": {},
+    "lifestyleTags": {},
+    "parserTemplates": {},
+    "rawTransactions": {},
+    "rules": {},
+    "sinks": {
+      "sink-car": {
+        "balance": 0,
+        "cap": 50000,
+        "id": "sink-car",
+        "lastFundedOn": null,
+        "monthlyTarget": 5000,
+        "name": "Car repairs",
+        "sinkType": "capped_reserve"
+      },
+      "sink-netflix": {
+        "balance": 0,
+        "billAmount": 1200,
+        "id": "sink-netflix",
+        "lastFundedOn": null,
+        "name": "Netflix",
+        "periodMonths": 12,
+        "sinkType": "recurring_bill"
+      },
+      "sink-vacation": {
+        "balance": 0,
+        "id": "sink-vacation",
+        "lastFundedOn": null,
+        "name": "Vacation",
+        "sinkType": "target_date",
+        "targetAmount": 200000,
+        "targetDate": "2026-12-01"
+      }
+    },
+    "splitGroups": {},
+    "version": 1
+  }
+}
