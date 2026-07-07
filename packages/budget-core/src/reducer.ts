@@ -74,6 +74,53 @@ function requireLifestyleTag(draft: DraftBudgetState, tagId: EntityId) {
   return lifestyleTag;
 }
 
+type SinkAllocation = {
+  sinkId: EntityId;
+  amount: number;
+};
+
+function ledgerTransactionSinkAllocations(ledgerTransaction: {
+  sinkId: EntityId | null;
+  amount: number;
+  virtualSlices: ReadonlyArray<{ sinkId: EntityId | null; amount: number }>;
+  internalTransferGroupId: EntityId | null;
+}): SinkAllocation[] {
+  if (ledgerTransaction.internalTransferGroupId) {
+    return [];
+  }
+
+  if (ledgerTransaction.virtualSlices.length > 0) {
+    const allocations: SinkAllocation[] = [];
+    for (const slice of ledgerTransaction.virtualSlices) {
+      if (slice.sinkId && slice.amount !== 0) {
+        allocations.push({ sinkId: slice.sinkId, amount: slice.amount });
+      }
+    }
+    return allocations;
+  }
+
+  if (ledgerTransaction.sinkId && ledgerTransaction.amount !== 0) {
+    return [
+      {
+        sinkId: ledgerTransaction.sinkId,
+        amount: ledgerTransaction.amount,
+      },
+    ];
+  }
+
+  return [];
+}
+
+function applySinkAllocations(
+  draft: DraftBudgetState,
+  allocations: readonly SinkAllocation[],
+  multiplier: 1 | -1 = 1,
+) {
+  for (const { sinkId, amount } of allocations) {
+    requireSink(draft, sinkId).balance += multiplier * amount;
+  }
+}
+
 function assertTransactionSinkConnected(
   draft: DraftBudgetState,
   assignment: LedgerAssignment,
@@ -121,6 +168,12 @@ function deleteLedgerTransaction(
       ];
     }
   }
+
+  applySinkAllocations(
+    draft,
+    ledgerTransactionSinkAllocations(ledgerTransaction),
+    -1,
+  );
 
   requireAccount(draft, ledgerTransaction.accountId).balance -=
     ledgerTransaction.amount;
@@ -428,6 +481,9 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
         internalTransferGroupId: null,
         virtualSlices: [],
       };
+      applySinkAllocations(draft, ledgerTransactionSinkAllocations(
+        draft.ledgerTransactions[payload.ledgerTransactionId]!,
+      ));
       return;
     }
 
@@ -440,6 +496,8 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       if (!ledgerTransaction.internalTransferGroupId) {
         assertTransactionSinkConnected(draft, payload);
       }
+      const previousAllocations =
+        ledgerTransactionSinkAllocations(ledgerTransaction);
       ledgerTransaction.categoryId = payload.categoryId;
       ledgerTransaction.sinkId = payload.sinkId;
       ledgerTransaction.lifestyleTagIds = payload.lifestyleTagIds;
@@ -448,6 +506,11 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       if (payload.description !== undefined) {
         ledgerTransaction.description = payload.description;
       }
+      applySinkAllocations(draft, previousAllocations, -1);
+      applySinkAllocations(
+        draft,
+        ledgerTransactionSinkAllocations(ledgerTransaction),
+      );
       return;
     }
 
@@ -488,16 +551,26 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       for (const slice of payload.slices) {
         assertTransactionSinkConnected(draft, slice);
       }
-      requireLedgerTransaction(draft, payload.ledgerTransactionId).virtualSlices =
-        payload.slices.map((slice) => ({
-          id: slice.sliceId,
-          amount: slice.amount,
-          description: slice.description,
-          categoryId: slice.categoryId,
-          sinkId: slice.sinkId,
-          lifestyleTagIds: slice.lifestyleTagIds,
-          eventTagIds: slice.eventTagIds,
-        }));
+      const ledgerTransaction = requireLedgerTransaction(
+        draft,
+        payload.ledgerTransactionId,
+      );
+      const previousAllocations =
+        ledgerTransactionSinkAllocations(ledgerTransaction);
+      ledgerTransaction.virtualSlices = payload.slices.map((slice) => ({
+        id: slice.sliceId,
+        amount: slice.amount,
+        description: slice.description,
+        categoryId: slice.categoryId,
+        sinkId: slice.sinkId,
+        lifestyleTagIds: slice.lifestyleTagIds,
+        eventTagIds: slice.eventTagIds,
+      }));
+      applySinkAllocations(draft, previousAllocations, -1);
+      applySinkAllocations(
+        draft,
+        ledgerTransactionSinkAllocations(ledgerTransaction),
+      );
       return;
     }
 
