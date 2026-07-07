@@ -1,0 +1,218 @@
+import { z } from "zod";
+import {
+  CurrencyCodeSchema,
+  EntityIdSchema,
+  IsoDateSchema,
+  IsoDateTimeSchema,
+  MoneyAmountSchema,
+} from "../common.js";
+import { ColumnMappingSchema, NumberFormatSchema } from "../budget/entities.js";
+
+export const GenesisEpochSetPayloadSchema = z.object({
+  establishedOn: IsoDateSchema,
+  accountOpeningBalances: z.record(EntityIdSchema, MoneyAmountSchema),
+  sinkOpeningBalances: z.record(EntityIdSchema, MoneyAmountSchema),
+});
+export type GenesisEpochSetPayload = z.infer<typeof GenesisEpochSetPayloadSchema>;
+
+export const AccountAddedPayloadSchema = z.object({
+  accountId: EntityIdSchema,
+  name: z.string().min(1),
+  openingBalance: MoneyAmountSchema,
+  currency: CurrencyCodeSchema.optional(),
+  isLiquid: z.boolean().optional(),
+  genesisDate: IsoDateSchema,
+});
+export type AccountAddedPayload = z.infer<typeof AccountAddedPayloadSchema>;
+
+export const AccountBalanceAdjustedPayloadSchema = z.object({
+  accountId: EntityIdSchema,
+  newBalance: MoneyAmountSchema,
+  reason: z.string().optional(),
+});
+export type AccountBalanceAdjustedPayload = z.infer<
+  typeof AccountBalanceAdjustedPayloadSchema
+>;
+
+export const SinkCreatedPayloadSchema = z.discriminatedUnion("sinkType", [
+  z.object({
+    sinkId: EntityIdSchema,
+    name: z.string().min(1),
+    sinkType: z.literal("target_date"),
+    targetAmount: MoneyAmountSchema,
+    targetDate: IsoDateSchema,
+  }),
+  z.object({
+    sinkId: EntityIdSchema,
+    name: z.string().min(1),
+    sinkType: z.literal("recurring_bill"),
+    billAmount: MoneyAmountSchema,
+    periodMonths: z.number().int().positive(),
+  }),
+  z.object({
+    sinkId: EntityIdSchema,
+    name: z.string().min(1),
+    sinkType: z.literal("capped_reserve"),
+    monthlyTarget: MoneyAmountSchema,
+    cap: MoneyAmountSchema,
+  }),
+]);
+export type SinkCreatedPayload = z.infer<typeof SinkCreatedPayloadSchema>;
+
+export const SinkFundedPayloadSchema = z.object({
+  sinkId: EntityIdSchema,
+  amount: MoneyAmountSchema,
+  ledgerTransactionId: EntityIdSchema.nullable(),
+});
+export type SinkFundedPayload = z.infer<typeof SinkFundedPayloadSchema>;
+
+export const SinkWithdrawnPayloadSchema = z.object({
+  sinkId: EntityIdSchema,
+  amount: MoneyAmountSchema,
+  ledgerTransactionId: EntityIdSchema.nullable(),
+});
+export type SinkWithdrawnPayload = z.infer<typeof SinkWithdrawnPayloadSchema>;
+
+export const SinkCapUpdatedPayloadSchema = z.object({
+  sinkId: EntityIdSchema,
+  cap: MoneyAmountSchema,
+});
+export type SinkCapUpdatedPayload = z.infer<typeof SinkCapUpdatedPayloadSchema>;
+
+export const CategoryCreatedPayloadSchema = z.object({
+  categoryId: EntityIdSchema,
+  name: z.string().min(1),
+});
+export type CategoryCreatedPayload = z.infer<typeof CategoryCreatedPayloadSchema>;
+
+export const LifestyleTagCreatedPayloadSchema = z.object({
+  tagId: EntityIdSchema,
+  name: z.string().min(1),
+});
+export type LifestyleTagCreatedPayload = z.infer<
+  typeof LifestyleTagCreatedPayloadSchema
+>;
+
+export const EventTagCreatedPayloadSchema = z.object({
+  tagId: EntityIdSchema,
+  name: z.string().min(1),
+});
+export type EventTagCreatedPayload = z.infer<typeof EventTagCreatedPayloadSchema>;
+
+export const EventTagArchivedPayloadSchema = z.object({
+  tagId: EntityIdSchema,
+});
+export type EventTagArchivedPayload = z.infer<typeof EventTagArchivedPayloadSchema>;
+
+export const ParserTemplateConfiguredPayloadSchema = z.object({
+  templateId: EntityIdSchema,
+  accountId: EntityIdSchema,
+  delimiter: z.string().min(1),
+  encoding: z.string().min(1),
+  columnMappings: ColumnMappingSchema,
+  numberFormat: NumberFormatSchema,
+});
+export type ParserTemplateConfiguredPayload = z.infer<
+  typeof ParserTemplateConfiguredPayloadSchema
+>;
+
+export const RuleCreatedPayloadSchema = z.object({
+  ruleId: EntityIdSchema,
+  name: z.string().min(1),
+  keywords: z.array(z.string().min(1)),
+  categoryId: EntityIdSchema.nullable(),
+  sinkId: EntityIdSchema.nullable(),
+  lifestyleTagIds: z.array(EntityIdSchema),
+  eventTagIds: z.array(EntityIdSchema),
+});
+export type RuleCreatedPayload = z.infer<typeof RuleCreatedPayloadSchema>;
+
+export const RuleUpdatedPayloadSchema = RuleCreatedPayloadSchema;
+export type RuleUpdatedPayload = z.infer<typeof RuleUpdatedPayloadSchema>;
+
+export const ImportedRawTransactionSchema = z.object({
+  rawTransactionId: EntityIdSchema,
+  date: IsoDateSchema,
+  amount: MoneyAmountSchema,
+  description: z.string(),
+  rawRow: z.record(z.string(), z.string()),
+});
+export type ImportedRawTransaction = z.infer<typeof ImportedRawTransactionSchema>;
+
+export const TransactionsImportedPayloadSchema = z.object({
+  importBatchId: EntityIdSchema,
+  accountId: EntityIdSchema,
+  importedAt: IsoDateTimeSchema,
+  transactions: z.array(ImportedRawTransactionSchema).min(1),
+});
+export type TransactionsImportedPayload = z.infer<
+  typeof TransactionsImportedPayloadSchema
+>;
+
+export const LedgerTransactionCreatedPayloadSchema = z.object({
+  ledgerTransactionId: EntityIdSchema,
+  rawTransactionId: EntityIdSchema.nullable(),
+  accountId: EntityIdSchema,
+  date: IsoDateSchema,
+  amount: MoneyAmountSchema,
+  description: z.string(),
+  categoryId: EntityIdSchema.nullable(),
+  sinkId: EntityIdSchema.nullable(),
+  lifestyleTagIds: z.array(EntityIdSchema),
+  eventTagIds: z.array(EntityIdSchema),
+});
+export type LedgerTransactionCreatedPayload = z.infer<
+  typeof LedgerTransactionCreatedPayloadSchema
+>;
+
+export const LedgerTransactionUpdatedPayloadSchema = z.object({
+  ledgerTransactionId: EntityIdSchema,
+  categoryId: EntityIdSchema.nullable(),
+  sinkId: EntityIdSchema.nullable(),
+  lifestyleTagIds: z.array(EntityIdSchema),
+  eventTagIds: z.array(EntityIdSchema),
+  description: z.string().optional(),
+});
+export type LedgerTransactionUpdatedPayload = z.infer<
+  typeof LedgerTransactionUpdatedPayloadSchema
+>;
+
+export const SplitInitiatedPayloadSchema = z.object({
+  splitGroupId: EntityIdSchema,
+  parentLedgerTransactionId: EntityIdSchema,
+});
+export type SplitInitiatedPayload = z.infer<typeof SplitInitiatedPayloadSchema>;
+
+export const SplitLinkedPayloadSchema = z.object({
+  splitGroupId: EntityIdSchema,
+  linkedLedgerTransactionId: EntityIdSchema,
+});
+export type SplitLinkedPayload = z.infer<typeof SplitLinkedPayloadSchema>;
+
+export const VirtualSliceDefinedSchema = z.object({
+  sliceId: EntityIdSchema,
+  amount: MoneyAmountSchema,
+  description: z.string().optional(),
+  categoryId: EntityIdSchema.nullable(),
+  sinkId: EntityIdSchema.nullable(),
+  lifestyleTagIds: z.array(EntityIdSchema),
+  eventTagIds: z.array(EntityIdSchema),
+});
+
+export const IncomeSlicedPayloadSchema = z.object({
+  ledgerTransactionId: EntityIdSchema,
+  slices: z.array(VirtualSliceDefinedSchema).min(1),
+});
+export type IncomeSlicedPayload = z.infer<typeof IncomeSlicedPayloadSchema>;
+
+export const InternalTransferRecordedPayloadSchema = z.object({
+  transferId: EntityIdSchema,
+  fromAccountId: EntityIdSchema,
+  toAccountId: EntityIdSchema,
+  amount: MoneyAmountSchema,
+  date: IsoDateSchema,
+  description: z.string().optional(),
+});
+export type InternalTransferRecordedPayload = z.infer<
+  typeof InternalTransferRecordedPayloadSchema
+>;
