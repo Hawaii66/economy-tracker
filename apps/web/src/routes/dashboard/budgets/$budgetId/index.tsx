@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { api } from '@economy-tracker/convex/api'
 import type { Id } from '@economy-tracker/convex/dataModel'
+import { BudgetOverviewChartsClient } from '@/components/overview/BudgetOverviewChartsClient'
 import { getAccounts, getSinks } from '@/lib/budget-types'
 import { formatMoney } from '@/lib/format-money'
 import { guardRailFromState } from '@/lib/sinks'
@@ -150,6 +151,14 @@ function BudgetOverviewPage() {
           </Link>
         </p>
       </section>
+
+      <BudgetOverviewChartsClient
+        accounts={accounts}
+        sinks={sinks}
+        categories={(data.state.categories ?? {}) as Record<string, { name: string; color: string }>}
+        ledgerTransactions={data.state.ledgerTransactions}
+        guardRail={guardRail}
+      />
     </div>
   )
 }

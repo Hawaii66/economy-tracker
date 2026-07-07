@@ -107,6 +107,21 @@ export {
 export type { SinkFundingStatus } from "./budget/sinks.ts";
 
 export {
+  aggregateIncomeAndExpenses,
+  aggregateLedgerByAccount,
+  aggregateLedgerByCategory,
+  aggregateLedgerByMonth,
+  aggregateLedgerBySink,
+  aggregateLedgerByTag,
+  collectLedgerLines,
+} from "./budget/aggregations.ts";
+export type {
+  IncomeExpenseTotals,
+  LedgerAggregationRow,
+  LedgerDateRange,
+} from "./budget/aggregations.ts";
+
+export {
   AccountAddedPayloadSchema,
   AccountBalanceAdjustedPayloadSchema,
   AccountUpdatedPayloadSchema,

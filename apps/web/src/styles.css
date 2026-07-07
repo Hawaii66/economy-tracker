@@ -548,6 +548,16 @@ a {
   }
 }
 
+.budget-charts-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+}
+
+.budget-chart-panel {
+  min-height: 100%;
+}
+
 @theme inline {
   --font-heading: "Instrument Serif", Georgia, serif;
   --color-sidebar-ring: var(--sidebar-ring);

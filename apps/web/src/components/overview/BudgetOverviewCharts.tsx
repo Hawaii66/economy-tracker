@@ -1,0 +1,411 @@
+import type { ReactNode } from 'react'
+import {
+  aggregateIncomeAndExpenses,
+  aggregateLedgerByCategory,
+  aggregateLedgerBySink,
+} from 'budget-core'
+import { Cell, Label, Pie, PieChart, Bar, BarChart, XAxis, YAxis } from 'recharts'
+import {
+  type BudgetAccount,
+  type BudgetSink,
+  getLedgerTransactions,
+} from '@/lib/budget-types'
+import { buildChartConfig, toNamedAmounts } from '@/lib/chart-colors'
+import { formatMoney } from '@/lib/format-money'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart'
+
+type CategoryRecord = Record<string, { name: string; color: string }>
+
+type BudgetOverviewChartsProps = {
+  accounts: BudgetAccount[]
+  sinks: BudgetSink[]
+  categories: CategoryRecord
+  ledgerTransactions: unknown
+  guardRail: {
+    cash: number
+    sinkTotal: number
+    headroom: number
+    healthy: boolean
+  }
+}
+
+function ChartPanel({
+  title,
+  description,
+  children,
+  emptyMessage,
+  isEmpty,
+}: {
+  title: string
+  description: string
+  children: ReactNode
+  emptyMessage: string
+  isEmpty: boolean
+}) {
+  return (
+    <section className="budget-panel budget-chart-panel">
+      <div className="mb-4">
+        <h2 className="m-0 text-base font-semibold text-[var(--text)]">{title}</h2>
+        <p className="mt-1 mb-0 text-sm text-[var(--text-muted)]">{description}</p>
+      </div>
+      {isEmpty ? (
+        <p className="m-0 py-8 text-center text-sm text-[var(--text-muted)]">{emptyMessage}</p>
+      ) : (
+        children
+      )}
+    </section>
+  )
+}
+
+function BalancePieChart({
+  title,
+  description,
+  rows,
+  emptyMessage,
+}: {
+  title: string
+  description: string
+  rows: ReturnType<typeof toNamedAmounts>
+  emptyMessage: string
+}) {
+  const chartConfig = buildChartConfig(rows) satisfies ChartConfig
+  const total = rows.reduce((sum, row) => sum + row.amount, 0)
+
+  return (
+    <ChartPanel
+      title={title}
+      description={description}
+      emptyMessage={emptyMessage}
+      isEmpty={rows.length === 0}
+    >
+      <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[260px]">
+        <PieChart>
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                hideLabel
+                formatter={(value, _name, item) => (
+                  <div className="flex w-full items-center justify-between gap-4">
+                    <span className="text-muted-foreground">{item.payload.label}</span>
+                    <span className="font-mono font-medium text-foreground tabular-nums">
+                      {formatMoney(Number(value))}
+                    </span>
+                  </div>
+                )}
+              />
+            }
+          />
+          <Pie
+            data={rows}
+            dataKey="amount"
+            nameKey="label"
+            innerRadius={58}
+            outerRadius={92}
+            strokeWidth={2}
+            stroke="var(--border)"
+          >
+            {rows.map((entry) => (
+              <Cell key={entry.id} fill={entry.fill} />
+            ))}
+            <Label
+              content={({ viewBox }) => {
+                if (!viewBox || !('cx' in viewBox) || !('cy' in viewBox)) {
+                  return null
+                }
+
+                return (
+                  <text
+                    x={viewBox.cx}
+                    y={viewBox.cy}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                  >
+                    <tspan
+                      x={viewBox.cx}
+                      y={viewBox.cy}
+                      className="fill-[var(--text)] text-lg font-semibold"
+                    >
+                      {formatMoney(total)}
+                    </tspan>
+                    <tspan
+                      x={viewBox.cx}
+                      y={(viewBox.cy ?? 0) + 18}
+                      className="fill-[var(--text-muted)] text-xs"
+                    >
+                      Total
+                    </tspan>
+                  </text>
+                )
+              }}
+            />
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+    </ChartPanel>
+  )
+}
+
+function SpendingBarChart({
+  title,
+  description,
+  rows,
+  emptyMessage,
+}: {
+  title: string
+  description: string
+  rows: ReturnType<typeof toNamedAmounts>
+  emptyMessage: string
+}) {
+  const chartConfig = buildChartConfig(rows) satisfies ChartConfig
+
+  return (
+    <ChartPanel
+      title={title}
+      description={description}
+      emptyMessage={emptyMessage}
+      isEmpty={rows.length === 0}
+    >
+      <ChartContainer config={chartConfig} className="aspect-[4/3] max-h-[280px] w-full">
+        <BarChart data={rows} layout="vertical" margin={{ left: 8, right: 16 }}>
+          <XAxis type="number" hide />
+          <YAxis
+            type="category"
+            dataKey="label"
+            width={96}
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+          />
+          <ChartTooltip
+            cursor={false}
+            content={
+              <ChartTooltipContent
+                hideLabel
+                formatter={(value) => formatMoney(Number(value))}
+              />
+            }
+          />
+          <Bar dataKey="amount" radius={4}>
+            {rows.map((entry) => (
+              <Cell key={entry.id} fill={entry.fill} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+    </ChartPanel>
+  )
+}
+
+function GuardRailChart({
+  guardRail,
+}: {
+  guardRail: BudgetOverviewChartsProps['guardRail']
+}) {
+  const chartConfig = {
+    sinks: { label: 'Sink balances', color: 'var(--chart-2)' },
+    headroom: {
+      label: guardRail.headroom >= 0 ? 'Free headroom' : 'Over-allocated',
+      color: guardRail.headroom >= 0 ? 'var(--chart-1)' : '#E88A8A',
+    },
+  } satisfies ChartConfig
+
+  const chartData = [
+    {
+      label: 'Allocation',
+      sinks: guardRail.sinkTotal,
+      headroom: Math.max(0, guardRail.headroom),
+    },
+  ]
+
+  return (
+    <ChartPanel
+      title="Guard-rail allocation"
+      description="How account cash is split between virtual sinks and free headroom."
+      emptyMessage="Add accounts to see guard-rail allocation."
+      isEmpty={guardRail.cash <= 0 && guardRail.sinkTotal <= 0}
+    >
+      <ChartContainer config={chartConfig} className="aspect-[5/2] max-h-[220px] w-full">
+        <BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 16, top: 8 }}>
+          <XAxis
+            type="number"
+            hide
+            domain={[0, Math.max(guardRail.cash, guardRail.sinkTotal, 1)]}
+          />
+          <YAxis type="category" dataKey="label" hide width={0} />
+          <ChartTooltip
+            cursor={false}
+            content={
+              <ChartTooltipContent
+                formatter={(value, name) => (
+                  <div className="flex w-full items-center justify-between gap-4">
+                    <span className="text-muted-foreground">
+                      {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
+                    </span>
+                    <span className="font-mono font-medium text-foreground tabular-nums">
+                      {formatMoney(Number(value))}
+                    </span>
+                  </div>
+                )}
+              />
+            }
+          />
+          <Bar dataKey="sinks" stackId="guard" fill="var(--color-sinks)" radius={[4, 0, 0, 4]} />
+          <Bar
+            dataKey="headroom"
+            stackId="guard"
+            fill="var(--color-headroom)"
+            radius={[0, 4, 4, 0]}
+          />
+        </BarChart>
+      </ChartContainer>
+      {!guardRail.healthy ? (
+        <p className="mb-0 mt-3 text-sm text-[#E88A8A]">
+          Sinks exceed cash by {formatMoney(Math.abs(guardRail.headroom))}.
+        </p>
+      ) : null}
+    </ChartPanel>
+  )
+}
+
+function IncomeExpenseChart({
+  income,
+  expenses,
+}: {
+  income: number
+  expenses: number
+}) {
+  const chartConfig = {
+    income: { label: 'Income', color: 'var(--chart-1)' },
+    expenses: { label: 'Expenses', color: 'var(--chart-4)' },
+  } satisfies ChartConfig
+
+  const chartData = [{ label: 'Totals', income, expenses }]
+
+  return (
+    <ChartPanel
+      title="Income vs expenses"
+      description="Ledger totals excluding internal transfers."
+      emptyMessage="Import and categorize transactions to see income and spending."
+      isEmpty={income === 0 && expenses === 0}
+    >
+      <ChartContainer config={chartConfig} className="aspect-[4/3] max-h-[260px] w-full">
+        <BarChart data={chartData} margin={{ top: 8, right: 8, left: 8 }}>
+          <XAxis
+            dataKey="label"
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+          />
+          <YAxis hide />
+          <ChartTooltip
+            cursor={false}
+            content={
+              <ChartTooltipContent
+                formatter={(value, name) => (
+                  <div className="flex w-full items-center justify-between gap-4">
+                    <span className="text-muted-foreground">
+                      {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
+                    </span>
+                    <span className="font-mono font-medium text-foreground tabular-nums">
+                      {formatMoney(Number(value))}
+                    </span>
+                  </div>
+                )}
+              />
+            }
+          />
+          <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+          <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
+        </BarChart>
+      </ChartContainer>
+    </ChartPanel>
+  )
+}
+
+export function BudgetOverviewCharts({
+  accounts,
+  sinks,
+  categories,
+  ledgerTransactions,
+  guardRail,
+}: BudgetOverviewChartsProps) {
+  const ledger = getLedgerTransactions(ledgerTransactions)
+  const categoryLookup = (id: string) => categories[id]?.name ?? 'Uncategorized'
+  const categoryColor = (id: string) => categories[id]?.color
+  const sinkLookup = (id: string) => sinks.find((sink) => sink.id === id)?.name ?? 'Unknown sink'
+  const sinkColor = (id: string) => sinks.find((sink) => sink.id === id)?.color
+  const accountLookup = (id: string) =>
+    accounts.find((account) => account.id === id)?.name ?? 'Unknown account'
+  const accountColor = (id: string) => accounts.find((account) => account.id === id)?.color
+
+  const accountRows = toNamedAmounts(
+    accounts.map((account) => ({ id: account.id, amount: Math.max(0, account.balance) })),
+    accountLookup,
+    accountColor,
+  )
+
+  const sinkRows = toNamedAmounts(
+    sinks.map((sink) => ({ id: sink.id, amount: Math.max(0, sink.balance) })),
+    sinkLookup,
+    sinkColor,
+  )
+
+  const spendingByCategory = toNamedAmounts(
+    aggregateLedgerByCategory(ledger),
+    categoryLookup,
+    categoryColor,
+  ).slice(0, 8)
+
+  const spendingBySink = toNamedAmounts(
+    aggregateLedgerBySink(ledger),
+    sinkLookup,
+    sinkColor,
+  ).slice(0, 8)
+
+  const { income, expenses } = aggregateIncomeAndExpenses(ledger)
+  const hasLedgerData = ledger.length > 0
+
+  return (
+    <div className="budget-charts-grid">
+      <BalancePieChart
+        title="Account cash"
+        description="Physical cash held across accounts."
+        rows={accountRows}
+        emptyMessage="Add an account to see cash breakdown."
+      />
+      <BalancePieChart
+        title="Sink allocation"
+        description="Virtual funds reserved in sinks."
+        rows={sinkRows}
+        emptyMessage="Create sinks to see virtual allocation."
+      />
+      <GuardRailChart guardRail={guardRail} />
+      <IncomeExpenseChart income={income} expenses={expenses} />
+      <SpendingBarChart
+        title="Spending by category"
+        description="Categorized expenses from the ledger."
+        rows={spendingByCategory}
+        emptyMessage={
+          hasLedgerData
+            ? 'No categorized spending yet.'
+            : 'Import and categorize transactions to see spending breakdown.'
+        }
+      />
+      <SpendingBarChart
+        title="Spending by sink"
+        description="Expenses assigned to each sink."
+        rows={spendingBySink}
+        emptyMessage={
+          hasLedgerData
+            ? 'No sink-assigned spending yet.'
+            : 'Import and categorize transactions to see sink spending.'
+        }
+      />
+    </div>
+  )
+}
