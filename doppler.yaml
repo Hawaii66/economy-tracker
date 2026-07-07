@@ -1,0 +1,3 @@
+setup:
+  project: economy-tracker
+  config: dev

@@ -1,0 +1,15 @@
+{
+  "name": "@economy-tracker/convex",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p convex/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "convex": "^1.39.1"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "typescript": "^5.8.3"
+  }
+}

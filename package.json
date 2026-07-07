@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "build": "pnpm -r build",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "convex:dev": "bash ./economy-tracker.sh dev convex dev",
+    "convex:prod": "bash ./economy-tracker.sh prod convex dev",
+    "convex:deploy:prod": "bash ./economy-tracker.sh prod convex deploy"
   },
   "devDependencies": {
     "typescript": "^5.8.3"

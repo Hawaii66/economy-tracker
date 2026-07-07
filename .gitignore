@@ -3,3 +3,10 @@ dist
 *.tsbuildinfo
 .DS_Store
 .pnpm-store
+
+# Convex local CLI cache
+.convex/
+
+# local env files (secrets are in Doppler)
+.env*.local
+.env
