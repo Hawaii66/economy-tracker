@@ -3,7 +3,7 @@ import {
   CURRENT_EVENT_VERSION,
   EntityIdSchema,
   IsoDateTimeSchema,
-} from "../common.js";
+} from "../common.ts";
 import {
   AccountAddedPayloadSchema,
   AccountBalanceAdjustedPayloadSchema,
@@ -26,7 +26,7 @@ import {
   SplitInitiatedPayloadSchema,
   SplitLinkedPayloadSchema,
   TransactionsImportedPayloadSchema,
-} from "./payloads.js";
+} from "./payloads.ts";
 
 export const EVENT_TYPES = [
   "GENESIS_EPOCH_SET",

@@ -4,7 +4,7 @@ import {
   EntityIdSchema,
   IsoDateSchema,
   MoneyAmountSchema,
-} from "../common.js";
+} from "../common.ts";
 
 export const GenesisEpochSchema = z.object({
   establishedOn: IsoDateSchema,

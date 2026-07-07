@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CURRENT_STATE_VERSION } from "../common.js";
+import { CURRENT_STATE_VERSION } from "../common.ts";
 import {
   AccountSchema,
   CategorySchema,
@@ -12,7 +12,7 @@ import {
   RuleSchema,
   SinkSchema,
   SplitGroupSchema,
-} from "./entities.js";
+} from "./entities.ts";
 
 export const BudgetStateV1Schema = z.object({
   version: z.literal(1),

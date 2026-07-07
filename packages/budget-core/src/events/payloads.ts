@@ -5,8 +5,8 @@ import {
   IsoDateSchema,
   IsoDateTimeSchema,
   MoneyAmountSchema,
-} from "../common.js";
-import { ColumnMappingSchema, NumberFormatSchema } from "../budget/entities.js";
+} from "../common.ts";
+import { ColumnMappingSchema, NumberFormatSchema } from "../budget/entities.ts";
 
 export const GenesisEpochSetPayloadSchema = z.object({
   establishedOn: IsoDateSchema,

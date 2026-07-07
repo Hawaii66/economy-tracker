@@ -9,7 +9,7 @@ export {
   IsoDateTimeSchema,
   MembershipRoleSchema,
   MoneyAmountSchema,
-} from "./common.js";
+} from "./common.ts";
 export type {
   CurrencyCode,
   EntityId,
@@ -17,7 +17,7 @@ export type {
   IsoDateTime,
   MembershipRole,
   MoneyAmount,
-} from "./common.js";
+} from "./common.ts";
 
 export {
   AccountSchema,
@@ -34,7 +34,7 @@ export {
   SinkSchema,
   SplitGroupSchema,
   VirtualSliceSchema,
-} from "./budget/entities.js";
+} from "./budget/entities.ts";
 export type {
   Account,
   Category,
@@ -50,17 +50,17 @@ export type {
   Sink,
   SplitGroup,
   VirtualSlice,
-} from "./budget/entities.js";
+} from "./budget/entities.ts";
 
-export { BudgetMetadataSchema } from "./budget/metadata.js";
-export type { BudgetMetadata } from "./budget/metadata.js";
+export { BudgetMetadataSchema } from "./budget/metadata.ts";
+export type { BudgetMetadata } from "./budget/metadata.ts";
 
 export {
   BudgetStateSchema,
   BudgetStateV1Schema,
   INITIAL_BUDGET_STATE,
-} from "./budget/state.js";
-export type { BudgetState, BudgetStateV1 } from "./budget/state.js";
+} from "./budget/state.ts";
+export type { BudgetState, BudgetStateV1 } from "./budget/state.ts";
 
 export {
   AccountAddedPayloadSchema,
@@ -86,7 +86,7 @@ export {
   SplitLinkedPayloadSchema,
   TransactionsImportedPayloadSchema,
   VirtualSliceDefinedSchema,
-} from "./events/payloads.js";
+} from "./events/payloads.ts";
 export type {
   AccountAddedPayload,
   AccountBalanceAdjustedPayload,
@@ -110,7 +110,7 @@ export type {
   SplitInitiatedPayload,
   SplitLinkedPayload,
   TransactionsImportedPayload,
-} from "./events/payloads.js";
+} from "./events/payloads.ts";
 
 export {
   AccountAddedEventSchema,
@@ -139,10 +139,10 @@ export {
   SplitLinkedEventSchema,
   StoredEventSchema,
   TransactionsImportedEventSchema,
-} from "./events/domain-event.js";
+} from "./events/domain-event.ts";
 export type {
   AppendEventInput,
   DomainEvent,
   EventType,
   StoredEvent,
-} from "./events/domain-event.js";
+} from "./events/domain-event.ts";

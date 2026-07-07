@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { EntityIdSchema } from "../common.js";
+import { EntityIdSchema } from "../common.ts";
 
 export const BudgetMetadataSchema = z.object({
   name: z.string().min(1),
