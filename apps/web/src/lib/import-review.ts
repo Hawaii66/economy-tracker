@@ -4,7 +4,10 @@ import {
   type MatchableRule,
   type RuleAssignment,
 } from 'budget-core'
-import type { ParsedCsvRow } from '@/lib/csv-import'
+import {
+  extractVerificationAndSaldoFromRawRow,
+  type ParsedCsvRow,
+} from '@/lib/csv-import'
 
 export type { RuleAssignment as TransactionAssignment }
 
@@ -117,10 +120,92 @@ export function buildTransactionDedupeKey(row: TransactionDedupeFields): string 
   ].join('\u0001')
 }
 
+export function buildTransactionCoreDedupeKey(
+  row: Pick<TransactionDedupeFields, 'accountId' | 'date' | 'description' | 'amount'>,
+): string {
+  return [row.accountId, row.date, row.description, String(row.amount)].join('\u0001')
+}
+
+export type StoredRawTransactionForDedupe = {
+  accountId: string
+  date: string
+  amount: number
+  description: string
+  rawRow: Record<string, string>
+}
+
+export type StoredLedgerTransactionForDedupe = {
+  accountId: string
+  date: string
+  amount: number
+  description: string
+}
+
+function addTransactionDedupeKeys(keys: Set<string>, row: TransactionDedupeFields) {
+  keys.add(buildTransactionDedupeKey(row))
+  keys.add(buildTransactionCoreDedupeKey(row))
+}
+
+function isTransactionDuplicate(keys: ReadonlySet<string>, row: TransactionDedupeFields): boolean {
+  return (
+    keys.has(buildTransactionDedupeKey(row)) || keys.has(buildTransactionCoreDedupeKey(row))
+  )
+}
+
 export function collectTransactionDedupeKeys(
   rows: readonly TransactionDedupeFields[],
 ): Set<string> {
-  return new Set(rows.map((row) => buildTransactionDedupeKey(row)))
+  const keys = new Set<string>()
+  for (const row of rows) {
+    addTransactionDedupeKeys(keys, row)
+  }
+  return keys
+}
+
+export function collectStoredTransactionDedupeKeys(
+  rawTransactions: readonly StoredRawTransactionForDedupe[],
+  ledgerTransactions: readonly StoredLedgerTransactionForDedupe[],
+): Set<string> {
+  const keys = new Set<string>()
+
+  for (const transaction of rawTransactions) {
+    const { verificationNumber, saldo } = extractVerificationAndSaldoFromRawRow(
+      transaction.rawRow,
+    )
+    addTransactionDedupeKeys(keys, {
+      accountId: transaction.accountId,
+      date: transaction.date,
+      description: transaction.description,
+      amount: transaction.amount,
+      verificationNumber,
+      saldo,
+    })
+  }
+
+  for (const transaction of ledgerTransactions) {
+    addTransactionDedupeKeys(keys, {
+      accountId: transaction.accountId,
+      date: transaction.date,
+      description: transaction.description,
+      amount: transaction.amount,
+      verificationNumber: '',
+      saldo: '',
+    })
+  }
+
+  return keys
+}
+
+export function mergeTransactionDedupeKeys(
+  ...keySets: ReadonlyArray<ReadonlySet<string>>
+): Set<string> {
+  const keys = new Set<string>()
+  for (const keySet of keySets) {
+    for (const key of keySet) {
+      keys.add(key)
+    }
+  }
+  return keys
 }
 
 export function dedupeReviewRows<T extends TransactionDedupeFields>(
@@ -132,13 +217,12 @@ export function dedupeReviewRows<T extends TransactionDedupeFields>(
   let duplicateSkippedCount = 0
 
   for (const row of rows) {
-    const key = buildTransactionDedupeKey(row)
-    if (keys.has(key)) {
+    if (isTransactionDuplicate(keys, row)) {
       duplicateSkippedCount += 1
       continue
     }
 
-    keys.add(key)
+    addTransactionDedupeKeys(keys, row)
     kept.push(row)
   }
 

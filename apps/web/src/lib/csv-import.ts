@@ -23,6 +23,7 @@ export type CsvParseResult = {
 const DATE_COLUMN_PATTERNS = [
   /^datum$/i,
   /^date$/i,
+  /^bokf[oö]ringsdatum$/i,
   /^bokf[oö]ringsdag$/i,
   /^bokf[oö]rd$/i,
   /^transaktionsdatum$/i,
@@ -122,6 +123,57 @@ function readMappedValue(rawRow: Record<string, string>, column: string | null):
   return (rawRow[column] ?? '').trim()
 }
 
+function buildConvexSafeRawRow(
+  headers: string[],
+  values: string[],
+): Record<string, string> {
+  const row: Record<string, string> = {
+    columns: JSON.stringify(headers),
+  }
+
+  for (let index = 0; index < headers.length; index += 1) {
+    row[`c${index}`] = values[index] ?? ''
+  }
+
+  return row
+}
+
+function decodeRawRowColumns(
+  rawRow: Record<string, string>,
+): { headers: string[]; values: Record<string, string> } {
+  if (typeof rawRow.columns === 'string') {
+    try {
+      const headers = JSON.parse(rawRow.columns) as string[]
+      const values: Record<string, string> = {}
+      for (const [index, header] of headers.entries()) {
+        values[header] = (rawRow[`c${index}`] ?? '').trim()
+      }
+      return { headers, values }
+    } catch {
+      return { headers: [], values: {} }
+    }
+  }
+
+  const headers = Object.keys(rawRow)
+  const values = Object.fromEntries(
+    headers.map((header) => [header, (rawRow[header] ?? '').trim()]),
+  )
+  return { headers, values }
+}
+
+export function extractVerificationAndSaldoFromRawRow(
+  rawRow: Record<string, string>,
+): { verificationNumber: string; saldo: string } {
+  const { headers, values } = decodeRawRowColumns(rawRow)
+  const verificationColumn = findColumn(headers, VERIFICATION_NUMBER_COLUMN_PATTERNS)
+  const saldoColumn = findColumn(headers, SALDO_COLUMN_PATTERNS)
+
+  return {
+    verificationNumber: verificationColumn ? (values[verificationColumn] ?? '').trim() : '',
+    saldo: saldoColumn ? (values[saldoColumn] ?? '').trim() : '',
+  }
+}
+
 function parseAmount(value: string): number | null {
   return parseDecimalStringToMinorUnits(value)
 }
@@ -195,7 +247,7 @@ export function parseCsvText(text: string): CsvParseResult {
       description,
       verificationNumber: readMappedValue(rawRow, verificationNumberColumn),
       saldo: readMappedValue(rawRow, saldoColumn),
-      rawRow,
+      rawRow: buildConvexSafeRawRow(headers, values),
     })
   }
 
