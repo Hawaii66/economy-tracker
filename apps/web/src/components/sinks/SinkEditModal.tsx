@@ -1,29 +1,39 @@
 import { useEffect, useState } from 'react'
+import { SinkIcon as SinkIconGlyph } from '@/components/sinks/SinkIcon'
+import { SinkIconField } from '@/components/sinks/SinkIconField'
+import { ColorField } from '@/components/taxonomy/ColorField'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { fieldHintClassName, inputClassName } from '@/components/taxonomy/form-styles'
 import { parseDecimalStringToMinorUnits } from '@/lib/format-money'
+import { DEFAULT_SINK_ICON, type SinkIcon } from '@/lib/sink-icons'
 import { SINK_TYPE_OPTIONS, type SinkType } from '@/lib/sinks'
+import { DEFAULT_ENTITY_COLOR } from '@/lib/taxonomy'
+
+type SinkAppearance = {
+  color: string
+  icon: SinkIcon
+}
 
 export type SinkCreateFormValues =
-  | {
+  | ({
       name: string
       sinkType: 'target_date'
       targetAmount: number
       targetDate: string
-    }
-  | {
+    } & SinkAppearance)
+  | ({
       name: string
       sinkType: 'recurring_bill'
       billAmount: number
       periodMonths: number
-    }
-  | {
+    } & SinkAppearance)
+  | ({
       name: string
       sinkType: 'capped_reserve'
       monthlyTarget: number
       cap: number
-    }
+    } & SinkAppearance)
 
 type SinkEditModalProps = {
   open: boolean
@@ -34,6 +44,8 @@ type SinkEditModalProps = {
 
 export function SinkEditModal({ open, onOpenChange, onSave, isSaving }: SinkEditModalProps) {
   const [name, setName] = useState('')
+  const [color, setColor] = useState(DEFAULT_ENTITY_COLOR)
+  const [icon, setIcon] = useState<SinkIcon>(DEFAULT_SINK_ICON)
   const [sinkType, setSinkType] = useState<SinkType>('target_date')
   const [targetAmountInput, setTargetAmountInput] = useState('2 000,00')
   const [targetDate, setTargetDate] = useState('')
@@ -48,6 +60,8 @@ export function SinkEditModal({ open, onOpenChange, onSave, isSaving }: SinkEdit
     }
 
     setName('')
+    setColor(DEFAULT_ENTITY_COLOR)
+    setIcon(DEFAULT_SINK_ICON)
     setSinkType('target_date')
     setTargetAmountInput('2 000,00')
     setTargetDate('')
@@ -88,6 +102,8 @@ export function SinkEditModal({ open, onOpenChange, onSave, isSaving }: SinkEdit
     if (sinkType === 'target_date' && targetAmount !== null && targetDate) {
       await onSave({
         name: trimmedName,
+        color,
+        icon,
         sinkType,
         targetAmount,
         targetDate,
@@ -95,6 +111,8 @@ export function SinkEditModal({ open, onOpenChange, onSave, isSaving }: SinkEdit
     } else if (sinkType === 'recurring_bill' && billAmount !== null && periodMonths > 0) {
       await onSave({
         name: trimmedName,
+        color,
+        icon,
         sinkType,
         billAmount,
         periodMonths,
@@ -102,6 +120,8 @@ export function SinkEditModal({ open, onOpenChange, onSave, isSaving }: SinkEdit
     } else if (sinkType === 'capped_reserve' && monthlyTarget !== null && cap !== null) {
       await onSave({
         name: trimmedName,
+        color,
+        icon,
         sinkType,
         monthlyTarget,
         cap,
@@ -132,6 +152,34 @@ export function SinkEditModal({ open, onOpenChange, onSave, isSaving }: SinkEdit
             autoFocus
           />
         </label>
+
+        <label className="flex flex-col gap-1 text-sm font-semibold text-[var(--text)]">
+          Icon
+          <SinkIconField value={icon} onChange={setIcon} disabled={isSaving} />
+        </label>
+
+        <label className="flex flex-col gap-1 text-sm font-semibold text-[var(--text)]">
+          Color
+          <ColorField value={color} onChange={setColor} disabled={isSaving} />
+        </label>
+
+        <div
+          className="flex items-center gap-3 rounded-xl border border-[var(--border)] px-3 py-2.5"
+          style={{ backgroundColor: `${color}22` }}
+        >
+          <span
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg"
+            style={{ backgroundColor: `${color}33`, color }}
+          >
+            <SinkIconGlyph icon={icon} className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <p className="m-0 truncate text-sm font-semibold text-[var(--text)]">
+              {name.trim() || 'Sink preview'}
+            </p>
+            <p className="m-0 text-xs text-[var(--text-muted)]">Preview</p>
+          </div>
+        </div>
 
         <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
           <legend className="mb-1 text-sm font-semibold text-[var(--text)]">Sink type</legend>

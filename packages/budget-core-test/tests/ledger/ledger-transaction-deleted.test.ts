@@ -6,6 +6,7 @@ import {
 import {
   accountAddedEvent,
   ledgerTransactionCreatedEvent,
+  sinkCreatedEvent,
 } from "../../helpers/domain-event.js";
 
 describe("ledger transaction deletion", () => {
@@ -43,8 +44,22 @@ describe("ledger transaction deletion", () => {
           ],
         },
       },
-      ledgerTransactionCreatedEvent({
+      sinkCreatedEvent({
         sequenceNumber: 3,
+        userId: "user-1",
+        createdAt: "2026-01-02T00:00:00.500Z",
+        payload: {
+          sinkId: "sink-groceries",
+          name: "Groceries",
+          color: "#5EAEFF",
+          icon: "shopping-cart",
+          sinkType: "capped_reserve",
+          monthlyTarget: 5_000,
+          cap: 20_000,
+        },
+      }),
+      ledgerTransactionCreatedEvent({
+        sequenceNumber: 4,
         userId: "user-1",
         createdAt: "2026-01-02T00:00:01.000Z",
         payload: {
@@ -55,7 +70,7 @@ describe("ledger transaction deletion", () => {
           amount: -1_500,
           description: "Grocery store",
           categoryId: "cat-groceries",
-          sinkId: null,
+          sinkId: "sink-groceries",
           lifestyleTagIds: [],
           eventTagIds: [],
         },
@@ -63,7 +78,7 @@ describe("ledger transaction deletion", () => {
       {
         eventType: "LEDGER_TRANSACTION_DELETED",
         v: 1,
-        sequenceNumber: 4,
+        sequenceNumber: 5,
         userId: "user-1",
         createdAt: "2026-01-02T00:00:02.000Z",
         payload: {

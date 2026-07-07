@@ -7,6 +7,7 @@ import {
   IsoDateSchema,
   IsoDateTimeSchema,
   MoneyAmountSchema,
+  SinkIconSchema,
 } from "../common.ts";
 import { ColumnMappingSchema, NumberFormatSchema } from "../budget/entities.ts";
 
@@ -47,24 +48,28 @@ export type AccountBalanceAdjustedPayload = z.infer<
   typeof AccountBalanceAdjustedPayloadSchema
 >;
 
+const sinkCreatedBaseFields = {
+  sinkId: EntityIdSchema,
+  name: z.string().min(1),
+  color: HexColorSchema,
+  icon: SinkIconSchema,
+};
+
 export const SinkCreatedPayloadSchema = z.discriminatedUnion("sinkType", [
   z.object({
-    sinkId: EntityIdSchema,
-    name: z.string().min(1),
+    ...sinkCreatedBaseFields,
     sinkType: z.literal("target_date"),
     targetAmount: MoneyAmountSchema,
     targetDate: IsoDateSchema,
   }),
   z.object({
-    sinkId: EntityIdSchema,
-    name: z.string().min(1),
+    ...sinkCreatedBaseFields,
     sinkType: z.literal("recurring_bill"),
     billAmount: MoneyAmountSchema,
     periodMonths: z.number().int().positive(),
   }),
   z.object({
-    sinkId: EntityIdSchema,
-    name: z.string().min(1),
+    ...sinkCreatedBaseFields,
     sinkType: z.literal("capped_reserve"),
     monthlyTarget: MoneyAmountSchema,
     cap: MoneyAmountSchema,

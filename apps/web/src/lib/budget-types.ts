@@ -1,9 +1,14 @@
+import { normalizeSinkIcon } from 'budget-core'
+import { type AccountIcon } from '@/lib/accounts'
+import { DEFAULT_SINK_ICON, type SinkIcon } from '@/lib/sink-icons'
+import { DEFAULT_ENTITY_COLOR } from '@/lib/taxonomy'
+
 export type BudgetAccount = {
   id: string
   name: string
   description: string
   color: string
-  icon: string
+  icon: AccountIcon
   balance: number
   currency: string
   genesisDate: string
@@ -12,6 +17,8 @@ export type BudgetAccount = {
 export type BudgetTargetDateSink = {
   id: string
   name: string
+  color: string
+  icon: SinkIcon
   balance: number
   lastFundedOn: string | null
   sinkType: 'target_date'
@@ -22,6 +29,8 @@ export type BudgetTargetDateSink = {
 export type BudgetRecurringBillSink = {
   id: string
   name: string
+  color: string
+  icon: SinkIcon
   balance: number
   lastFundedOn: string | null
   sinkType: 'recurring_bill'
@@ -32,6 +41,8 @@ export type BudgetRecurringBillSink = {
 export type BudgetCappedReserveSink = {
   id: string
   name: string
+  color: string
+  icon: SinkIcon
   balance: number
   lastFundedOn: string | null
   sinkType: 'capped_reserve'
@@ -109,6 +120,8 @@ export function getSinks(sinks: unknown): BudgetSink[] {
     .map((sink) => ({
       ...sink,
       lastFundedOn: sink.lastFundedOn ?? null,
+      color: sink.color ?? DEFAULT_ENTITY_COLOR,
+      icon: normalizeSinkIcon(sink.icon ?? DEFAULT_SINK_ICON) as SinkIcon,
     }))
     .sort((left, right) => left.name.localeCompare(right.name))
 }

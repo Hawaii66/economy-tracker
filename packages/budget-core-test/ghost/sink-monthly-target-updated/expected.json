@@ -14,6 +14,8 @@
       "sink-car": {
         "balance": 0,
         "cap": 50000,
+        "color": "#6BCB9A",
+        "icon": "wrench",
         "id": "sink-car",
         "lastFundedOn": null,
         "monthlyTarget": 7500,

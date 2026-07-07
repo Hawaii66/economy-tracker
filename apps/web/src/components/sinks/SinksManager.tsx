@@ -4,6 +4,7 @@ import { ArrowDownCircle, ArrowUpCircle, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '@economy-tracker/convex/api'
 import type { Id } from '@economy-tracker/convex/dataModel'
+import { SinkIcon } from '@/components/sinks/SinkIcon'
 import { SinkCapEditModal, type CappedReserveEditValues } from '@/components/sinks/SinkCapEditModal'
 import {
   SinkEditModal,
@@ -195,7 +196,7 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
 
   async function handleCreateSink(values: SinkCreateFormValues) {
     const sinkId = generateEntityId()
-    const base = { sinkId, name: values.name }
+    const base = { sinkId, name: values.name, color: values.color, icon: values.icon }
 
     const payload =
       values.sinkType === 'target_date'
@@ -403,18 +404,26 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
                     </button>
                   ) : null}
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="m-0 truncate text-base font-semibold text-[var(--text)]">
-                          {sink.name}
-                        </h3>
-                        <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-xs font-medium text-[var(--text-muted)]">
-                          {sinkTypeLabel(sink)}
-                        </span>
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span
+                        className="flex size-10 shrink-0 items-center justify-center rounded-xl"
+                        style={{ backgroundColor: `${sink.color}22`, color: sink.color }}
+                      >
+                        <SinkIcon icon={sink.icon} />
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="m-0 truncate text-base font-semibold text-[var(--text)]">
+                            {sink.name}
+                          </h3>
+                          <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-xs font-medium text-[var(--text-muted)]">
+                            {sinkTypeLabel(sink)}
+                          </span>
+                        </div>
+                        <p className="m-0 mt-1 text-sm font-semibold text-[var(--text)]">
+                          {formatMoney(sink.balance)}
+                        </p>
                       </div>
-                      <p className="m-0 mt-1 text-sm font-semibold text-[var(--text)]">
-                        {formatMoney(sink.balance)}
-                      </p>
                     </div>
                     <div className="flex shrink-0 flex-wrap gap-1">
                       <Button size="sm" variant="outline" onClick={() => openFundSink(sink)}>

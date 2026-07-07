@@ -12,6 +12,7 @@ import {
   totalSinkBalance,
 } from 'budget-core'
 import { todayIsoDate } from '@/lib/accounts'
+import { DEFAULT_SINK_ICON } from '@/lib/sink-icons'
 
 export {
   guardRailFromState,
@@ -81,4 +82,4 @@ export function sinkProgressLabel(sink: Sink): string {
   }
 }
 
-export { todayIsoDate }
+export { todayIsoDate, DEFAULT_SINK_ICON }

@@ -20,6 +20,8 @@ export const events = [
     payload: {
       sinkId: "sink-car",
       name: "Car repairs",
+      color: "#6BCB9A",
+      icon: "wrench",
       sinkType: "capped_reserve",
       monthlyTarget: 5_000,
       cap: 50_000,

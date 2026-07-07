@@ -26,6 +26,8 @@ describe("sink funding schedule", () => {
     const sink = {
       id: "sink-car",
       name: "Car repairs",
+      color: "#6BCB9A",
+      icon: "wrench" as const,
       balance: 0,
       lastFundedOn: "2026-01-10",
       sinkType: "capped_reserve" as const,
@@ -45,6 +47,8 @@ describe("sink funding schedule", () => {
     const sink = {
       id: "sink-car",
       name: "Car repairs",
+      color: "#6BCB9A",
+      icon: "wrench" as const,
       balance: 50_000,
       lastFundedOn: "2026-01-10",
       sinkType: "capped_reserve" as const,

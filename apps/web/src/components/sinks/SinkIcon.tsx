@@ -1,0 +1,90 @@
+import {
+  Baby,
+  Bike,
+  BookOpen,
+  Briefcase,
+  Bus,
+  Calendar,
+  Car,
+  Coffee,
+  Dog,
+  Dumbbell,
+  Flower2,
+  Fuel,
+  Gamepad2,
+  Gift,
+  GraduationCap,
+  Hammer,
+  HeartPulse,
+  House,
+  Music,
+  Paintbrush,
+  Palmtree,
+  Plane,
+  Receipt,
+  Scissors,
+  Shield,
+  Shirt,
+  ShoppingCart,
+  Smartphone,
+  Stethoscope,
+  Target,
+  TreePine,
+  Tv,
+  Umbrella,
+  Utensils,
+  Wrench,
+  Zap,
+  type LucideIcon,
+} from 'lucide-react'
+import { DEFAULT_SINK_ICON, type SinkIcon as SinkIconName } from '@/lib/sink-icons'
+import { cn } from '@/lib/utils'
+
+const ICON_MAP: Record<SinkIconName, LucideIcon> = {
+  house: House,
+  car: Car,
+  fuel: Fuel,
+  bus: Bus,
+  bike: Bike,
+  utensils: Utensils,
+  'shopping-cart': ShoppingCart,
+  coffee: Coffee,
+  plane: Plane,
+  palmtree: Palmtree,
+  'heart-pulse': HeartPulse,
+  stethoscope: Stethoscope,
+  'graduation-cap': GraduationCap,
+  'book-open': BookOpen,
+  baby: Baby,
+  shirt: Shirt,
+  scissors: Scissors,
+  zap: Zap,
+  shield: Shield,
+  umbrella: Umbrella,
+  gift: Gift,
+  dog: Dog,
+  dumbbell: Dumbbell,
+  tv: Tv,
+  'gamepad-2': Gamepad2,
+  music: Music,
+  wrench: Wrench,
+  hammer: Hammer,
+  paintbrush: Paintbrush,
+  smartphone: Smartphone,
+  'tree-pine': TreePine,
+  'flower-2': Flower2,
+  briefcase: Briefcase,
+  calendar: Calendar,
+  receipt: Receipt,
+  target: Target,
+}
+
+type SinkIconProps = {
+  icon: SinkIconName
+  className?: string
+}
+
+export function SinkIcon({ icon, className }: SinkIconProps) {
+  const Icon = ICON_MAP[icon] ?? ICON_MAP[DEFAULT_SINK_ICON]
+  return <Icon className={cn('size-5', className)} aria-hidden />
+}

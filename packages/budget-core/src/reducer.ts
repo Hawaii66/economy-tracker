@@ -1,4 +1,8 @@
 import { produce, type Draft } from "immer";
+import {
+  isFullyUnassignedAssignment,
+  type LedgerAssignment,
+} from "./budget/assignment.ts";
 import { DEFAULT_ACCOUNT_APPEARANCE, type Sink } from "./budget/entities.ts";
 import {
   assertGuardRailFundingAllowed,
@@ -70,6 +74,25 @@ function requireLifestyleTag(draft: DraftBudgetState, tagId: EntityId) {
   return lifestyleTag;
 }
 
+function assertTransactionSinkConnected(
+  draft: DraftBudgetState,
+  assignment: LedgerAssignment,
+  options: { exemptWhenFullyUnassigned?: boolean } = {},
+) {
+  if (
+    options.exemptWhenFullyUnassigned &&
+    isFullyUnassignedAssignment(assignment)
+  ) {
+    return;
+  }
+
+  if (!assignment.sinkId) {
+    throw new Error("Transactions must be connected to a sink");
+  }
+
+  requireSink(draft, assignment.sinkId);
+}
+
 function deleteLedgerTransaction(
   draft: DraftBudgetState,
   ledgerTransactionId: EntityId,
@@ -136,6 +159,8 @@ function sinkFromCreatedPayload(payload: SinkCreatedPayload): Sink {
   const base = {
     id: payload.sinkId,
     name: payload.name,
+    color: payload.color,
+    icon: payload.icon,
     balance: 0,
     lastFundedOn: null,
   };
@@ -384,6 +409,9 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
 
     case "LEDGER_TRANSACTION_CREATED": {
       const { payload } = event;
+      assertTransactionSinkConnected(draft, payload, {
+        exemptWhenFullyUnassigned: true,
+      });
       requireAccount(draft, payload.accountId).balance += payload.amount;
       draft.ledgerTransactions[payload.ledgerTransactionId] = {
         id: payload.ledgerTransactionId,
@@ -409,6 +437,9 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
         draft,
         payload.ledgerTransactionId,
       );
+      if (!ledgerTransaction.internalTransferGroupId) {
+        assertTransactionSinkConnected(draft, payload);
+      }
       ledgerTransaction.categoryId = payload.categoryId;
       ledgerTransaction.sinkId = payload.sinkId;
       ledgerTransaction.lifestyleTagIds = payload.lifestyleTagIds;
@@ -454,6 +485,9 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
 
     case "INCOME_SLICED": {
       const { payload } = event;
+      for (const slice of payload.slices) {
+        assertTransactionSinkConnected(draft, slice);
+      }
       requireLedgerTransaction(draft, payload.ledgerTransactionId).virtualSlices =
         payload.slices.map((slice) => ({
           id: slice.sliceId,

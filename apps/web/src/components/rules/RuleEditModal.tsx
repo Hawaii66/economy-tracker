@@ -14,7 +14,7 @@ export type RuleFormValues = {
 }
 
 type CategoryOption = { id: string; name: string; color: string }
-type SinkOption = { id: string; name: string }
+type SinkOption = { id: string; name: string; color: string; icon: string }
 type TagOption = { id: string; name: string; color: string; kind: 'permanent' | 'temporary' }
 
 type RuleEditModalProps = {
@@ -114,12 +114,9 @@ export function RuleEditModal({
     onOpenChange(false)
   }
 
-  const hasActions =
-    isInternalTransfer ||
-    categoryId !== null ||
-    sinkId !== null ||
-    selectedLifestyleTagIds.length > 0 ||
-    selectedEventTagIds.length > 0
+  const canSave =
+    subtext.trim().length > 0 &&
+    (isInternalTransfer || sinkId !== null)
 
   return (
     <Modal
@@ -129,7 +126,7 @@ export function RuleEditModal({
       description={
         isInternalTransfer
           ? 'When imported transaction text contains this subtext, the transaction is pre-marked as an internal transfer.'
-          : 'When imported transaction text contains this subtext, the selected category and tags are applied automatically.'
+          : 'When imported transaction text contains this subtext, the selected category, sink, and tags are applied automatically.'
       }
       className="w-[min(36rem,calc(100vw-2rem))]"
     >
@@ -193,8 +190,9 @@ export function RuleEditModal({
                 value={sinkId ?? ''}
                 onChange={(event) => setSinkId(event.target.value || null)}
                 disabled={isSaving}
+                required
               >
-                <option value="">None</option>
+                <option value="">Select sink…</option>
                 {sinks.map((sink) => (
                   <option key={sink.id} value={sink.id}>
                     {sink.name}
@@ -202,7 +200,7 @@ export function RuleEditModal({
                 ))}
               </select>
               <p className={fieldHintClassName}>
-                Optionally route matching expenses to a virtual sink on import.
+                Route matching expenses to a virtual sink on import.
               </p>
             </label>
 
@@ -273,7 +271,7 @@ export function RuleEditModal({
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSaving || !subtext.trim() || !hasActions}>
+          <Button type="submit" disabled={isSaving || !canSave}>
             {isSaving ? 'Saving…' : isCreate ? 'Add rule' : 'Save changes'}
           </Button>
         </div>

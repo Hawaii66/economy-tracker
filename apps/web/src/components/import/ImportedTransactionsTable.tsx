@@ -6,7 +6,7 @@ import {
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { Fragment, useEffect, useState } from 'react'
 import TransactionEditPanel from '@/components/transactions/TransactionEditPanel'
-import type { CategoryOption, TagOption } from '@/components/transactions/types'
+import type { CategoryOption, SinkOption, TagOption } from '@/components/transactions/types'
 import type { BudgetRawTransaction } from '@/lib/budget-types'
 import { formatMoney } from '@/lib/format-money'
 import { findInternalTransferCandidates } from '@/lib/internal-transfer'
@@ -23,6 +23,7 @@ type ImportedTransactionsTableProps = {
   transactions: BudgetRawTransaction[]
   accountNames: Record<string, string>
   categories: CategoryOption[]
+  sinks: SinkOption[]
   tags: TagOption[]
   rules: readonly MatchableRule[]
   rulesById: Record<string, { name: string; keywords: string[]; ruleType?: 'categorize' | 'internal_transfer' }>
@@ -53,6 +54,7 @@ export default function ImportedTransactionsTable({
   transactions,
   accountNames,
   categories,
+  sinks,
   tags,
   rules,
   rulesById,
@@ -303,6 +305,7 @@ export default function ImportedTransactionsTable({
                         transaction={transaction}
                         splitRows={splitRows}
                         categories={categories}
+                        sinks={sinks}
                         tags={tags}
                         rules={rules}
                         matchedRuleLabel={

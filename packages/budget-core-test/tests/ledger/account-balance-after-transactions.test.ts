@@ -4,6 +4,7 @@ import {
   accountAddedEvent,
   categoryCreatedEvent,
   ledgerTransactionCreatedEvent,
+  sinkCreatedEvent,
 } from "../../helpers/domain-event.js";
 
 describe("account balance after transactions", () => {
@@ -30,8 +31,22 @@ describe("account balance after transactions", () => {
           name: "Groceries",
         },
       }),
-      ledgerTransactionCreatedEvent({
+      sinkCreatedEvent({
         sequenceNumber: 3,
+        userId: "user-1",
+        createdAt: "2026-01-01T00:02:00.000Z",
+        payload: {
+          sinkId: "sink-groceries",
+          name: "Groceries",
+          color: "#5EAEFF",
+          icon: "shopping-cart",
+          sinkType: "capped_reserve",
+          monthlyTarget: 5_000,
+          cap: 20_000,
+        },
+      }),
+      ledgerTransactionCreatedEvent({
+        sequenceNumber: 4,
         userId: "user-1",
         createdAt: "2026-01-02T00:00:00.000Z",
         payload: {
@@ -48,7 +63,7 @@ describe("account balance after transactions", () => {
         },
       }),
       ledgerTransactionCreatedEvent({
-        sequenceNumber: 4,
+        sequenceNumber: 5,
         userId: "user-1",
         createdAt: "2026-01-03T00:00:00.000Z",
         payload: {
@@ -59,7 +74,7 @@ describe("account balance after transactions", () => {
           amount: -5_000,
           description: "Groceries",
           categoryId: "cat-groceries",
-          sinkId: null,
+          sinkId: "sink-groceries",
           lifestyleTagIds: [],
           eventTagIds: [],
         },

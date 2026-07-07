@@ -1,4 +1,7 @@
+import type { SinkIcon } from '@/lib/sink-icons'
+
 export type CategoryOption = { id: string; name: string; color: string }
+export type SinkOption = { id: string; name: string; color: string; icon: SinkIcon }
 export type TagOption = {
   id: string
   name: string

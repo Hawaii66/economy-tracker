@@ -8,6 +8,8 @@ export const events = [
     payload: {
       sinkId: "sink-vacation",
       name: "Vacation",
+      color: "#5EAEFF",
+      icon: "plane",
       sinkType: "target_date",
       targetAmount: 200_000,
       targetDate: "2026-12-01",
@@ -20,6 +22,8 @@ export const events = [
     payload: {
       sinkId: "sink-netflix",
       name: "Netflix",
+      color: "#E8B84A",
+      icon: "tv",
       sinkType: "recurring_bill",
       billAmount: 1_200,
       periodMonths: 12,
@@ -32,6 +36,8 @@ export const events = [
     payload: {
       sinkId: "sink-car",
       name: "Car repairs",
+      color: "#6BCB9A",
+      icon: "wrench",
       sinkType: "capped_reserve",
       monthlyTarget: 5_000,
       cap: 50_000,

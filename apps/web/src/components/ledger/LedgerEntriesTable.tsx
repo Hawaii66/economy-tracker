@@ -1,8 +1,9 @@
 import { ArrowLeftRight, Link2, Trash2 } from 'lucide-react'
 import { Fragment, useState } from 'react'
+import { SinkIcon } from '@/components/sinks/SinkIcon'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
-import type { CategoryOption, TagOption } from '@/components/transactions/types'
+import type { CategoryOption, SinkOption, TagOption } from '@/components/transactions/types'
 import type {
   BudgetInternalTransferGroup,
   BudgetLedgerTransaction,
@@ -18,6 +19,7 @@ type LedgerEntriesTableProps = {
   transactions: BudgetLedgerTransaction[]
   accountNames: Record<string, string>
   categoriesById: Record<string, CategoryOption>
+  sinksById: Record<string, SinkOption>
   tagsById: Record<string, TagOption>
   ledgerById: Map<string, BudgetLedgerTransaction>
   internalTransferGroups: BudgetInternalTransferGroup[]
@@ -62,6 +64,37 @@ function CategoryCell({
       <span className="inline-flex items-center gap-1.5 text-sm">
         <ColorDot color={category.color} />
         {category.name}
+      </span>
+    </td>
+  )
+}
+
+function SinkCell({
+  sinkId,
+  sinksById,
+}: {
+  sinkId: string | null
+  sinksById: Record<string, SinkOption>
+}) {
+  if (!sinkId) {
+    return <td className="text-[var(--text-muted)]">{EMPTY}</td>
+  }
+
+  const sink = sinksById[sinkId]
+  if (!sink) {
+    return <td className="text-[var(--text-muted)]">{shortEntityId(sinkId)}</td>
+  }
+
+  return (
+    <td>
+      <span className="inline-flex items-center gap-1.5 text-sm">
+        <span
+          className="inline-flex size-5 shrink-0 items-center justify-center rounded-md"
+          style={{ backgroundColor: `${sink.color}22`, color: sink.color }}
+        >
+          <SinkIcon icon={sink.icon} className="size-3.5" />
+        </span>
+        {sink.name}
       </span>
     </td>
   )
@@ -223,10 +256,12 @@ function SplitGroupLink({
 function SliceRow({
   slice,
   categoriesById,
+  sinksById,
   tagsById,
 }: {
   slice: BudgetVirtualSlice
   categoriesById: Record<string, CategoryOption>
+  sinksById: Record<string, SinkOption>
   tagsById: Record<string, TagOption>
 }) {
   return (
@@ -243,6 +278,7 @@ function SliceRow({
         {formatMoney(slice.amount)}
       </td>
       <CategoryCell categoryId={slice.categoryId} categoriesById={categoriesById} />
+      <SinkCell sinkId={slice.sinkId} sinksById={sinksById} />
       <TagsCell
         lifestyleTagIds={slice.lifestyleTagIds}
         eventTagIds={slice.eventTagIds}
@@ -258,6 +294,7 @@ export default function LedgerEntriesTable({
   transactions,
   accountNames,
   categoriesById,
+  sinksById,
   tagsById,
   ledgerById,
   internalTransferGroups,
@@ -306,7 +343,7 @@ export default function LedgerEntriesTable({
   return (
     <>
       <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
-        <table className="w-full min-w-[48rem] border-collapse text-sm">
+        <table className="w-full min-w-[52rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-[var(--border)] bg-[rgba(27,24,23,0.9)] text-left text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
               <th className="px-3 py-2">Date</th>
@@ -314,6 +351,7 @@ export default function LedgerEntriesTable({
               <th className="px-3 py-2">Description</th>
               <th className="px-3 py-2 text-right">Amount</th>
               <th className="px-3 py-2">Category</th>
+              <th className="px-3 py-2">Sink</th>
               <th className="px-3 py-2">Tags</th>
               <th className="px-3 py-2">Links</th>
               <th className="px-3 py-2 text-right">Actions</th>
@@ -361,10 +399,12 @@ export default function LedgerEntriesTable({
                       <>
                         <td className="text-[var(--text-muted)]">{EMPTY}</td>
                         <td className="text-[var(--text-muted)]">{EMPTY}</td>
+                        <td className="text-[var(--text-muted)]">{EMPTY}</td>
                       </>
                     ) : (
                       <>
                         <CategoryCell categoryId={ledger.categoryId} categoriesById={categoriesById} />
+                        <SinkCell sinkId={ledger.sinkId} sinksById={sinksById} />
                         <TagsCell
                           lifestyleTagIds={ledger.lifestyleTagIds}
                           eventTagIds={ledger.eventTagIds}
@@ -407,6 +447,7 @@ export default function LedgerEntriesTable({
                       key={slice.id}
                       slice={slice}
                       categoriesById={categoriesById}
+                      sinksById={sinksById}
                       tagsById={tagsById}
                     />
                   ))}
