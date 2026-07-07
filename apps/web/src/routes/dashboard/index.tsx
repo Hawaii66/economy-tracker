@@ -35,13 +35,15 @@ function DashboardHome() {
   }
 
   return (
-    <main className="page-wrap px-4 pb-8 pt-8">
-      <section className="panel rounded-2xl p-6 sm:p-8">
+    <div className="budget-page">
+      <header className="budget-page-header">
         <p className="kicker mb-2">Your budgets</p>
-        <h1 className="display-title mb-6 text-3xl text-[var(--text)] sm:text-4xl">
+        <h1 className="display-title m-0 text-3xl text-[var(--text)] sm:text-4xl">
           Dashboard
         </h1>
+      </header>
 
+      <section className="budget-panel">
         <form
           className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end"
           onSubmit={(event) => void handleCreateBudget(event)}
@@ -64,16 +66,16 @@ function DashboardHome() {
         {isPending ? (
           <p className="m-0 text-sm text-[var(--text-muted)]">Loading budgets…</p>
         ) : budgets && budgets.length > 0 ? (
-          <ul className="m-0 grid list-none gap-3 p-0">
+          <ul className="m-0 grid list-none gap-3 p-0 lg:grid-cols-2 xl:grid-cols-3">
             {budgets.map((budget) => (
               <li key={budget._id}>
                 <Link
                   to="/dashboard/budgets/$budgetId"
                   params={{ budgetId: budget._id }}
-                  className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 no-underline transition hover:-translate-y-0.5 hover:border-[rgba(94,174,255,0.35)]"
+                  className="flex h-full items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 no-underline transition hover:-translate-y-0.5 hover:border-[rgba(94,174,255,0.35)]"
                 >
                   <span className="font-semibold text-[var(--text)]">{budget.name}</span>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                  <span className="text-xs font-semibold tracking-wide text-[var(--text-muted)] uppercase">
                     {budget.role}
                   </span>
                 </Link>
@@ -86,6 +88,6 @@ function DashboardHome() {
           </p>
         )}
       </section>
-    </main>
+    </div>
   )
 }
