@@ -83,6 +83,24 @@ export {
 export type { BudgetState, BudgetStateV1 } from "./budget/state.ts";
 
 export {
+  assertGuardRailFundingAllowed,
+  assertGuardRailStateHealthy,
+  calendarMonthsBetween,
+  guardRailFromState,
+  isGuardRailHealthy,
+  maxFundableAmount,
+  missedFundingMonths,
+  monthsUntilTarget,
+  sinkCatchUpAmount,
+  sinkFundingPromptLabel,
+  sinkFundingStatus,
+  sinkMonthlyPace,
+  totalAccountCash,
+  totalSinkBalance,
+} from "./budget/sinks.ts";
+export type { SinkFundingStatus } from "./budget/sinks.ts";
+
+export {
   AccountAddedPayloadSchema,
   AccountBalanceAdjustedPayloadSchema,
   AccountUpdatedPayloadSchema,
@@ -108,6 +126,7 @@ export {
   SinkCapUpdatedPayloadSchema,
   SinkCreatedPayloadSchema,
   SinkFundedPayloadSchema,
+  SinkMonthlyTargetUpdatedPayloadSchema,
   SinkWithdrawnPayloadSchema,
   SplitInitiatedPayloadSchema,
   SplitLinkedPayloadSchema,
@@ -140,6 +159,7 @@ export type {
   SinkCapUpdatedPayload,
   SinkCreatedPayload,
   SinkFundedPayload,
+  SinkMonthlyTargetUpdatedPayload,
   SinkWithdrawnPayload,
   SplitInitiatedPayload,
   SplitLinkedPayload,
@@ -175,6 +195,7 @@ export {
   SinkCapUpdatedEventSchema,
   SinkCreatedEventSchema,
   SinkFundedEventSchema,
+  SinkMonthlyTargetUpdatedEventSchema,
   SinkWithdrawnEventSchema,
   SplitInitiatedEventSchema,
   SplitLinkedEventSchema,

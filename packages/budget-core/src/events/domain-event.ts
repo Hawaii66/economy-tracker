@@ -29,6 +29,7 @@ import {
   SinkCapUpdatedPayloadSchema,
   SinkCreatedPayloadSchema,
   SinkFundedPayloadSchema,
+  SinkMonthlyTargetUpdatedPayloadSchema,
   SinkWithdrawnPayloadSchema,
   SplitInitiatedPayloadSchema,
   SplitLinkedPayloadSchema,
@@ -44,6 +45,7 @@ export const EVENT_TYPES = [
   "SINK_FUNDED",
   "SINK_WITHDRAWN",
   "SINK_CAP_UPDATED",
+  "SINK_MONTHLY_TARGET_UPDATED",
   "CATEGORY_CREATED",
   "CATEGORY_UPDATED",
   "LIFESTYLE_TAG_CREATED",
@@ -121,6 +123,12 @@ export const SinkWithdrawnEventSchema = z.object({
 export const SinkCapUpdatedEventSchema = z.object({
   eventType: z.literal("SINK_CAP_UPDATED"),
   payload: SinkCapUpdatedPayloadSchema,
+  ...domainEventBase,
+});
+
+export const SinkMonthlyTargetUpdatedEventSchema = z.object({
+  eventType: z.literal("SINK_MONTHLY_TARGET_UPDATED"),
+  payload: SinkMonthlyTargetUpdatedPayloadSchema,
   ...domainEventBase,
 });
 
@@ -253,6 +261,7 @@ export const DomainEventSchema = z.discriminatedUnion("eventType", [
   SinkFundedEventSchema,
   SinkWithdrawnEventSchema,
   SinkCapUpdatedEventSchema,
+  SinkMonthlyTargetUpdatedEventSchema,
   CategoryCreatedEventSchema,
   CategoryUpdatedEventSchema,
   LifestyleTagCreatedEventSchema,
@@ -327,6 +336,11 @@ export const AppendEventInputSchema = z.discriminatedUnion("eventType", [
   z.object({
     eventType: z.literal("SINK_CAP_UPDATED"),
     payload: SinkCapUpdatedPayloadSchema,
+    ...appendEventBase,
+  }),
+  z.object({
+    eventType: z.literal("SINK_MONTHLY_TARGET_UPDATED"),
+    payload: SinkMonthlyTargetUpdatedPayloadSchema,
     ...appendEventBase,
   }),
   z.object({

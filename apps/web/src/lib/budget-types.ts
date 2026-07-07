@@ -9,6 +9,41 @@ export type BudgetAccount = {
   genesisDate: string
 }
 
+export type BudgetTargetDateSink = {
+  id: string
+  name: string
+  balance: number
+  lastFundedOn: string | null
+  sinkType: 'target_date'
+  targetAmount: number
+  targetDate: string
+}
+
+export type BudgetRecurringBillSink = {
+  id: string
+  name: string
+  balance: number
+  lastFundedOn: string | null
+  sinkType: 'recurring_bill'
+  billAmount: number
+  periodMonths: number
+}
+
+export type BudgetCappedReserveSink = {
+  id: string
+  name: string
+  balance: number
+  lastFundedOn: string | null
+  sinkType: 'capped_reserve'
+  monthlyTarget: number
+  cap: number
+}
+
+export type BudgetSink =
+  | BudgetTargetDateSink
+  | BudgetRecurringBillSink
+  | BudgetCappedReserveSink
+
 export type BudgetRawTransaction = {
   id: string
   accountId: string
@@ -67,6 +102,15 @@ function asRecord<T>(value: unknown): Record<string, T> {
 
 export function getAccounts(accounts: unknown): BudgetAccount[] {
   return Object.values(asRecord<BudgetAccount>(accounts))
+}
+
+export function getSinks(sinks: unknown): BudgetSink[] {
+  return Object.values(asRecord<BudgetSink>(sinks))
+    .map((sink) => ({
+      ...sink,
+      lastFundedOn: sink.lastFundedOn ?? null,
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name))
 }
 
 export function getRawTransactions(rawTransactions: unknown): BudgetRawTransaction[] {

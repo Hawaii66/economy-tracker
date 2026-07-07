@@ -8,11 +8,13 @@ export type RuleFormValues = {
   subtext: string
   ruleType: RuleType
   categoryId: string | null
+  sinkId: string | null
   lifestyleTagIds: string[]
   eventTagIds: string[]
 }
 
 type CategoryOption = { id: string; name: string; color: string }
+type SinkOption = { id: string; name: string }
 type TagOption = { id: string; name: string; color: string; kind: 'permanent' | 'temporary' }
 
 type RuleEditModalProps = {
@@ -23,10 +25,12 @@ type RuleEditModalProps = {
     keywords: string[]
     ruleType?: RuleType
     categoryId: string | null
+    sinkId: string | null
     lifestyleTagIds: string[]
     eventTagIds: string[]
   }
   categories: CategoryOption[]
+  sinks: SinkOption[]
   tags: TagOption[]
   onSave: (values: RuleFormValues) => Promise<void>
   isSaving: boolean
@@ -46,6 +50,7 @@ export function RuleEditModal({
   onOpenChange,
   rule,
   categories,
+  sinks,
   tags,
   onSave,
   isSaving,
@@ -54,6 +59,7 @@ export function RuleEditModal({
   const [subtext, setSubtext] = useState(rule?.keywords[0] ?? '')
   const [ruleType, setRuleType] = useState<RuleType>(rule?.ruleType ?? 'categorize')
   const [categoryId, setCategoryId] = useState<string | null>(rule?.categoryId ?? null)
+  const [sinkId, setSinkId] = useState<string | null>(rule?.sinkId ?? null)
   const [selectedLifestyleTagIds, setSelectedLifestyleTagIds] = useState<string[]>(
     rule?.lifestyleTagIds ?? [],
   )
@@ -69,6 +75,7 @@ export function RuleEditModal({
     setSubtext(rule?.keywords[0] ?? '')
     setRuleType(rule?.ruleType ?? 'categorize')
     setCategoryId(rule?.categoryId ?? null)
+    setSinkId(rule?.sinkId ?? null)
     setSelectedLifestyleTagIds(rule?.lifestyleTagIds ?? [])
     setSelectedEventTagIds(rule?.eventTagIds ?? [])
   }, [open, rule])
@@ -100,6 +107,7 @@ export function RuleEditModal({
       subtext: trimmedSubtext,
       ruleType,
       categoryId: isInternalTransfer ? null : categoryId,
+      sinkId: isInternalTransfer ? null : sinkId,
       lifestyleTagIds: isInternalTransfer ? [] : selectedLifestyleTagIds,
       eventTagIds: isInternalTransfer ? [] : selectedEventTagIds,
     })
@@ -109,6 +117,7 @@ export function RuleEditModal({
   const hasActions =
     isInternalTransfer ||
     categoryId !== null ||
+    sinkId !== null ||
     selectedLifestyleTagIds.length > 0 ||
     selectedEventTagIds.length > 0
 
@@ -175,6 +184,26 @@ export function RuleEditModal({
                   </option>
                 ))}
               </select>
+            </label>
+
+            <label className="flex flex-col gap-1 text-sm font-semibold text-[var(--text)]">
+              Sink
+              <select
+                className={inputClassName}
+                value={sinkId ?? ''}
+                onChange={(event) => setSinkId(event.target.value || null)}
+                disabled={isSaving}
+              >
+                <option value="">None</option>
+                {sinks.map((sink) => (
+                  <option key={sink.id} value={sink.id}>
+                    {sink.name}
+                  </option>
+                ))}
+              </select>
+              <p className={fieldHintClassName}>
+                Optionally route matching expenses to a virtual sink on import.
+              </p>
             </label>
 
             {tags.length > 0 ? (

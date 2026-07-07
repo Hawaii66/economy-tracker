@@ -1,8 +1,11 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { api } from '@economy-tracker/convex/api'
 import type { Id } from '@economy-tracker/convex/dataModel'
+import { getAccounts, getSinks } from '@/lib/budget-types'
+import { formatMoney } from '@/lib/format-money'
+import { guardRailFromState } from '@/lib/sinks'
 
 export const Route = createFileRoute('/dashboard/budgets/$budgetId/')({
   component: BudgetOverviewPage,
@@ -37,6 +40,12 @@ function BudgetOverviewPage() {
   const accountCount = Object.keys(data.state.accounts ?? {}).length
   const sinkCount = Object.keys(data.state.sinks ?? {}).length
   const categoryCount = Object.keys(data.state.categories ?? {}).length
+
+  const accounts = getAccounts(data.state.accounts)
+  const sinks = getSinks(data.state.sinks)
+  const accountsRecord = Object.fromEntries(accounts.map((account) => [account.id, account]))
+  const sinksRecord = Object.fromEntries(sinks.map((sink) => [sink.id, sink]))
+  const guardRail = guardRailFromState({ accounts: accountsRecord, sinks: sinksRecord })
 
   return (
     <div className="budget-page">
@@ -74,12 +83,71 @@ function BudgetOverviewPage() {
         </section>
       </div>
 
-      <section className="budget-panel budget-panel-wide">
-        <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Budget guard-rail</h2>
-        <p className="mt-2 mb-0 max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
-          Total cash across all physical accounts must cover total virtual sink balances. Sinks live
-          only in the app — money can sit in any account and move when needed. This dashboard will
-          surface allocation health and sink pacing as features are built out.
+      <section
+        className={`budget-panel budget-panel-wide border ${
+          guardRail.healthy
+            ? 'border-[rgba(94,174,255,0.35)]'
+            : 'border-[rgba(232,138,138,0.45)]'
+        }`}
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Budget guard-rail</h2>
+            <p className="mt-2 mb-0 max-w-3xl text-sm leading-relaxed text-[var(--text-muted)]">
+              Total cash across physical accounts must cover total virtual sink balances. Sinks live
+              only in the app — money can sit in any account and move when needed.
+            </p>
+          </div>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-bold tracking-wide uppercase ${
+              guardRail.healthy
+                ? 'bg-[rgba(94,174,255,0.15)] text-[var(--accent)]'
+                : 'bg-[rgba(232,138,138,0.15)] text-[#E88A8A]'
+            }`}
+          >
+            {guardRail.healthy ? 'Healthy' : 'Over-allocated'}
+          </span>
+        </div>
+
+        <dl className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div>
+            <dt className="text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
+              Account cash
+            </dt>
+            <dd className="m-0 mt-1 text-lg font-semibold text-[var(--text)]">
+              {formatMoney(guardRail.cash)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
+              Sink balances
+            </dt>
+            <dd className="m-0 mt-1 text-lg font-semibold text-[var(--text)]">
+              {formatMoney(guardRail.sinkTotal)}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
+              Headroom
+            </dt>
+            <dd
+              className={`m-0 mt-1 text-lg font-semibold ${
+                guardRail.headroom >= 0 ? 'text-[var(--text)]' : 'text-[#E88A8A]'
+              }`}
+            >
+              {formatMoney(guardRail.headroom)}
+            </dd>
+          </div>
+        </dl>
+
+        <p className="mb-0 mt-4 text-sm">
+          <Link
+            to="/dashboard/budgets/$budgetId/sinks"
+            params={{ budgetId }}
+            className="font-semibold text-[var(--accent)] no-underline hover:underline"
+          >
+            Manage sinks
+          </Link>
         </p>
       </section>
     </div>

@@ -119,6 +119,8 @@ start_web() {
   fi
 
   echo "[economy-tracker] web env=${ENVIRONMENT}"
+  echo "[economy-tracker] building budget-core..."
+  (cd "$ROOT_DIR" && economy_tracker_pnpm --filter budget-core build)
   (cd "$WEB_DIR" && economy_tracker_pnpm "${args[@]}") &
   SERVICE_PID="$!"
 }

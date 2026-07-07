@@ -36,28 +36,29 @@ export const DEFAULT_ACCOUNT_APPEARANCE = {
 } as const;
 export type Account = z.infer<typeof AccountSchema>;
 
-const TargetDateSinkSchema = z.object({
+const sinkBaseFields = {
   id: EntityIdSchema,
   name: z.string().min(1),
   balance: MoneyAmountSchema,
+  lastFundedOn: IsoDateSchema.nullable(),
+};
+
+const TargetDateSinkSchema = z.object({
+  ...sinkBaseFields,
   sinkType: z.literal("target_date"),
   targetAmount: MoneyAmountSchema,
   targetDate: IsoDateSchema,
 });
 
 const RecurringBillSinkSchema = z.object({
-  id: EntityIdSchema,
-  name: z.string().min(1),
-  balance: MoneyAmountSchema,
+  ...sinkBaseFields,
   sinkType: z.literal("recurring_bill"),
   billAmount: MoneyAmountSchema,
   periodMonths: z.number().int().positive(),
 });
 
 const CappedReserveSinkSchema = z.object({
-  id: EntityIdSchema,
-  name: z.string().min(1),
-  balance: MoneyAmountSchema,
+  ...sinkBaseFields,
   sinkType: z.literal("capped_reserve"),
   monthlyTarget: MoneyAmountSchema,
   cap: MoneyAmountSchema,
