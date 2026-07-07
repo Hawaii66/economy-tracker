@@ -146,3 +146,9 @@ export type {
   EventType,
   StoredEvent,
 } from "./events/domain-event.ts";
+
+export {
+  reduceBudgetState,
+  replayBudgetEvents,
+  applyEventToDraft,
+} from "./reducer.ts";
