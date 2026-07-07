@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server.js";
 import {
   getBudgetMembership,
+  requireAuthUser,
   requireBudget,
   requireBudgetMembership,
   requireUser,
@@ -23,12 +24,12 @@ const clientEventValidator = v.object({
 export const getBudgetState = query({
   args: {
     budgetId: v.id("budgets"),
-    userId: v.id("users"),
     timeTravelSeq: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    const { userId } = await requireAuthUser(ctx);
     await requireBudget(ctx, args.budgetId);
-    await requireBudgetMembership(ctx, args.budgetId, args.userId, [
+    await requireBudgetMembership(ctx, args.budgetId, userId, [
       "OWNER",
       "EDITOR",
       "VIEWER",
@@ -41,19 +42,19 @@ export const getBudgetState = query({
 export const appendEvents = mutation({
   args: {
     budgetId: v.id("budgets"),
-    userId: v.id("users"),
     events: v.array(clientEventValidator),
   },
   handler: async (ctx, args) => {
+    const { userId } = await requireAuthUser(ctx);
     const budget = await requireBudget(ctx, args.budgetId);
-    await requireBudgetMembership(ctx, args.budgetId, args.userId, [
+    await requireBudgetMembership(ctx, args.budgetId, userId, [
       "OWNER",
       "EDITOR",
     ]);
 
     return appendBudgetEvents(ctx, {
       budget,
-      userId: args.userId,
+      userId,
       events: args.events,
     });
   },
@@ -62,11 +63,11 @@ export const appendEvents = mutation({
 export const createSnapshot = mutation({
   args: {
     budgetId: v.id("budgets"),
-    userId: v.id("users"),
   },
   handler: async (ctx, args) => {
+    const { userId } = await requireAuthUser(ctx);
     const budget = await requireBudget(ctx, args.budgetId);
-    await requireBudgetMembership(ctx, args.budgetId, args.userId, [
+    await requireBudgetMembership(ctx, args.budgetId, userId, [
       "OWNER",
       "EDITOR",
     ]);
@@ -98,15 +99,14 @@ const membershipRoleValidator = v.union(
 export const createBudget = mutation({
   args: {
     name: v.string(),
-    userId: v.id("users"),
   },
   handler: async (ctx, args) => {
-    await requireUser(ctx, args.userId);
+    const { userId } = await requireAuthUser(ctx);
 
     const createdAt = new Date().toISOString();
     const budgetId = await ctx.db.insert("budgets", {
       name: args.name,
-      createdById: args.userId,
+      createdById: userId,
       isBranch: false,
       parentBudgetId: null,
       branchedAtSequence: null,
@@ -116,7 +116,7 @@ export const createBudget = mutation({
 
     await ctx.db.insert("budgetMemberships", {
       budgetId,
-      userId: args.userId,
+      userId,
       role: "OWNER",
     });
 
@@ -129,13 +129,13 @@ export const createBudget = mutation({
 export const addMember = mutation({
   args: {
     budgetId: v.id("budgets"),
-    actorUserId: v.id("users"),
     userId: v.id("users"),
     role: membershipRoleValidator,
   },
   handler: async (ctx, args) => {
+    const { userId: actorUserId } = await requireAuthUser(ctx);
     await requireBudget(ctx, args.budgetId);
-    await requireBudgetMembership(ctx, args.budgetId, args.actorUserId, [
+    await requireBudgetMembership(ctx, args.budgetId, actorUserId, [
       "OWNER",
     ]);
     await requireUser(ctx, args.userId);
@@ -163,11 +163,11 @@ export const branchBudget = mutation({
   args: {
     parentBudgetId: v.id("budgets"),
     branchName: v.string(),
-    userId: v.id("users"),
   },
   handler: async (ctx, args) => {
+    const { userId } = await requireAuthUser(ctx);
     const parentBudget = await requireBudget(ctx, args.parentBudgetId);
-    await requireBudgetMembership(ctx, args.parentBudgetId, args.userId, [
+    await requireBudgetMembership(ctx, args.parentBudgetId, userId, [
       "OWNER",
       "EDITOR",
     ]);
@@ -177,7 +177,7 @@ export const branchBudget = mutation({
 
     const branchBudgetId = await ctx.db.insert("budgets", {
       name: args.branchName,
-      createdById: args.userId,
+      createdById: userId,
       isBranch: true,
       parentBudgetId: args.parentBudgetId,
       branchedAtSequence: parentBudget.currentSequence,
@@ -187,7 +187,7 @@ export const branchBudget = mutation({
 
     await ctx.db.insert("budgetMemberships", {
       budgetId: branchBudgetId,
-      userId: args.userId,
+      userId,
       role: "OWNER",
     });
 

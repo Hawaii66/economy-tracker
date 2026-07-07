@@ -1,7 +1,20 @@
+import { getAuthUserId } from "@convex-dev/auth/server";
 import type { Doc, Id } from "../_generated/dataModel.js";
 import type { MutationCtx, QueryCtx } from "../_generated/server.js";
 
 type BudgetCtx = QueryCtx | MutationCtx;
+
+export async function requireAuthUser(ctx: BudgetCtx) {
+  const userId = await getAuthUserId(ctx);
+  if (userId === null) {
+    throw new Error("Authentication required");
+  }
+  const user = await ctx.db.get(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return { userId, user };
+}
 
 export async function requireBudget(ctx: BudgetCtx, budgetId: Id<"budgets">) {
   const budget = await ctx.db.get(budgetId);

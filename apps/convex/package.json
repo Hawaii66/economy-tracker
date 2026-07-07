@@ -3,9 +3,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "typecheck": "tsc -p convex/tsconfig.json --noEmit"
+    "typecheck": "tsc -p convex/tsconfig.json --noEmit",
+    "auth:setup": "node node_modules/@convex-dev/auth/dist/bin.cjs"
   },
   "dependencies": {
+    "@auth/core": "0.41.1",
+    "@convex-dev/auth": "^0.0.94",
     "budget-core": "workspace:*",
     "convex": "^1.39.1"
   },
