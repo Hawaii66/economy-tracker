@@ -12,7 +12,35 @@ A highly customized, self-hosted web application for personal finance management
 
 ---
 
-## 2. Core Features
+## 2. Visual Design: The "Analog Darkroom" Palette
+
+Shared with glimt-v2's darkroom base, with blue accents instead of orange. The interface is dark, rich, and tactile — warm darkroom tones instead of harsh pure whites and blacks.
+
+```text
+BACKGROUNDS:
+█ #0E0D0C -> Primary Background (Pure, warm, dark-mode slate)
+█ #1B1817 -> Secondary Background (Frames, folders, and cards)
+
+HIGHLIGHT COLORS:
+█ #5EAEFF -> Electric Blue (Active buttons and ready states)
+█ #2E7AD4 -> Deep Azure (Secondary highlight accents and active lines)
+
+TYPOGRAPHY COLORS:
+█ #F2EFEA -> Cream White (Primary text)
+█ #8C847E -> Film Gray (Secondary text, timestamps, metadata)
+█ #0E1014 -> Deep Charcoal (Text on blue buttons)
+
+BORDERS:
+█ #262220 -> Surface border
+```
+
+**Typography:** DM Sans (UI) and Instrument Serif (display headings).
+
+**Implementation:** `apps/web/src/styles.css` defines CSS variables; `apps/web/src/lib/theme.ts` exports the same palette for programmatic use.
+
+---
+
+## 3. Core Features
 
 ### 1. Unified Sinks Budgeting ("Everything is a Sink")
 Instead of separating "monthly budgets" from "savings goals", all expense projections are structured as **Sinks**. A sink is a virtual envelope. The app supports three distinct Sink behaviors:
@@ -38,7 +66,7 @@ Instead of separating "monthly budgets" from "savings goals", all expense projec
 
 ---
 
-## 3. Real-World Problems and Solutions
+## 4. Real-World Problems and Solutions
 
 ### Problem A: Bank CSV Formats and Locales
 **Problem:** Swedish banks utilize semi-colons `;` instead of commas, format numbers as `"1 250,50"` instead of decimal system floats, and export in `ISO-8859-1` character tables.
