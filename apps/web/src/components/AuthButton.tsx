@@ -10,7 +10,7 @@ export default function AuthButton() {
   return (
     <>
       <AuthLoading>
-        <span className="text-sm text-[var(--sea-ink-soft)]">…</span>
+        <span className="text-sm text-[var(--text-muted)]">…</span>
       </AuthLoading>
       <Unauthenticated>
         <SignInButton />
@@ -37,7 +37,7 @@ function SignedInMenu() {
   return (
     <div className="flex items-center gap-2">
       {user?.name ? (
-        <span className="hidden max-w-32 truncate text-sm text-[var(--sea-ink-soft)] sm:inline">
+        <span className="hidden max-w-32 truncate text-sm text-[var(--text-muted)] sm:inline">
           {user.name}
         </span>
       ) : null}

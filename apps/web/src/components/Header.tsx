@@ -1,18 +1,17 @@
 import { Link } from '@tanstack/react-router'
 import { Authenticated } from 'convex/react'
 import AuthButton from './AuthButton'
-import ThemeToggle from './ThemeToggle'
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 border-b border-[var(--line)] bg-[var(--header-bg)] px-4 backdrop-blur-lg">
+    <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[rgba(14,13,12,0.82)] px-4 backdrop-blur-lg">
       <nav className="page-wrap flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:py-4">
         <h2 className="m-0 flex-shrink-0 text-base font-semibold tracking-tight">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--chip-line)] bg-[var(--chip-bg)] px-3 py-1.5 text-sm text-[var(--sea-ink)] no-underline shadow-[0_8px_24px_rgba(30,90,72,0.08)] sm:px-4 sm:py-2"
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--text)] no-underline sm:px-4 sm:py-2"
           >
-            <span className="h-2 w-2 rounded-full bg-[linear-gradient(90deg,#56c6be,#7ed3bf)]" />
+            <span className="h-2 w-2 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)]" />
             Economy Tracker
           </Link>
         </h2>
@@ -46,13 +45,12 @@ export default function Header() {
           <Authenticated>
             <Link
               to="/dashboard"
-              className="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:bg-[var(--chip-bg)]"
+              className="rounded-lg px-2.5 py-1.5 text-sm font-semibold text-[var(--text)] no-underline transition hover:bg-[var(--surface)]"
             >
               Dashboard
             </Link>
           </Authenticated>
           <AuthButton />
-          <ThemeToggle />
         </div>
       </nav>
     </header>

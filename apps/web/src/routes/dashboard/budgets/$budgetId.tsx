@@ -18,34 +18,34 @@ function BudgetPage() {
 
   return (
     <main className="page-wrap px-4 pb-8 pt-8">
-      <section className="island-shell rounded-2xl p-6 sm:p-8">
+      <section className="panel rounded-2xl p-6 sm:p-8">
         <Link
           to="/dashboard"
-          className="mb-4 inline-block text-sm font-semibold text-[var(--lagoon-deep)] no-underline hover:underline"
+          className="mb-4 inline-block text-sm font-semibold text-[var(--accent)] no-underline hover:underline"
         >
           ← All budgets
         </Link>
 
         {isPending ? (
-          <p className="m-0 text-sm text-[var(--sea-ink-soft)]">Loading budget…</p>
+          <p className="m-0 text-sm text-[var(--text-muted)]">Loading budget…</p>
         ) : isError || !data ? (
-          <p className="m-0 text-sm text-[var(--sea-ink-soft)]">
+          <p className="m-0 text-sm text-[var(--text-muted)]">
             This budget could not be loaded. You may not have access.
           </p>
         ) : (
           <>
-            <p className="island-kicker mb-2">Budget</p>
-            <h1 className="display-title mb-6 text-3xl font-bold text-[var(--sea-ink)] sm:text-4xl">
+            <p className="kicker mb-2">Budget</p>
+            <h1 className="display-title mb-6 text-3xl text-[var(--text)] sm:text-4xl">
               {data.name}
             </h1>
             <dl className="m-0 grid gap-3 text-sm sm:grid-cols-2">
               <div>
-                <dt className="font-semibold text-[var(--sea-ink)]">Sequence</dt>
-                <dd className="m-0 text-[var(--sea-ink-soft)]">{data.sequence}</dd>
+                <dt className="font-semibold text-[var(--text)]">Sequence</dt>
+                <dd className="m-0 text-[var(--text-muted)]">{data.sequence}</dd>
               </div>
               <div>
-                <dt className="font-semibold text-[var(--sea-ink)]">Categories</dt>
-                <dd className="m-0 text-[var(--sea-ink-soft)]">
+                <dt className="font-semibold text-[var(--text)]">Categories</dt>
+                <dd className="m-0 text-[var(--text-muted)]">
                   {Object.keys(data.state.categories).length}
                 </dd>
               </div>

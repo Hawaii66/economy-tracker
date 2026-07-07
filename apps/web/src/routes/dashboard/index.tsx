@@ -36,9 +36,9 @@ function DashboardHome() {
 
   return (
     <main className="page-wrap px-4 pb-8 pt-8">
-      <section className="island-shell rounded-2xl p-6 sm:p-8">
-        <p className="island-kicker mb-2">Your budgets</p>
-        <h1 className="display-title mb-6 text-3xl font-bold text-[var(--sea-ink)] sm:text-4xl">
+      <section className="panel rounded-2xl p-6 sm:p-8">
+        <p className="kicker mb-2">Your budgets</p>
+        <h1 className="display-title mb-6 text-3xl text-[var(--text)] sm:text-4xl">
           Dashboard
         </h1>
 
@@ -46,10 +46,10 @@ function DashboardHome() {
           className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end"
           onSubmit={(event) => void handleCreateBudget(event)}
         >
-          <label className="flex flex-1 flex-col gap-1.5 text-sm font-semibold text-[var(--sea-ink)]">
+          <label className="flex flex-1 flex-col gap-1.5 text-sm font-semibold text-[var(--text)]">
             New budget
             <input
-              className="rounded-xl border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-base font-normal text-[var(--sea-ink)] outline-none focus:border-[rgba(79,184,178,0.5)]"
+              className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-base font-normal text-[var(--text)] outline-none focus:border-[rgba(94,174,255,0.5)]"
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Household, vacation, project…"
@@ -62,7 +62,7 @@ function DashboardHome() {
         </form>
 
         {isPending ? (
-          <p className="m-0 text-sm text-[var(--sea-ink-soft)]">Loading budgets…</p>
+          <p className="m-0 text-sm text-[var(--text-muted)]">Loading budgets…</p>
         ) : budgets && budgets.length > 0 ? (
           <ul className="m-0 grid list-none gap-3 p-0">
             {budgets.map((budget) => (
@@ -70,10 +70,10 @@ function DashboardHome() {
                 <Link
                   to="/dashboard/budgets/$budgetId"
                   params={{ budgetId: budget._id }}
-                  className="flex items-center justify-between rounded-xl border border-[var(--line)] bg-[var(--surface)] px-4 py-3 no-underline transition hover:-translate-y-0.5 hover:border-[rgba(79,184,178,0.35)]"
+                  className="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 no-underline transition hover:-translate-y-0.5 hover:border-[rgba(94,174,255,0.35)]"
                 >
-                  <span className="font-semibold text-[var(--sea-ink)]">{budget.name}</span>
-                  <span className="text-xs font-semibold uppercase tracking-wide text-[var(--sea-ink-soft)]">
+                  <span className="font-semibold text-[var(--text)]">{budget.name}</span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                     {budget.role}
                   </span>
                 </Link>
@@ -81,7 +81,7 @@ function DashboardHome() {
             ))}
           </ul>
         ) : (
-          <p className="m-0 text-sm text-[var(--sea-ink-soft)]">
+          <p className="m-0 text-sm text-[var(--text-muted)]">
             No budgets yet. Create one above to get started.
           </p>
         )}

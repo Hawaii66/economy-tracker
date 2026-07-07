@@ -28,8 +28,8 @@ function SignInPage() {
   return (
     <main className="page-wrap px-4 pb-8 pt-14">
       <AuthLoading>
-        <section className="island-shell mx-auto max-w-md rounded-2xl p-8 text-center">
-          <p className="m-0 text-sm text-[var(--sea-ink-soft)]">Checking session…</p>
+        <section className="panel mx-auto max-w-md rounded-2xl p-8 text-center">
+          <p className="m-0 text-sm text-[var(--text-muted)]">Checking session…</p>
         </section>
       </AuthLoading>
       <Authenticated>
@@ -56,12 +56,12 @@ function SignInForm() {
   const { signIn } = useAuthActions()
 
   return (
-    <section className="island-shell rise-in mx-auto max-w-md rounded-[2rem] px-6 py-10 sm:px-10">
-      <p className="island-kicker mb-3">Sign in</p>
-      <h1 className="display-title mb-4 text-3xl font-bold tracking-tight text-[var(--sea-ink)] sm:text-4xl">
+    <section className="panel rise-in mx-auto max-w-md rounded-[2rem] px-6 py-10 sm:px-10">
+      <p className="kicker mb-3">Sign in</p>
+      <h1 className="display-title mb-4 text-3xl tracking-tight text-[var(--text)] sm:text-4xl">
         Welcome back
       </h1>
-      <p className="mb-8 text-sm text-[var(--sea-ink-soft)] sm:text-base">
+      <p className="mb-8 text-sm text-[var(--text-muted)] sm:text-base">
         Sign in with GitHub to access your budgets and collaborate with others.
       </p>
       <Button type="button" className="w-full" onClick={() => void signIn('github')}>
