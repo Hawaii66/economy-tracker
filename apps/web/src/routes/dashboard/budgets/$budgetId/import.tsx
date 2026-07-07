@@ -7,15 +7,23 @@ import { useState } from 'react'
 import { api } from '@economy-tracker/convex/api'
 import type { Id } from '@economy-tracker/convex/dataModel'
 import CsvDropzone from '@/components/CsvDropzone'
+import ImportReviewTable from '@/components/import/ImportReviewTable'
 import TransactionTable from '@/components/TransactionTable'
 import { Button } from '@/components/ui/button'
 import { type CsvParseResult, parseCsvText, readCsvText } from '@/lib/csv-import'
 import { getAccounts, getRawTransactions } from '@/lib/budget-types'
 import { createEntityId } from '@/lib/entity-id'
+import { buildImportReviewRows, type ImportReviewRow } from '@/lib/import-review'
+import type { MatchableRule } from 'budget-core'
 
 export const Route = createFileRoute('/dashboard/budgets/$budgetId/import')({
   component: ImportPage,
 })
+
+type Rule = MatchableRule & { name: string }
+type Category = { id: string; name: string; color: string }
+type LifestyleTag = { id: string; name: string; color: string }
+type EventTag = { id: string; name: string; color: string; archived: boolean }
 
 function ImportPage() {
   const { budgetId } = Route.useParams()
@@ -28,6 +36,7 @@ function ImportPage() {
 
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
   const [parseResult, setParseResult] = useState<CsvParseResult | null>(null)
+  const [reviewRows, setReviewRows] = useState<ImportReviewRow[]>([])
   const [parseError, setParseError] = useState<string | null>(null)
   const [selectedAccountId, setSelectedAccountId] = useState<string>('')
   const [newAccountName, setNewAccountName] = useState('')
@@ -57,9 +66,43 @@ function ImportPage() {
   const accountNames = Object.fromEntries(accounts.map((account) => [account.id, account.name]))
   const rawTransactions = getRawTransactions(data.state.rawTransactions)
   const isCreatingAccount = selectedAccountId === '__new__'
+
+  const rules = (Object.values(data.state.rules ?? {}) as Rule[]).sort((left, right) =>
+    (left.keywords[0] ?? left.name).localeCompare(right.keywords[0] ?? right.name),
+  )
+  const rulesById = Object.fromEntries(
+    rules.map((rule) => [rule.id, { name: rule.name, keywords: rule.keywords }]),
+  )
+
+  const categoryOptions = (Object.values(data.state.categories ?? {}) as Category[])
+    .sort((left, right) => left.name.localeCompare(right.name))
+
+  const lifestyleTags = Object.values(data.state.lifestyleTags ?? {}) as LifestyleTag[]
+  const eventTags = (Object.values(data.state.eventTags ?? {}) as EventTag[]).filter(
+    (tag) => !tag.archived,
+  )
+
+  const tagOptions = [
+    ...lifestyleTags.map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      color: tag.color,
+      kind: 'permanent' as const,
+    })),
+    ...eventTags.map((tag) => ({
+      id: tag.id,
+      name: tag.name,
+      color: tag.color,
+      kind: 'temporary' as const,
+    })),
+  ].sort((left, right) => left.name.localeCompare(right.name))
+
+  const approvedRows = reviewRows.filter((row) => row.approved)
+  const targetAccountName = isCreatingAccount
+    ? newAccountName.trim() || 'New account'
+    : accountNames[selectedAccountId] ?? 'Selected account'
   const canImport =
-    parseResult &&
-    parseResult.rows.length > 0 &&
+    approvedRows.length > 0 &&
     (isCreatingAccount ? newAccountName.trim().length > 0 : selectedAccountId.length > 0)
 
   async function handleFile(file: File) {
@@ -72,8 +115,10 @@ function ImportPage() {
       const text = await readCsvText(file)
       const parsed = parseCsvText(text)
       setParseResult(parsed)
+      setReviewRows(buildImportReviewRows(parsed.rows, rules))
     } catch (error) {
       setParseResult(null)
+      setReviewRows([])
       setParseError(error instanceof Error ? error.message : 'Failed to parse CSV file.')
     }
   }
@@ -105,21 +150,47 @@ function ImportPage() {
       }
 
       const importBatchId = createEntityId('batch')
+      const importedTransactions = approvedRows.map((row) => ({
+        rawTransactionId: createEntityId('raw'),
+        date: row.date,
+        amount: row.amount,
+        description: row.description,
+        rawRow: row.rawRow,
+      }))
+
       events.push({
         eventType: 'TRANSACTIONS_IMPORTED',
         payload: {
           importBatchId,
           accountId,
           importedAt: new Date().toISOString(),
-          transactions: parseResult.rows.map((row) => ({
-            rawTransactionId: createEntityId('raw'),
+          transactions: importedTransactions,
+        },
+      })
+
+      for (let index = 0; index < approvedRows.length; index += 1) {
+        const row = approvedRows[index]
+        const rawTransaction = importedTransactions[index]
+        if (!row || !rawTransaction) {
+          continue
+        }
+
+        events.push({
+          eventType: 'LEDGER_TRANSACTION_CREATED',
+          payload: {
+            ledgerTransactionId: createEntityId('txn'),
+            rawTransactionId: rawTransaction.rawTransactionId,
+            accountId,
             date: row.date,
             amount: row.amount,
             description: row.description,
-            rawRow: row.rawRow,
-          })),
-        },
-      })
+            categoryId: row.assignment.categoryId,
+            sinkId: row.assignment.sinkId,
+            lifestyleTagIds: row.assignment.lifestyleTagIds,
+            eventTagIds: row.assignment.eventTagIds,
+          },
+        })
+      }
 
       await appendEvents({
         budgetId: budgetId as Id<'budgets'>,
@@ -127,9 +198,10 @@ function ImportPage() {
       })
 
       setImportMessage(
-        `Imported ${parseResult.rows.length} transaction${parseResult.rows.length === 1 ? '' : 's'}.`,
+        `Imported ${approvedRows.length} transaction${approvedRows.length === 1 ? '' : 's'}.`,
       )
       setParseResult(null)
+      setReviewRows([])
       setSelectedFileName(null)
       setSelectedAccountId(isCreatingAccount ? accountId : selectedAccountId)
       setNewAccountName('')
@@ -157,8 +229,8 @@ function ImportPage() {
       <section className="budget-panel">
         <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Upload CSV</h2>
         <p className="mt-2 mb-4 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
-          Drop a bank export to store immutable raw transactions. Import rules and ledger
-          categorization are skipped for now.
+          Drop a bank export to review each transaction. Import rules auto-apply categories and
+          tags. Assign a category, approve rows, then import.
         </p>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -224,20 +296,14 @@ function ImportPage() {
               <span className="demo-pill">Delimiter: {parseResult.delimiter}</span>
             </div>
 
-            <TransactionTable
-              transactions={parseResult.rows.map((row, index) => ({
-                id: `preview-${index}`,
-                accountId: selectedAccountId || 'preview',
-                date: row.date,
-                amount: row.amount,
-                description: row.description,
-              }))}
-              accountNames={{
-                ...accountNames,
-                preview: isCreatingAccount
-                  ? newAccountName.trim() || 'New account'
-                  : accountNames[selectedAccountId] ?? 'Selected account',
-              }}
+            <ImportReviewTable
+              rows={reviewRows}
+              categories={categoryOptions}
+              tags={tagOptions}
+              rulesById={rulesById}
+              accountName={targetAccountName}
+              onRowsChange={setReviewRows}
+              disabled={isImporting}
             />
 
             <div className="mt-4">
@@ -246,7 +312,11 @@ function ImportPage() {
                 disabled={!canImport || isImporting}
                 onClick={() => void handleImport()}
               >
-                {isImporting ? 'Importing…' : 'Import transactions'}
+                {isImporting
+                  ? 'Importing…'
+                  : approvedRows.length > 0
+                    ? `Import ${approvedRows.length} approved transaction${approvedRows.length === 1 ? '' : 's'}`
+                    : 'Approve rows to import'}
               </Button>
             </div>
           </div>

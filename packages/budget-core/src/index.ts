@@ -180,3 +180,10 @@ export {
   replayBudgetEvents,
   applyEventToDraft,
 } from "./reducer.ts";
+
+export {
+  assignmentFromRule,
+  findMatchingRule,
+  ruleMatchesDescription,
+} from "./rules/match-rule.ts";
+export type { MatchableRule, RuleAssignment } from "./rules/match-rule.ts";
