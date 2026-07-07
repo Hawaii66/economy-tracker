@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Settings,
-  Split,
   Tags,
   Wallet,
   Waves,
@@ -56,11 +55,6 @@ export const budgetNavItems: NavItem[] = [
     to: '/dashboard/budgets/$budgetId/import',
   },
   {
-    label: 'Splits',
-    icon: Split,
-    to: '/dashboard/budgets/$budgetId/splits',
-  },
-  {
     label: 'Categories & Tags',
     icon: Tags,
     to: '/dashboard/budgets/$budgetId/tags',
@@ -88,10 +82,10 @@ export const budgetNavGroups = [
   },
   {
     label: 'Organization',
-    items: budgetNavItems.slice(5, 8),
+    items: budgetNavItems.slice(5, 7),
   },
   {
     label: 'Workspace',
-    items: budgetNavItems.slice(8),
+    items: budgetNavItems.slice(7),
   },
 ] as const
