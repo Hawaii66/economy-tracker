@@ -6,6 +6,7 @@
     "typecheck": "tsc -p convex/tsconfig.json --noEmit"
   },
   "dependencies": {
+    "budget-core": "workspace:*",
     "convex": "^1.39.1"
   },
   "devDependencies": {

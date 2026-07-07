@@ -14,6 +14,9 @@ importers:
 
   apps/convex:
     dependencies:
+      budget-core:
+        specifier: workspace:*
+        version: link:../../packages/budget-core
       convex:
         specifier: ^1.39.1
         version: 1.42.1
