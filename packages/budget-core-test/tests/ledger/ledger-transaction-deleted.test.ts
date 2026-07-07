@@ -133,6 +133,7 @@ describe("ledger transaction deletion", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          internalTransferLeg: true,
         },
       }),
       ledgerTransactionCreatedEvent({
@@ -150,6 +151,7 @@ describe("ledger transaction deletion", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          internalTransferLeg: true,
         },
       }),
       {
@@ -224,6 +226,7 @@ describe("ledger transaction deletion", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          internalTransferLeg: true,
         },
       }),
       ledgerTransactionCreatedEvent({
@@ -241,6 +244,7 @@ describe("ledger transaction deletion", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          internalTransferLeg: true,
         },
       }),
       {

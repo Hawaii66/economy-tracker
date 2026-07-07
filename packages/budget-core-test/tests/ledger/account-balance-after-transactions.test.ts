@@ -45,8 +45,22 @@ describe("account balance after transactions", () => {
           cap: 20_000,
         },
       }),
-      ledgerTransactionCreatedEvent({
+      sinkCreatedEvent({
         sequenceNumber: 4,
+        userId: "user-1",
+        createdAt: "2026-01-01T00:03:00.000Z",
+        payload: {
+          sinkId: "sink-salary",
+          name: "Salary",
+          color: "#5EAEFF",
+          icon: "briefcase",
+          sinkType: "capped_reserve",
+          monthlyTarget: 10_000,
+          cap: 50_000,
+        },
+      }),
+      ledgerTransactionCreatedEvent({
+        sequenceNumber: 5,
         userId: "user-1",
         createdAt: "2026-01-02T00:00:00.000Z",
         payload: {
@@ -57,13 +71,13 @@ describe("account balance after transactions", () => {
           amount: 10_000,
           description: "Salary",
           categoryId: null,
-          sinkId: null,
+          sinkId: "sink-salary",
           lifestyleTagIds: [],
           eventTagIds: [],
         },
       }),
       ledgerTransactionCreatedEvent({
-        sequenceNumber: 5,
+        sequenceNumber: 6,
         userId: "user-1",
         createdAt: "2026-01-03T00:00:00.000Z",
         payload: {

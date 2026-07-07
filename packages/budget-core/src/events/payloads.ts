@@ -214,6 +214,8 @@ export const LedgerTransactionCreatedPayloadSchema = z.object({
   sinkId: EntityIdSchema.nullable(),
   lifestyleTagIds: z.array(EntityIdSchema),
   eventTagIds: z.array(EntityIdSchema),
+  internalTransferLeg: z.boolean().optional(),
+  virtualSliceParent: z.boolean().optional(),
 });
 export type LedgerTransactionCreatedPayload = z.infer<
   typeof LedgerTransactionCreatedPayloadSchema

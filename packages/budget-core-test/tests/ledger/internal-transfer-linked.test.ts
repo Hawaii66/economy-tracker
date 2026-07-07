@@ -51,6 +51,7 @@ describe("internal transfer linking", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          internalTransferLeg: true,
         },
       }),
       ledgerTransactionCreatedEvent({
@@ -68,6 +69,7 @@ describe("internal transfer linking", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          internalTransferLeg: true,
         },
       }),
       InternalTransferLinkedEventSchema.parse({
@@ -135,6 +137,7 @@ describe("internal transfer linking", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          internalTransferLeg: true,
         },
       }),
       ledgerTransactionCreatedEvent({
@@ -152,6 +155,7 @@ describe("internal transfer linking", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          internalTransferLeg: true,
         },
       }),
       InternalTransferLinkedEventSchema.parse({

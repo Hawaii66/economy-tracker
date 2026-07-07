@@ -35,7 +35,7 @@
         "internalTransferGroupId": null,
         "lifestyleTagIds": [],
         "rawTransactionId": null,
-        "sinkId": null,
+        "sinkId": "sink-salary",
         "splitGroupId": null,
         "virtualSlices": []
       },
@@ -69,6 +69,17 @@
         "lastFundedOn": null,
         "monthlyTarget": 5000,
         "name": "Groceries",
+        "sinkType": "capped_reserve"
+      },
+      "sink-salary": {
+        "balance": 0,
+        "cap": 50000,
+        "color": "#5EAEFF",
+        "icon": "briefcase",
+        "id": "sink-salary",
+        "lastFundedOn": null,
+        "monthlyTarget": 10000,
+        "name": "Salary",
         "sinkType": "capped_reserve"
       }
     },
