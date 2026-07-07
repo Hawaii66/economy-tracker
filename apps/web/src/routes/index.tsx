@@ -1,6 +1,7 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { Authenticated, Unauthenticated } from 'convex/react'
 import { api } from '@economy-tracker/convex/api'
 
 export const Route = createFileRoute('/')({ component: App })
@@ -25,12 +26,28 @@ function App() {
           create budgets, invite collaborators, and branch scenarios.
         </p>
         <div className="flex flex-wrap gap-3">
-          <a
-            href="/about"
-            className="rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+          <Authenticated>
+            <Link
+              to="/dashboard"
+              className="rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+            >
+              Go to dashboard
+            </Link>
+          </Authenticated>
+          <Unauthenticated>
+            <Link
+              to="/sign-in"
+              className="rounded-full border border-[rgba(50,143,151,0.3)] bg-[rgba(79,184,178,0.14)] px-5 py-2.5 text-sm font-semibold text-[var(--lagoon-deep)] no-underline transition hover:-translate-y-0.5 hover:bg-[rgba(79,184,178,0.24)]"
+            >
+              Sign in
+            </Link>
+          </Unauthenticated>
+          <Link
+            to="/about"
+            className="rounded-full border border-[var(--line)] bg-[var(--surface)] px-5 py-2.5 text-sm font-semibold text-[var(--sea-ink)] no-underline transition hover:-translate-y-0.5"
           >
             About
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -52,9 +69,21 @@ function App() {
           <div className="sm:col-span-2">
             <dt className="font-semibold text-[var(--sea-ink)]">Session</dt>
             <dd className="m-0 text-[var(--sea-ink-soft)]">
-              {user
-                ? `Signed in${user.email ? ` as ${user.email}` : ''}`
-                : 'Not signed in'}
+              {user ? (
+                <>
+                  Signed in{user.email ? ` as ${user.email}` : ''}.{' '}
+                  <Link to="/dashboard" className="font-semibold text-[var(--lagoon-deep)]">
+                    Open dashboard
+                  </Link>
+                </>
+              ) : (
+                <>
+                  Not signed in.{' '}
+                  <Link to="/sign-in" className="font-semibold text-[var(--lagoon-deep)]">
+                    Sign in
+                  </Link>
+                </>
+              )}
             </dd>
           </div>
         </dl>
