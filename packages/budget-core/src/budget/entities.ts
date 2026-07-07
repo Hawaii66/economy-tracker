@@ -1,6 +1,9 @@
 import { z } from "zod";
 import {
+  AccountIconSchema,
   CurrencyCodeSchema,
+  DEFAULT_ACCOUNT_ICON,
+  DEFAULT_ENTITY_COLOR,
   EntityIdSchema,
   HexColorSchema,
   IsoDateSchema,
@@ -17,12 +20,20 @@ export type GenesisEpoch = z.infer<typeof GenesisEpochSchema>;
 export const AccountSchema = z.object({
   id: EntityIdSchema,
   name: z.string().min(1),
+  description: z.string(),
+  color: HexColorSchema,
+  icon: AccountIconSchema,
   balance: MoneyAmountSchema,
   currency: CurrencyCodeSchema,
-  isLiquid: z.boolean(),
   genesisDate: IsoDateSchema,
   parserTemplateId: EntityIdSchema.nullable(),
 });
+
+export const DEFAULT_ACCOUNT_APPEARANCE = {
+  color: DEFAULT_ENTITY_COLOR,
+  icon: DEFAULT_ACCOUNT_ICON,
+  description: "",
+} as const;
 export type Account = z.infer<typeof AccountSchema>;
 
 const TargetDateSinkSchema = z.object({

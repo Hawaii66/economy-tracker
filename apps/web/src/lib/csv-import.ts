@@ -1,3 +1,5 @@
+import { parseDecimalStringToMinorUnits } from 'budget-core'
+
 export type ParsedCsvRow = {
   date: string
   amount: number
@@ -96,27 +98,7 @@ function findColumn(headers: string[], patterns: RegExp[]): string | null {
 }
 
 function parseAmount(value: string): number | null {
-  const trimmed = value.trim()
-  if (!trimmed) {
-    return null
-  }
-
-  let normalized = trimmed.replace(/\s/g, '')
-  const hasComma = normalized.includes(',')
-  const hasDot = normalized.includes('.')
-
-  if (hasComma && hasDot) {
-    if (normalized.lastIndexOf(',') > normalized.lastIndexOf('.')) {
-      normalized = normalized.replace(/\./g, '').replace(',', '.')
-    } else {
-      normalized = normalized.replace(/,/g, '')
-    }
-  } else if (hasComma) {
-    normalized = normalized.replace(',', '.')
-  }
-
-  const amount = Number.parseFloat(normalized)
-  return Number.isFinite(amount) ? amount : null
+  return parseDecimalStringToMinorUnits(value)
 }
 
 function parseDate(value: string): string | null {

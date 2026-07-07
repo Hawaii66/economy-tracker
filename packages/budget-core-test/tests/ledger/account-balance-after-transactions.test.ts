@@ -39,7 +39,7 @@ describe("account balance after transactions", () => {
           rawTransactionId: null,
           accountId: "acct-checking",
           date: "2026-01-02",
-          amount: 100,
+          amount: 10_000,
           description: "Salary",
           categoryId: null,
           sinkId: null,
@@ -56,7 +56,7 @@ describe("account balance after transactions", () => {
           rawTransactionId: null,
           accountId: "acct-checking",
           date: "2026-01-03",
-          amount: -50,
+          amount: -5_000,
           description: "Groceries",
           categoryId: "cat-groceries",
           sinkId: null,
@@ -66,7 +66,7 @@ describe("account balance after transactions", () => {
       }),
     ]);
 
-    expect(state.accounts["acct-checking"]?.balance).toBe(50);
+    expect(state.accounts["acct-checking"]?.balance).toBe(5_000);
     expect(state.ledgerTransactions["txn-groceries"]?.categoryId).toBe(
       "cat-groceries",
     );

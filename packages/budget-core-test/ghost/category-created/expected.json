@@ -3,6 +3,7 @@
     "accounts": {},
     "categories": {
       "cat-food": {
+        "color": "#5EAEFF",
         "id": "cat-food",
         "name": "Food"
       }

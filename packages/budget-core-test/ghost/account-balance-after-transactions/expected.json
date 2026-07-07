@@ -2,17 +2,20 @@
   "state": {
     "accounts": {
       "acct-checking": {
-        "balance": 50,
+        "balance": 5000,
+        "color": "#5EAEFF",
         "currency": "SEK",
+        "description": "",
         "genesisDate": "2026-01-01",
+        "icon": "wallet",
         "id": "acct-checking",
-        "isLiquid": true,
         "name": "Checking",
         "parserTemplateId": null
       }
     },
     "categories": {
       "cat-groceries": {
+        "color": "#5EAEFF",
         "id": "cat-groceries",
         "name": "Groceries"
       }
@@ -22,7 +25,7 @@
     "ledgerTransactions": {
       "txn-deposit": {
         "accountId": "acct-checking",
-        "amount": 100,
+        "amount": 10000,
         "categoryId": null,
         "date": "2026-01-02",
         "description": "Salary",
@@ -36,7 +39,7 @@
       },
       "txn-groceries": {
         "accountId": "acct-checking",
-        "amount": -50,
+        "amount": -5000,
         "categoryId": "cat-groceries",
         "date": "2026-01-03",
         "description": "Groceries",
