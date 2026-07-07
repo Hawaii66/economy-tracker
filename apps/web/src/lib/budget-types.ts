@@ -26,6 +26,7 @@ export type BudgetLedgerTransaction = {
   date: string
   amount: number
   description: string
+  internalTransferGroupId: string | null
 }
 
 function asRecord<T>(value: unknown): Record<string, T> {

@@ -302,6 +302,7 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
         lifestyleTagIds: payload.lifestyleTagIds,
         eventTagIds: payload.eventTagIds,
         splitGroupId: null,
+        internalTransferGroupId: null,
         virtualSlices: [],
       };
       return;
@@ -362,6 +363,45 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
           lifestyleTagIds: slice.lifestyleTagIds,
           eventTagIds: slice.eventTagIds,
         }));
+      return;
+    }
+
+    case "INTERNAL_TRANSFER_LINKED": {
+      const { payload, userId } = event;
+      const ledgerTransactionA = requireLedgerTransaction(
+        draft,
+        payload.ledgerTransactionIdA,
+      );
+      const ledgerTransactionB = requireLedgerTransaction(
+        draft,
+        payload.ledgerTransactionIdB,
+      );
+
+      if (ledgerTransactionA.accountId === ledgerTransactionB.accountId) {
+        throw new Error("Internal transfer legs must be in different accounts");
+      }
+
+      if (ledgerTransactionA.amount + ledgerTransactionB.amount !== 0) {
+        throw new Error("Internal transfer amounts must net to zero");
+      }
+
+      if (
+        ledgerTransactionA.internalTransferGroupId ||
+        ledgerTransactionB.internalTransferGroupId
+      ) {
+        throw new Error("Transaction is already linked as an internal transfer");
+      }
+
+      draft.internalTransferGroups[payload.transferGroupId] = {
+        id: payload.transferGroupId,
+        ledgerTransactionIds: [
+          payload.ledgerTransactionIdA,
+          payload.ledgerTransactionIdB,
+        ],
+        initiatedByUserId: userId,
+      };
+      ledgerTransactionA.internalTransferGroupId = payload.transferGroupId;
+      ledgerTransactionB.internalTransferGroupId = payload.transferGroupId;
       return;
     }
 

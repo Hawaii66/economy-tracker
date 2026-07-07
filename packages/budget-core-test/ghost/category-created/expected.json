@@ -10,6 +10,7 @@
     },
     "eventTags": {},
     "genesisEpoch": null,
+    "internalTransferGroups": {},
     "ledgerTransactions": {},
     "lifestyleTags": {},
     "parserTemplates": {},
