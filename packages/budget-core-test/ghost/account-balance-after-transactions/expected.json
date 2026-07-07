@@ -61,7 +61,7 @@
     "rules": {},
     "sinks": {
       "sink-groceries": {
-        "balance": 0,
+        "balance": -5000,
         "cap": 20000,
         "color": "#5EAEFF",
         "icon": "shopping-cart",
@@ -72,7 +72,7 @@
         "sinkType": "capped_reserve"
       },
       "sink-salary": {
-        "balance": 0,
+        "balance": 10000,
         "cap": 50000,
         "color": "#5EAEFF",
         "icon": "briefcase",

@@ -2,13 +2,17 @@ import {
   AccountAddedEventSchema,
   CategoryCreatedEventSchema,
   CURRENT_EVENT_VERSION,
+  IncomeSlicedEventSchema,
   LedgerTransactionCreatedEventSchema,
+  LedgerTransactionUpdatedEventSchema,
   SinkCreatedEventSchema,
   SinkFundedEventSchema,
   SinkMonthlyTargetUpdatedEventSchema,
   type AccountAddedPayload,
   type CategoryCreatedPayload,
+  type IncomeSlicedPayload,
   type LedgerTransactionCreatedPayload,
+  type LedgerTransactionUpdatedPayload,
   type SinkCreatedPayload,
   type SinkFundedPayload,
   type SinkMonthlyTargetUpdatedPayload,
@@ -44,6 +48,24 @@ export function ledgerTransactionCreatedEvent(
 ) {
   return LedgerTransactionCreatedEventSchema.parse({
     eventType: "LEDGER_TRANSACTION_CREATED",
+    v: CURRENT_EVENT_VERSION,
+    ...input,
+  });
+}
+
+export function ledgerTransactionUpdatedEvent(
+  input: DomainEventInput<LedgerTransactionUpdatedPayload>,
+) {
+  return LedgerTransactionUpdatedEventSchema.parse({
+    eventType: "LEDGER_TRANSACTION_UPDATED",
+    v: CURRENT_EVENT_VERSION,
+    ...input,
+  });
+}
+
+export function incomeSlicedEvent(input: DomainEventInput<IncomeSlicedPayload>) {
+  return IncomeSlicedEventSchema.parse({
+    eventType: "INCOME_SLICED",
     v: CURRENT_EVENT_VERSION,
     ...input,
   });
