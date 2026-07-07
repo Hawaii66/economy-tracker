@@ -452,6 +452,21 @@ pre code {
   background: rgba(94, 174, 255, 0.06);
 }
 
+.demo-table tr.ledger-row-highlight td {
+  background: rgba(94, 174, 255, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(94, 174, 255, 0.35);
+}
+
+.demo-pill-button {
+  cursor: pointer;
+  font: inherit;
+}
+
+.demo-pill-button:hover {
+  border-color: rgba(94, 174, 255, 0.45);
+  color: var(--text);
+}
+
 button,
 .panel,
 a {

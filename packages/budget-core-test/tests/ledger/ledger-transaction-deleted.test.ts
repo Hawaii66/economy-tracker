@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   INITIAL_BUDGET_STATE,
-  InternalTransferLinkedEventSchema,
   replayBudgetEvents,
 } from "budget-core";
 import {
@@ -9,8 +8,76 @@ import {
   ledgerTransactionCreatedEvent,
 } from "../../helpers/domain-event.js";
 
-describe("internal transfer linking", () => {
-  it("links opposite ledger transactions across accounts without changing net balances", () => {
+describe("ledger transaction deletion", () => {
+  it("removes a ledger entry, reverses balance, and leaves raw import unlinked", () => {
+    const state = replayBudgetEvents(INITIAL_BUDGET_STATE, [
+      accountAddedEvent({
+        sequenceNumber: 1,
+        userId: "user-1",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        payload: {
+          accountId: "acct-checking",
+          name: "Checking",
+          openingBalance: 10_000,
+          currency: "SEK",
+          genesisDate: "2026-01-01",
+        },
+      }),
+      {
+        eventType: "TRANSACTIONS_IMPORTED",
+        v: 1,
+        sequenceNumber: 2,
+        userId: "user-1",
+        createdAt: "2026-01-02T00:00:00.000Z",
+        payload: {
+          importBatchId: "batch-1",
+          accountId: "acct-checking",
+          transactions: [
+            {
+              rawTransactionId: "raw-1",
+              date: "2026-01-02",
+              amount: -1_500,
+              description: "Grocery store",
+              rawRow: { description: "Grocery store" },
+            },
+          ],
+        },
+      },
+      ledgerTransactionCreatedEvent({
+        sequenceNumber: 3,
+        userId: "user-1",
+        createdAt: "2026-01-02T00:00:01.000Z",
+        payload: {
+          ledgerTransactionId: "txn-1",
+          rawTransactionId: "raw-1",
+          accountId: "acct-checking",
+          date: "2026-01-02",
+          amount: -1_500,
+          description: "Grocery store",
+          categoryId: "cat-groceries",
+          sinkId: null,
+          lifestyleTagIds: [],
+          eventTagIds: [],
+        },
+      }),
+      {
+        eventType: "LEDGER_TRANSACTION_DELETED",
+        v: 1,
+        sequenceNumber: 4,
+        userId: "user-1",
+        createdAt: "2026-01-02T00:00:02.000Z",
+        payload: {
+          ledgerTransactionId: "txn-1",
+        },
+      },
+    ]);
+
+    expect(state.accounts["acct-checking"]?.balance).toBe(10_000);
+    expect(state.rawTransactions["raw-1"]?.description).toBe("Grocery store");
+    expect(state.ledgerTransactions["txn-1"]).toBeUndefined();
+  });
+
+  it("removes both sides of an internal transfer and restores opening balances", () => {
     const state = replayBudgetEvents(INITIAL_BUDGET_STATE, [
       accountAddedEvent({
         sequenceNumber: 1,
@@ -70,7 +137,7 @@ describe("internal transfer linking", () => {
           eventTagIds: [],
         },
       }),
-      InternalTransferLinkedEventSchema.parse({
+      {
         eventType: "INTERNAL_TRANSFER_LINKED",
         v: 1,
         sequenceNumber: 5,
@@ -81,21 +148,28 @@ describe("internal transfer linking", () => {
           ledgerTransactionIdA: "txn-out",
           ledgerTransactionIdB: "txn-in",
         },
-      }),
+      },
+      {
+        eventType: "LEDGER_TRANSACTION_DELETED",
+        v: 1,
+        sequenceNumber: 6,
+        userId: "user-1",
+        createdAt: "2026-01-02T00:00:03.000Z",
+        payload: {
+          ledgerTransactionId: "txn-out",
+        },
+      },
     ]);
 
-    expect(state.accounts["acct-checking"]?.balance).toBe(8_000);
-    expect(state.accounts["acct-card"]?.balance).toBe(2_000);
-    expect(state.ledgerTransactions["txn-out"]?.internalTransferGroupId).toBe("xfer-1");
-    expect(state.ledgerTransactions["txn-in"]?.internalTransferGroupId).toBe("xfer-1");
-    expect(state.internalTransferGroups["xfer-1"]?.ledgerTransactionIds).toEqual([
-      "txn-out",
-      "txn-in",
-    ]);
+    expect(state.accounts["acct-checking"]?.balance).toBe(10_000);
+    expect(state.accounts["acct-card"]?.balance).toBe(0);
+    expect(state.ledgerTransactions["txn-out"]).toBeUndefined();
+    expect(state.ledgerTransactions["txn-in"]).toBeUndefined();
+    expect(state.internalTransferGroups["xfer-1"]).toBeUndefined();
   });
 
-  it("unlinks an internal transfer without changing account balances", () => {
-    const linkedState = replayBudgetEvents(INITIAL_BUDGET_STATE, [
+  it("tolerates deleting both transfer legs in one batch", () => {
+    const state = replayBudgetEvents(INITIAL_BUDGET_STATE, [
       accountAddedEvent({
         sequenceNumber: 1,
         userId: "user-1",
@@ -154,7 +228,7 @@ describe("internal transfer linking", () => {
           eventTagIds: [],
         },
       }),
-      InternalTransferLinkedEventSchema.parse({
+      {
         eventType: "INTERNAL_TRANSFER_LINKED",
         v: 1,
         sequenceNumber: 5,
@@ -165,26 +239,32 @@ describe("internal transfer linking", () => {
           ledgerTransactionIdA: "txn-out",
           ledgerTransactionIdB: "txn-in",
         },
-      }),
-    ]);
-
-    const state = replayBudgetEvents(linkedState, [
+      },
       {
-        eventType: "INTERNAL_TRANSFER_UNLINKED",
+        eventType: "LEDGER_TRANSACTION_DELETED",
         v: 1,
         sequenceNumber: 6,
         userId: "user-1",
         createdAt: "2026-01-02T00:00:03.000Z",
         payload: {
-          transferGroupId: "xfer-1",
+          ledgerTransactionId: "txn-out",
+        },
+      },
+      {
+        eventType: "LEDGER_TRANSACTION_DELETED",
+        v: 1,
+        sequenceNumber: 7,
+        userId: "user-1",
+        createdAt: "2026-01-02T00:00:04.000Z",
+        payload: {
+          ledgerTransactionId: "txn-in",
         },
       },
     ]);
 
-    expect(state.accounts["acct-checking"]?.balance).toBe(8_000);
-    expect(state.accounts["acct-card"]?.balance).toBe(2_000);
-    expect(state.ledgerTransactions["txn-out"]?.internalTransferGroupId).toBeNull();
-    expect(state.ledgerTransactions["txn-in"]?.internalTransferGroupId).toBeNull();
-    expect(state.internalTransferGroups["xfer-1"]).toBeUndefined();
+    expect(state.accounts["acct-checking"]?.balance).toBe(10_000);
+    expect(state.accounts["acct-card"]?.balance).toBe(0);
+    expect(state.ledgerTransactions["txn-out"]).toBeUndefined();
+    expect(state.ledgerTransactions["txn-in"]).toBeUndefined();
   });
 });
