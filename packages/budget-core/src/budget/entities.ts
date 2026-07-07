@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   CurrencyCodeSchema,
   EntityIdSchema,
+  HexColorSchema,
   IsoDateSchema,
   MoneyAmountSchema,
 } from "../common.ts";
@@ -61,18 +62,21 @@ export type Sink = z.infer<typeof SinkSchema>;
 export const CategorySchema = z.object({
   id: EntityIdSchema,
   name: z.string().min(1),
+  color: HexColorSchema,
 });
 export type Category = z.infer<typeof CategorySchema>;
 
 export const LifestyleTagSchema = z.object({
   id: EntityIdSchema,
   name: z.string().min(1),
+  color: HexColorSchema,
 });
 export type LifestyleTag = z.infer<typeof LifestyleTagSchema>;
 
 export const EventTagSchema = z.object({
   id: EntityIdSchema,
   name: z.string().min(1),
+  color: HexColorSchema,
   archived: z.boolean(),
 });
 export type EventTag = z.infer<typeof EventTagSchema>;

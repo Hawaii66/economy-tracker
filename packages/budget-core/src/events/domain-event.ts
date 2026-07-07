@@ -8,14 +8,17 @@ import {
   AccountAddedPayloadSchema,
   AccountBalanceAdjustedPayloadSchema,
   CategoryCreatedPayloadSchema,
+  CategoryUpdatedPayloadSchema,
   EventTagArchivedPayloadSchema,
   EventTagCreatedPayloadSchema,
+  EventTagUpdatedPayloadSchema,
   GenesisEpochSetPayloadSchema,
   IncomeSlicedPayloadSchema,
   InternalTransferRecordedPayloadSchema,
   LedgerTransactionCreatedPayloadSchema,
   LedgerTransactionUpdatedPayloadSchema,
   LifestyleTagCreatedPayloadSchema,
+  LifestyleTagUpdatedPayloadSchema,
   ParserTemplateConfiguredPayloadSchema,
   RuleCreatedPayloadSchema,
   RuleUpdatedPayloadSchema,
@@ -37,8 +40,11 @@ export const EVENT_TYPES = [
   "SINK_WITHDRAWN",
   "SINK_CAP_UPDATED",
   "CATEGORY_CREATED",
+  "CATEGORY_UPDATED",
   "LIFESTYLE_TAG_CREATED",
+  "LIFESTYLE_TAG_UPDATED",
   "EVENT_TAG_CREATED",
+  "EVENT_TAG_UPDATED",
   "EVENT_TAG_ARCHIVED",
   "PARSER_TEMPLATE_CONFIGURED",
   "RULE_CREATED",
@@ -110,15 +116,33 @@ export const CategoryCreatedEventSchema = z.object({
   ...domainEventBase,
 });
 
+export const CategoryUpdatedEventSchema = z.object({
+  eventType: z.literal("CATEGORY_UPDATED"),
+  payload: CategoryUpdatedPayloadSchema,
+  ...domainEventBase,
+});
+
 export const LifestyleTagCreatedEventSchema = z.object({
   eventType: z.literal("LIFESTYLE_TAG_CREATED"),
   payload: LifestyleTagCreatedPayloadSchema,
   ...domainEventBase,
 });
 
+export const LifestyleTagUpdatedEventSchema = z.object({
+  eventType: z.literal("LIFESTYLE_TAG_UPDATED"),
+  payload: LifestyleTagUpdatedPayloadSchema,
+  ...domainEventBase,
+});
+
 export const EventTagCreatedEventSchema = z.object({
   eventType: z.literal("EVENT_TAG_CREATED"),
   payload: EventTagCreatedPayloadSchema,
+  ...domainEventBase,
+});
+
+export const EventTagUpdatedEventSchema = z.object({
+  eventType: z.literal("EVENT_TAG_UPDATED"),
+  payload: EventTagUpdatedPayloadSchema,
   ...domainEventBase,
 });
 
@@ -197,8 +221,11 @@ export const DomainEventSchema = z.discriminatedUnion("eventType", [
   SinkWithdrawnEventSchema,
   SinkCapUpdatedEventSchema,
   CategoryCreatedEventSchema,
+  CategoryUpdatedEventSchema,
   LifestyleTagCreatedEventSchema,
+  LifestyleTagUpdatedEventSchema,
   EventTagCreatedEventSchema,
+  EventTagUpdatedEventSchema,
   EventTagArchivedEventSchema,
   ParserTemplateConfiguredEventSchema,
   RuleCreatedEventSchema,
@@ -267,13 +294,28 @@ export const AppendEventInputSchema = z.discriminatedUnion("eventType", [
     ...appendEventBase,
   }),
   z.object({
+    eventType: z.literal("CATEGORY_UPDATED"),
+    payload: CategoryUpdatedPayloadSchema,
+    ...appendEventBase,
+  }),
+  z.object({
     eventType: z.literal("LIFESTYLE_TAG_CREATED"),
     payload: LifestyleTagCreatedPayloadSchema,
     ...appendEventBase,
   }),
   z.object({
+    eventType: z.literal("LIFESTYLE_TAG_UPDATED"),
+    payload: LifestyleTagUpdatedPayloadSchema,
+    ...appendEventBase,
+  }),
+  z.object({
     eventType: z.literal("EVENT_TAG_CREATED"),
     payload: EventTagCreatedPayloadSchema,
+    ...appendEventBase,
+  }),
+  z.object({
+    eventType: z.literal("EVENT_TAG_UPDATED"),
+    payload: EventTagUpdatedPayloadSchema,
     ...appendEventBase,
   }),
   z.object({

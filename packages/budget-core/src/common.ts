@@ -21,5 +21,13 @@ export type CurrencyCode = z.infer<typeof CurrencyCodeSchema>;
 export const MoneyAmountSchema = z.number().finite();
 export type MoneyAmount = z.infer<typeof MoneyAmountSchema>;
 
+export const HexColorSchema = z
+  .string()
+  .regex(/^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/)
+  .default("#5EAEFF");
+export type HexColor = z.infer<typeof HexColorSchema>;
+
+export const DEFAULT_ENTITY_COLOR = "#5EAEFF" as const;
+
 export const MembershipRoleSchema = z.enum(["OWNER", "EDITOR", "VIEWER"]);
 export type MembershipRole = z.infer<typeof MembershipRoleSchema>;

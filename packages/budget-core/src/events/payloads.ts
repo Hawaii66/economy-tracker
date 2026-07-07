@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   CurrencyCodeSchema,
   EntityIdSchema,
+  HexColorSchema,
   IsoDateSchema,
   IsoDateTimeSchema,
   MoneyAmountSchema,
@@ -82,22 +83,49 @@ export type SinkCapUpdatedPayload = z.infer<typeof SinkCapUpdatedPayloadSchema>;
 export const CategoryCreatedPayloadSchema = z.object({
   categoryId: EntityIdSchema,
   name: z.string().min(1),
+  color: HexColorSchema,
 });
 export type CategoryCreatedPayload = z.infer<typeof CategoryCreatedPayloadSchema>;
+
+export const CategoryUpdatedPayloadSchema = z.object({
+  categoryId: EntityIdSchema,
+  name: z.string().min(1),
+  color: HexColorSchema,
+});
+export type CategoryUpdatedPayload = z.infer<typeof CategoryUpdatedPayloadSchema>;
 
 export const LifestyleTagCreatedPayloadSchema = z.object({
   tagId: EntityIdSchema,
   name: z.string().min(1),
+  color: HexColorSchema,
 });
 export type LifestyleTagCreatedPayload = z.infer<
   typeof LifestyleTagCreatedPayloadSchema
 >;
 
+export const LifestyleTagUpdatedPayloadSchema = z.object({
+  tagId: EntityIdSchema,
+  name: z.string().min(1),
+  color: HexColorSchema,
+});
+export type LifestyleTagUpdatedPayload = z.infer<
+  typeof LifestyleTagUpdatedPayloadSchema
+>;
+
 export const EventTagCreatedPayloadSchema = z.object({
   tagId: EntityIdSchema,
   name: z.string().min(1),
+  color: HexColorSchema,
 });
 export type EventTagCreatedPayload = z.infer<typeof EventTagCreatedPayloadSchema>;
+
+export const EventTagUpdatedPayloadSchema = z.object({
+  tagId: EntityIdSchema,
+  name: z.string().min(1),
+  color: HexColorSchema,
+  archived: z.boolean(),
+});
+export type EventTagUpdatedPayload = z.infer<typeof EventTagUpdatedPayloadSchema>;
 
 export const EventTagArchivedPayloadSchema = z.object({
   tagId: EntityIdSchema,

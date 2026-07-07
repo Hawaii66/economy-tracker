@@ -50,6 +50,22 @@ function requireEventTag(draft: DraftBudgetState, tagId: EntityId) {
   return eventTag;
 }
 
+function requireCategory(draft: DraftBudgetState, categoryId: EntityId) {
+  const category = draft.categories[categoryId];
+  if (!category) {
+    throw new Error(`Category not found: ${categoryId}`);
+  }
+  return category;
+}
+
+function requireLifestyleTag(draft: DraftBudgetState, tagId: EntityId) {
+  const lifestyleTag = draft.lifestyleTags[tagId];
+  if (!lifestyleTag) {
+    throw new Error(`Lifestyle tag not found: ${tagId}`);
+  }
+  return lifestyleTag;
+}
+
 function sinkFromCreatedPayload(payload: SinkCreatedPayload): Sink {
   const base = {
     id: payload.sinkId,
@@ -157,7 +173,16 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       draft.categories[payload.categoryId] = {
         id: payload.categoryId,
         name: payload.name,
+        color: payload.color,
       };
+      return;
+    }
+
+    case "CATEGORY_UPDATED": {
+      const { payload } = event;
+      const category = requireCategory(draft, payload.categoryId);
+      category.name = payload.name;
+      category.color = payload.color;
       return;
     }
 
@@ -166,7 +191,16 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       draft.lifestyleTags[payload.tagId] = {
         id: payload.tagId,
         name: payload.name,
+        color: payload.color,
       };
+      return;
+    }
+
+    case "LIFESTYLE_TAG_UPDATED": {
+      const { payload } = event;
+      const lifestyleTag = requireLifestyleTag(draft, payload.tagId);
+      lifestyleTag.name = payload.name;
+      lifestyleTag.color = payload.color;
       return;
     }
 
@@ -175,8 +209,18 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       draft.eventTags[payload.tagId] = {
         id: payload.tagId,
         name: payload.name,
+        color: payload.color,
         archived: false,
       };
+      return;
+    }
+
+    case "EVENT_TAG_UPDATED": {
+      const { payload } = event;
+      const eventTag = requireEventTag(draft, payload.tagId);
+      eventTag.name = payload.name;
+      eventTag.color = payload.color;
+      eventTag.archived = payload.archived;
       return;
     }
 
