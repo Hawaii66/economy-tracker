@@ -5,12 +5,14 @@
   "type": "module",
   "scripts": {
     "test": "vitest run",
+    "test:ghost:update": "UPDATE_GHOSTS=1 vitest run tests/ghost.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "budget-core": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "^26.1.0",
     "vitest": "^3.2.4"
   }
 }

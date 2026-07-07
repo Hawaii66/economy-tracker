@@ -1,0 +1,60 @@
+{
+  "state": {
+    "accounts": {
+      "acct-checking": {
+        "balance": 50,
+        "currency": "SEK",
+        "genesisDate": "2026-01-01",
+        "id": "acct-checking",
+        "isLiquid": true,
+        "name": "Checking",
+        "parserTemplateId": null
+      }
+    },
+    "categories": {
+      "cat-groceries": {
+        "id": "cat-groceries",
+        "name": "Groceries"
+      }
+    },
+    "eventTags": {},
+    "genesisEpoch": null,
+    "ledgerTransactions": {
+      "txn-deposit": {
+        "accountId": "acct-checking",
+        "amount": 100,
+        "categoryId": null,
+        "date": "2026-01-02",
+        "description": "Salary",
+        "eventTagIds": [],
+        "id": "txn-deposit",
+        "lifestyleTagIds": [],
+        "rawTransactionId": null,
+        "sinkId": null,
+        "splitGroupId": null,
+        "virtualSlices": []
+      },
+      "txn-groceries": {
+        "accountId": "acct-checking",
+        "amount": -50,
+        "categoryId": "cat-groceries",
+        "date": "2026-01-03",
+        "description": "Groceries",
+        "eventTagIds": [],
+        "id": "txn-groceries",
+        "lifestyleTagIds": [],
+        "rawTransactionId": null,
+        "sinkId": null,
+        "splitGroupId": null,
+        "virtualSlices": []
+      }
+    },
+    "lifestyleTags": {},
+    "parserTemplates": {},
+    "rawTransactions": {},
+    "rules": {},
+    "sinks": {},
+    "splitGroups": {},
+    "version": 1
+  }
+}
