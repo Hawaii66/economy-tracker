@@ -1,6 +1,7 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
+import { Authenticated, Unauthenticated } from 'convex/react'
 import { api } from '@economy-tracker/convex/api'
 
 export const Route = createFileRoute('/')({ component: App })
@@ -25,9 +26,19 @@ function App() {
           create budgets, invite collaborators, and branch scenarios.
         </p>
         <div className="flex flex-wrap gap-3">
-          <a href="/about" className="btn-ghost !px-5 !py-2.5 text-sm">
+          <Authenticated>
+            <Link to="/dashboard" className="btn-primary !px-5 !py-2.5 text-sm">
+              Go to dashboard
+            </Link>
+          </Authenticated>
+          <Unauthenticated>
+            <Link to="/sign-in" className="btn-primary !px-5 !py-2.5 text-sm">
+              Sign in
+            </Link>
+          </Unauthenticated>
+          <Link to="/about" className="btn-ghost !px-5 !py-2.5 text-sm">
             About
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -49,9 +60,21 @@ function App() {
           <div className="sm:col-span-2">
             <dt className="font-semibold text-[var(--text)]">Session</dt>
             <dd className="m-0 text-[var(--text-muted)]">
-              {user
-                ? `Signed in${user.email ? ` as ${user.email}` : ''}`
-                : 'Not signed in'}
+              {user ? (
+                <>
+                  Signed in{user.email ? ` as ${user.email}` : ''}.{' '}
+                  <Link to="/dashboard" className="font-semibold text-[var(--accent)]">
+                    Open dashboard
+                  </Link>
+                </>
+              ) : (
+                <>
+                  Not signed in.{' '}
+                  <Link to="/sign-in" className="font-semibold text-[var(--accent)]">
+                    Sign in
+                  </Link>
+                </>
+              )}
             </dd>
           </div>
         </dl>

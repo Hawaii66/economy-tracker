@@ -28,14 +28,57 @@ export const getBudgetState = query({
   },
   handler: async (ctx, args) => {
     const { userId } = await requireAuthUser(ctx);
-    await requireBudget(ctx, args.budgetId);
+    const budget = await requireBudget(ctx, args.budgetId);
     await requireBudgetMembership(ctx, args.budgetId, userId, [
       "OWNER",
       "EDITOR",
       "VIEWER",
     ]);
 
-    return projectBudgetState(ctx, args.budgetId, args.timeTravelSeq);
+    const projection = await projectBudgetState(
+      ctx,
+      args.budgetId,
+      args.timeTravelSeq,
+    );
+
+    return {
+      budgetId: budget._id,
+      name: budget.name,
+      ...projection,
+    };
+  },
+});
+
+export const listMyBudgets = query({
+  args: {},
+  handler: async (ctx) => {
+    const { userId } = await requireAuthUser(ctx);
+
+    const memberships = await ctx.db
+      .query("budgetMemberships")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const budgets = await Promise.all(
+      memberships.map(async (membership) => {
+        const budget = await ctx.db.get(membership.budgetId);
+        if (!budget) {
+          return null;
+        }
+
+        return {
+          _id: budget._id,
+          name: budget.name,
+          role: membership.role,
+          currentSequence: budget.currentSequence,
+          isBranch: budget.isBranch,
+        };
+      }),
+    );
+
+    return budgets
+      .filter((budget) => budget !== null)
+      .sort((left, right) => left.name.localeCompare(right.name));
   },
 });
 

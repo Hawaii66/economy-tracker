@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router'
 import { useAuthActions } from '@convex-dev/auth/react'
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
@@ -22,16 +23,9 @@ export default function AuthButton() {
 }
 
 function SignInButton() {
-  const { signIn } = useAuthActions()
-
   return (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      onClick={() => void signIn('github')}
-    >
-      Sign in with GitHub
+    <Button variant="outline" size="sm" render={<Link to="/sign-in" />} nativeButton={false}>
+      Sign in
     </Button>
   )
 }

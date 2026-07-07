@@ -7,7 +7,8 @@
     "paths": {
       "#/*": ["./src/*"],
       "@/*": ["./src/*"],
-      "@economy-tracker/convex/api": ["../convex/convex/_generated/api"]
+      "@economy-tracker/convex/api": ["../convex/convex/_generated/api"],
+      "@economy-tracker/convex/dataModel": ["../convex/convex/_generated/dataModel"]
     },
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"],
