@@ -4,6 +4,8 @@ export type ParsedCsvRow = {
   date: string
   amount: number
   description: string
+  verificationNumber: string
+  saldo: string
   rawRow: Record<string, string>
 }
 
@@ -39,6 +41,22 @@ const DESCRIPTION_COLUMN_PATTERNS = [
   /^meddelande$/i,
   /^mottagare$/i,
   /^referens$/i,
+]
+
+const VERIFICATION_NUMBER_COLUMN_PATTERNS = [
+  /^verifikationsnummer$/i,
+  /^verifikation$/i,
+  /^ver\.?\s*nr\.?$/i,
+  /^verification$/i,
+  /^verificationnumber$/i,
+  /^verification number$/i,
+]
+
+const SALDO_COLUMN_PATTERNS = [
+  /^saldo$/i,
+  /^balance$/i,
+  /^nytt saldo$/i,
+  /^kontosaldo$/i,
 ]
 
 export async function readCsvText(file: File): Promise<string> {
@@ -97,6 +115,13 @@ function findColumn(headers: string[], patterns: RegExp[]): string | null {
   return null
 }
 
+function readMappedValue(rawRow: Record<string, string>, column: string | null): string {
+  if (!column) {
+    return ''
+  }
+  return (rawRow[column] ?? '').trim()
+}
+
 function parseAmount(value: string): number | null {
   return parseDecimalStringToMinorUnits(value)
 }
@@ -145,6 +170,8 @@ export function parseCsvText(text: string): CsvParseResult {
   const amountColumn = findColumn(headers, AMOUNT_COLUMN_PATTERNS) ?? headers[1] ?? headers[0]
   const descriptionColumn =
     findColumn(headers, DESCRIPTION_COLUMN_PATTERNS) ?? headers[2] ?? headers[1] ?? headers[0]
+  const verificationNumberColumn = findColumn(headers, VERIFICATION_NUMBER_COLUMN_PATTERNS)
+  const saldoColumn = findColumn(headers, SALDO_COLUMN_PATTERNS)
 
   const rows: ParsedCsvRow[] = []
   let skippedRowCount = 0
@@ -166,6 +193,8 @@ export function parseCsvText(text: string): CsvParseResult {
       date,
       amount,
       description,
+      verificationNumber: readMappedValue(rawRow, verificationNumberColumn),
+      saldo: readMappedValue(rawRow, saldoColumn),
       rawRow,
     })
   }

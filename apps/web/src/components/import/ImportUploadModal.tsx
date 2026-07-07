@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/modal'
 import { inputClassName } from '@/components/taxonomy/form-styles'
 import type { CsvParsePreview } from '@/lib/import-review'
 
-type AccountOption = { id: string; name: string }
+type AccountOption = { id: string; name: string; genesisDate: string }
 
 type ImportUploadModalProps = {
   open: boolean
@@ -55,7 +55,13 @@ export function ImportUploadModal({
   }
 
   const canContinue =
-    accountId.length > 0 && fileName !== null && parsePreview !== null && !parseError
+    accountId.length > 0 &&
+    fileName !== null &&
+    parsePreview !== null &&
+    parsePreview.eligibleRowCount > 0 &&
+    !parseError
+
+  const selectedAccount = accounts.find((account) => account.id === accountId)
 
   return (
     <Modal
@@ -89,6 +95,12 @@ export function ImportUploadModal({
           </p>
         ) : null}
 
+        {selectedAccount ? (
+          <p className="m-0 text-xs text-[var(--text-muted)]">
+            Transactions before {selectedAccount.genesisDate} are ignored for this account.
+          </p>
+        ) : null}
+
         <div className="flex flex-col gap-1.5">
           <p className="m-0 text-sm font-semibold text-[var(--text)]">CSV file</p>
           <CsvDropzone onFile={onFile} disabled={disabled} fileName={fileName} />
@@ -104,9 +116,19 @@ export function ImportUploadModal({
 
         {parsePreview && !parseError ? (
           <div className="flex flex-wrap gap-2">
-            <span className="demo-pill">{parsePreview.rowCount} rows</span>
+            <span className="demo-pill">{parsePreview.eligibleRowCount} to review</span>
             {parsePreview.skippedRowCount > 0 ? (
-              <span className="demo-pill">{parsePreview.skippedRowCount} skipped</span>
+              <span className="demo-pill">{parsePreview.skippedRowCount} invalid rows</span>
+            ) : null}
+            {parsePreview.genesisSkippedRowCount > 0 ? (
+              <span className="demo-pill">
+                {parsePreview.genesisSkippedRowCount} before genesis
+              </span>
+            ) : null}
+            {parsePreview.duplicateSkippedRowCount > 0 ? (
+              <span className="demo-pill">
+                {parsePreview.duplicateSkippedRowCount} duplicates
+              </span>
             ) : null}
             <span className="demo-pill">Delimiter: {parsePreview.delimiter}</span>
           </div>

@@ -256,7 +256,7 @@ export default function ImportReviewTable({
   const categoriesById = new Map(categories.map((category) => [category.id, category]))
   const tagsById = new Map(tags.map((tag) => [tag.id, tag]))
   const approvedCount = rows.filter((row) => row.approved).length
-  const columnCount = 8
+  const columnCount = 9
 
   function updateRow(rowId: string, patch: Partial<ImportReviewRow>) {
     onRowsChange(rows.map((row) => (row.id === rowId ? { ...row, ...patch } : row)))
@@ -321,13 +321,14 @@ export default function ImportReviewTable({
       </div>
 
       <div className="overflow-x-auto rounded-xl border border-[var(--border)]">
-        <table className="w-full min-w-[58rem] table-fixed border-collapse text-sm">
+        <table className="w-full min-w-[64rem] table-fixed border-collapse text-sm">
           <colgroup>
             <col className="w-8" />
             <col className="w-[5.75rem]" />
             <col className="w-[7.5rem]" />
             <col />
-            <col className="w-[7.5rem]" />
+            <col className="w-[6.5rem]" />
+            <col className="w-[7rem]" />
             <col className="w-[8.5rem]" />
             <col className="w-[9.5rem]" />
             <col className="w-12" />
@@ -338,6 +339,7 @@ export default function ImportReviewTable({
               <th className="px-3 py-2">Date</th>
               <th className="px-3 py-2">Account</th>
               <th className="px-3 py-2">Description</th>
+              <th className="px-3 py-2">Verification</th>
               <th className="px-3 py-2 text-right">Amount</th>
               <th className="px-3 py-2">Category</th>
               <th className="px-3 py-2">Tags</th>
@@ -385,6 +387,9 @@ export default function ImportReviewTable({
                     </td>
                     <td className="truncate px-3 py-2.5 align-middle text-[var(--text)]">
                       {row.description || '—'}
+                    </td>
+                    <td className="truncate px-3 py-2.5 align-middle tabular-nums text-[var(--text-muted)]">
+                      {row.verificationNumber || '—'}
                     </td>
                     <td
                       className={cn(

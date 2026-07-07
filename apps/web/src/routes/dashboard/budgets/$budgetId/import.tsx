@@ -16,6 +16,10 @@ import { createEntityId } from '@/lib/entity-id'
 import {
   applyReviewRowUpdates,
   buildImportReviewRows,
+  buildParsePreview,
+  collectTransactionDedupeKeys,
+  dedupeReviewRows,
+  filterParsedRowsByGenesisDate,
   flattenReviewRows,
   groupApprovedRowsByAccount,
   type CsvParsePreview,
@@ -76,6 +80,9 @@ function ImportPage() {
 
   const accounts = getAccounts(data.state.accounts)
   const accountNames = Object.fromEntries(accounts.map((account) => [account.id, account.name]))
+  const genesisDatesByAccountId = Object.fromEntries(
+    accounts.map((account) => [account.id, account.genesisDate]),
+  )
   const rawTransactions = getRawTransactions(data.state.rawTransactions)
 
   const rules = (Object.values(data.state.rules ?? {}) as Rule[]).sort((left, right) =>
@@ -126,6 +133,60 @@ function ImportPage() {
     setUploadModalOpen(true)
   }
 
+  function updateParsePreview(accountId: string, parsed: CsvParseResult) {
+    const genesisDate = accountId ? (genesisDatesByAccountId[accountId] ?? null) : null
+    const preview = buildParsePreview(parsed, genesisDate)
+
+    let eligibleRowCount = preview.eligibleRowCount
+    let duplicateSkippedRowCount = 0
+
+    if (accountId && genesisDate) {
+      const { rows: eligibleRows } = filterParsedRowsByGenesisDate(parsed.rows, genesisDate)
+      const deduped = dedupeReviewRows(
+        eligibleRows.map((row) => ({
+          accountId,
+          date: row.date,
+          description: row.description,
+          amount: row.amount,
+          verificationNumber: row.verificationNumber,
+          saldo: row.saldo,
+        })),
+        collectTransactionDedupeKeys(flattenReviewRows(reviewBatches)),
+      )
+      eligibleRowCount = deduped.rows.length
+      duplicateSkippedRowCount = deduped.duplicateSkippedCount
+
+      setParsePreview({
+        ...preview,
+        eligibleRowCount,
+        duplicateSkippedRowCount,
+      })
+    } else {
+      setParsePreview(preview)
+    }
+
+    if (accountId && genesisDate && eligibleRowCount === 0 && parsed.rows.length > 0) {
+      if (duplicateSkippedRowCount > 0) {
+        setParseError('All transactions are duplicates of rows already in review.')
+        return
+      }
+
+      setParseError(
+        `All transactions are before this account's genesis date (${genesisDate}).`,
+      )
+      return
+    }
+
+    setParseError(null)
+  }
+
+  function handleAccountChange(accountId: string) {
+    setSelectedAccountId(accountId)
+    if (pendingParse) {
+      updateParsePreview(accountId, pendingParse)
+    }
+  }
+
   async function handleFileSelect(file: File) {
     setParseError(null)
     setParsePreview(null)
@@ -144,11 +205,7 @@ function ImportPage() {
       }
 
       setPendingParse(parsed)
-      setParsePreview({
-        rowCount: parsed.rows.length,
-        skippedRowCount: parsed.skippedRowCount,
-        delimiter: parsed.delimiter,
-      })
+      updateParsePreview(selectedAccountId, parsed)
     } catch (error) {
       setParseError(error instanceof Error ? error.message : 'Failed to parse CSV file.')
     } finally {
@@ -161,26 +218,57 @@ function ImportPage() {
       return
     }
 
+    const genesisDate = genesisDatesByAccountId[selectedAccountId]
+    if (!genesisDate) {
+      return
+    }
+
     setIsParsing(true)
 
     try {
+      const { rows: eligibleRows, genesisSkippedCount } = filterParsedRowsByGenesisDate(
+        pendingParse.rows,
+        genesisDate,
+      )
+
+      if (eligibleRows.length === 0) {
+        setParseError(
+          `All transactions are before this account's genesis date (${genesisDate}).`,
+        )
+        return
+      }
+
       const batchId = createEntityId('review-batch')
       const batchOrder = reviewBatches.length
+      const builtRows = buildImportReviewRows(
+        eligibleRows,
+        rules,
+        batchId,
+        selectedAccountId,
+        batchOrder,
+      )
+      const existingKeys = collectTransactionDedupeKeys(flattenReviewRows(reviewBatches))
+      const { rows: dedupedRows, duplicateSkippedCount } = dedupeReviewRows(
+        builtRows,
+        existingKeys,
+      )
+
+      if (dedupedRows.length === 0) {
+        setParseError('All transactions were duplicates of rows already in review.')
+        return
+      }
+
       const batch: ImportReviewBatch = {
         id: batchId,
         accountId: selectedAccountId,
         fileName: pendingFile.name,
         delimiter: pendingParse.delimiter,
-        rowCount: pendingParse.rows.length,
+        rowCount: dedupedRows.length,
         skippedRowCount: pendingParse.skippedRowCount,
+        genesisSkippedRowCount: genesisSkippedCount,
+        duplicateSkippedRowCount: duplicateSkippedCount,
         batchOrder,
-        rows: buildImportReviewRows(
-          pendingParse.rows,
-          rules,
-          batchId,
-          selectedAccountId,
-          batchOrder,
-        ),
+        rows: dedupedRows,
       }
 
       setReviewBatches((current) => [...current, batch])
@@ -211,7 +299,10 @@ function ImportPage() {
 
     try {
       const events: Array<{ eventType: string; payload: Record<string, unknown> }> = []
-      const approvedByAccount = groupApprovedRowsByAccount(reviewBatches)
+      const approvedByAccount = groupApprovedRowsByAccount(
+        reviewBatches,
+        genesisDatesByAccountId,
+      )
 
       for (const [accountId, rows] of approvedByAccount) {
         const importBatchId = createEntityId('batch')
@@ -317,6 +408,12 @@ function ImportPage() {
                 <span key={batch.id} className="demo-pill">
                   {accountNames[batch.accountId] ?? batch.accountId} · {batch.fileName} ·{' '}
                   {batch.rowCount} rows
+                  {batch.genesisSkippedRowCount > 0
+                    ? ` · ${batch.genesisSkippedRowCount} before genesis`
+                    : ''}
+                  {batch.duplicateSkippedRowCount > 0
+                    ? ` · ${batch.duplicateSkippedRowCount} duplicates`
+                    : ''}
                 </span>
               ))}
             </div>
@@ -381,7 +478,7 @@ function ImportPage() {
         isPreviewing={isPreviewing}
         hasExistingBatches={reviewBatches.length > 0}
         disabled={isImporting || isParsing || isPreviewing}
-        onAccountChange={setSelectedAccountId}
+        onAccountChange={handleAccountChange}
         onFile={(file) => void handleFileSelect(file)}
         onContinue={handleAddToReview}
       />
