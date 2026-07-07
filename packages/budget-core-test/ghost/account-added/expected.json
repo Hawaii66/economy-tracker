@@ -1,0 +1,26 @@
+{
+  "state": {
+    "accounts": {
+      "acct-checking": {
+        "balance": 1500,
+        "currency": "SEK",
+        "genesisDate": "2026-01-01",
+        "id": "acct-checking",
+        "isLiquid": true,
+        "name": "Checking",
+        "parserTemplateId": null
+      }
+    },
+    "categories": {},
+    "eventTags": {},
+    "genesisEpoch": null,
+    "ledgerTransactions": {},
+    "lifestyleTags": {},
+    "parserTemplates": {},
+    "rawTransactions": {},
+    "rules": {},
+    "sinks": {},
+    "splitGroups": {},
+    "version": 1
+  }
+}

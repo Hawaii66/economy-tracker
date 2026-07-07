@@ -1,0 +1,35 @@
+{
+  "state": {
+    "accounts": {
+      "acct-checking": {
+        "balance": 1000,
+        "currency": "SEK",
+        "genesisDate": "2026-01-01",
+        "id": "acct-checking",
+        "isLiquid": true,
+        "name": "Checking",
+        "parserTemplateId": null
+      },
+      "acct-savings": {
+        "balance": 5000,
+        "currency": "SEK",
+        "genesisDate": "2026-01-01",
+        "id": "acct-savings",
+        "isLiquid": true,
+        "name": "Savings",
+        "parserTemplateId": null
+      }
+    },
+    "categories": {},
+    "eventTags": {},
+    "genesisEpoch": null,
+    "ledgerTransactions": {},
+    "lifestyleTags": {},
+    "parserTemplates": {},
+    "rawTransactions": {},
+    "rules": {},
+    "sinks": {},
+    "splitGroups": {},
+    "version": 1
+  }
+}

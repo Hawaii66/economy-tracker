@@ -1,0 +1,31 @@
+{
+  "state": {
+    "accounts": {
+      "acct-checking": {
+        "balance": 0,
+        "currency": "SEK",
+        "genesisDate": "2026-01-01",
+        "id": "acct-checking",
+        "isLiquid": true,
+        "name": "Checking",
+        "parserTemplateId": null
+      }
+    },
+    "categories": {
+      "cat-rent": {
+        "id": "cat-rent",
+        "name": "Rent"
+      }
+    },
+    "eventTags": {},
+    "genesisEpoch": null,
+    "ledgerTransactions": {},
+    "lifestyleTags": {},
+    "parserTemplates": {},
+    "rawTransactions": {},
+    "rules": {},
+    "sinks": {},
+    "splitGroups": {},
+    "version": 1
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "state": {
+    "accounts": {},
+    "categories": {
+      "cat-food": {
+        "id": "cat-food",
+        "name": "Food"
+      }
+    },
+    "eventTags": {},
+    "genesisEpoch": null,
+    "ledgerTransactions": {},
+    "lifestyleTags": {},
+    "parserTemplates": {},
+    "rawTransactions": {},
+    "rules": {},
+    "sinks": {},
+    "splitGroups": {},
+    "version": 1
+  }
+}

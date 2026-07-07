@@ -1,0 +1,41 @@
+{
+  "state": {
+    "accounts": {
+      "acct-checking": {
+        "balance": 100,
+        "currency": "SEK",
+        "genesisDate": "2026-01-01",
+        "id": "acct-checking",
+        "isLiquid": true,
+        "name": "Checking",
+        "parserTemplateId": null
+      }
+    },
+    "categories": {},
+    "eventTags": {},
+    "genesisEpoch": null,
+    "ledgerTransactions": {
+      "txn-salary": {
+        "accountId": "acct-checking",
+        "amount": 100,
+        "categoryId": null,
+        "date": "2026-01-02",
+        "description": "Salary",
+        "eventTagIds": [],
+        "id": "txn-salary",
+        "lifestyleTagIds": [],
+        "rawTransactionId": null,
+        "sinkId": null,
+        "splitGroupId": null,
+        "virtualSlices": []
+      }
+    },
+    "lifestyleTags": {},
+    "parserTemplates": {},
+    "rawTransactions": {},
+    "rules": {},
+    "sinks": {},
+    "splitGroups": {},
+    "version": 1
+  }
+}
