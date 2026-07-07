@@ -8,7 +8,8 @@
     "convex:dev": "bash ./economy-tracker.sh dev convex dev",
     "convex:prod": "bash ./economy-tracker.sh prod convex dev",
     "convex:deploy:prod": "bash ./economy-tracker.sh prod convex deploy",
-    "web:dev": "pnpm --filter @economy-tracker/web dev"
+    "web:dev": "bash ./economy-tracker.sh dev web",
+    "web:prod": "bash ./economy-tracker.sh prod web preview"
   },
   "devDependencies": {
     "typescript": "^5.8.3"
