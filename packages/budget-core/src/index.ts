@@ -18,11 +18,15 @@ export {
   CurrencyCodeSchema,
   DEFAULT_ACCOUNT_ICON,
   DEFAULT_ENTITY_COLOR,
+  DEFAULT_SINK_ICON,
   EntityIdSchema,
   HexColorSchema,
   IsoDateSchema,
   IsoDateTimeSchema,
   MembershipRoleSchema,
+  normalizeSinkIcon,
+  SINK_ICON_VALUES,
+  SinkIconSchema,
 } from "./common.ts";
 export type {
   AccountIcon,
@@ -32,6 +36,7 @@ export type {
   IsoDate,
   IsoDateTime,
   MembershipRole,
+  SinkIcon,
 } from "./common.ts";
 
 export {
@@ -39,6 +44,7 @@ export {
   CategorySchema,
   ColumnMappingSchema,
   DEFAULT_ACCOUNT_APPEARANCE,
+  DEFAULT_SINK_APPEARANCE,
   EventTagSchema,
   GenesisEpochSchema,
   LedgerTransactionSchema,
@@ -223,3 +229,10 @@ export {
   ruleMatchesDescription,
 } from "./rules/match-rule.ts";
 export type { MatchableRule, RuleAssignment } from "./rules/match-rule.ts";
+
+export {
+  assignmentHasSink,
+  assignmentsHaveSinks,
+  isFullyUnassignedAssignment,
+} from "./budget/assignment.ts";
+export type { LedgerAssignment } from "./budget/assignment.ts";

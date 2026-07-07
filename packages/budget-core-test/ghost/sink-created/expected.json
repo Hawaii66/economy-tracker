@@ -14,6 +14,8 @@
       "sink-car": {
         "balance": 0,
         "cap": 50000,
+        "color": "#6BCB9A",
+        "icon": "wrench",
         "id": "sink-car",
         "lastFundedOn": null,
         "monthlyTarget": 5000,
@@ -23,6 +25,8 @@
       "sink-netflix": {
         "balance": 0,
         "billAmount": 1200,
+        "color": "#E8B84A",
+        "icon": "tv",
         "id": "sink-netflix",
         "lastFundedOn": null,
         "name": "Netflix",
@@ -31,6 +35,8 @@
       },
       "sink-vacation": {
         "balance": 0,
+        "color": "#5EAEFF",
+        "icon": "plane",
         "id": "sink-vacation",
         "lastFundedOn": null,
         "name": "Vacation",

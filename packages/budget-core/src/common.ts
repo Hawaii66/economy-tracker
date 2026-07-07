@@ -43,5 +43,78 @@ export type AccountIcon = z.infer<typeof AccountIconSchema>;
 
 export const DEFAULT_ACCOUNT_ICON = "wallet" as const;
 
+export const SINK_ICON_VALUES = [
+  "house",
+  "car",
+  "fuel",
+  "utensils",
+  "shopping-cart",
+  "plane",
+  "palmtree",
+  "heart-pulse",
+  "graduation-cap",
+  "baby",
+  "shirt",
+  "zap",
+  "shield",
+  "gift",
+  "dog",
+  "dumbbell",
+  "tv",
+  "wrench",
+  "smartphone",
+  "tree-pine",
+  "briefcase",
+  "calendar",
+  "coffee",
+  "target",
+  "stethoscope",
+  "book-open",
+  "gamepad-2",
+  "music",
+  "bus",
+  "bike",
+  "hammer",
+  "paintbrush",
+  "flower-2",
+  "scissors",
+  "receipt",
+  "umbrella",
+] as const;
+
+export type SinkIcon = (typeof SINK_ICON_VALUES)[number];
+
+export const DEFAULT_SINK_ICON: SinkIcon = "target";
+
+const LEGACY_ACCOUNT_ICON_TO_SINK_ICON: Record<string, SinkIcon> = {
+  wallet: "target",
+  landmark: "briefcase",
+  "credit-card": "smartphone",
+  "piggy-bank": "target",
+  banknote: "shopping-cart",
+  "building-2": "house",
+  "circle-dollar-sign": "target",
+};
+
+export function normalizeSinkIcon(value: unknown): SinkIcon {
+  if (
+    typeof value === "string" &&
+    (SINK_ICON_VALUES as readonly string[]).includes(value)
+  ) {
+    return value as SinkIcon;
+  }
+
+  if (typeof value === "string" && value in LEGACY_ACCOUNT_ICON_TO_SINK_ICON) {
+    return LEGACY_ACCOUNT_ICON_TO_SINK_ICON[value]!;
+  }
+
+  return DEFAULT_SINK_ICON;
+}
+
+export const SinkIconSchema = z.preprocess(
+  (value) => normalizeSinkIcon(value),
+  z.enum(SINK_ICON_VALUES),
+);
+
 export const MembershipRoleSchema = z.enum(["OWNER", "EDITOR", "VIEWER"]);
 export type MembershipRole = z.infer<typeof MembershipRoleSchema>;

@@ -50,7 +50,7 @@
         "internalTransferGroupId": null,
         "lifestyleTagIds": [],
         "rawTransactionId": null,
-        "sinkId": null,
+        "sinkId": "sink-groceries",
         "splitGroupId": null,
         "virtualSlices": []
       }
@@ -59,7 +59,19 @@
     "parserTemplates": {},
     "rawTransactions": {},
     "rules": {},
-    "sinks": {},
+    "sinks": {
+      "sink-groceries": {
+        "balance": 0,
+        "cap": 20000,
+        "color": "#5EAEFF",
+        "icon": "shopping-cart",
+        "id": "sink-groceries",
+        "lastFundedOn": null,
+        "monthlyTarget": 5000,
+        "name": "Groceries",
+        "sinkType": "capped_reserve"
+      }
+    },
     "splitGroups": {},
     "version": 1
   }

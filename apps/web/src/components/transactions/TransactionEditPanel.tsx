@@ -1,4 +1,5 @@
 import {
+  assignmentsHaveSinks,
   minorUnitsToDecimalString,
   type MatchableRule,
   type RuleAssignment,
@@ -7,7 +8,7 @@ import { Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { inputClassName } from '@/components/taxonomy/form-styles'
-import type { CategoryOption, EditableTransaction, TagOption } from '@/components/transactions/types'
+import type { CategoryOption, EditableTransaction, SinkOption, TagOption } from '@/components/transactions/types'
 import { formatMoney } from '@/lib/format-money'
 import {
   createSplitRow,
@@ -132,6 +133,7 @@ function TagBadgeGrid({
 function AssignmentFields({
   assignment,
   categories,
+  sinks,
   tags,
   disabled,
   onAssignmentChange,
@@ -139,6 +141,7 @@ function AssignmentFields({
 }: {
   assignment: RuleAssignment
   categories: CategoryOption[]
+  sinks: SinkOption[]
   tags: TagOption[]
   disabled?: boolean
   onAssignmentChange: (assignment: RuleAssignment) => void
@@ -161,7 +164,7 @@ function AssignmentFields({
   }
 
   return (
-    <div className="grid w-full gap-x-2 gap-y-4 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
+    <div className="grid w-full gap-x-2 gap-y-4 sm:grid-cols-[minmax(0,14rem)_minmax(0,14rem)_minmax(0,1fr)]">
       <label className={cn('flex flex-col gap-1 text-sm font-semibold text-[var(--text)]', textAlign)}>
         Category
         <select
@@ -184,7 +187,35 @@ function AssignmentFields({
         </select>
       </label>
 
-      <div className={cn('flex flex-col gap-2', align === 'right' && 'pr-2')}>
+      <label className={cn('flex flex-col gap-1 text-sm font-semibold text-[var(--text)]', textAlign)}>
+        Sink
+        <select
+          className={inputClassName}
+          value={assignment.sinkId ?? ''}
+          onChange={(event) =>
+            onAssignmentChange({
+              ...assignment,
+              sinkId: event.target.value || null,
+            })
+          }
+          disabled={disabled}
+          required
+        >
+          <option value="">Select sink…</option>
+          {sinks.map((sink) => (
+            <option key={sink.id} value={sink.id}>
+              {sink.name}
+            </option>
+          ))}
+        </select>
+        {sinks.length === 0 ? (
+          <p className="m-0 text-xs font-normal text-[var(--text-muted)]">
+            No sinks yet. Create sinks under Sinks.
+          </p>
+        ) : null}
+      </label>
+
+      <div className={cn('flex flex-col gap-2 sm:col-span-1', align === 'right' && 'pr-2')}>
         <p className={cn('m-0 text-sm font-semibold text-[var(--text)]', textAlign)}>Tags</p>
         <TagBadgeGrid
           tags={tags}
@@ -204,6 +235,7 @@ function SplitRowEditor({
   rowIndex,
   transaction,
   categories,
+  sinks,
   tags,
   matchedRuleLabel,
   disabled,
@@ -215,6 +247,7 @@ function SplitRowEditor({
   rowIndex: number
   transaction: EditableTransaction
   categories: CategoryOption[]
+  sinks: SinkOption[]
   tags: TagOption[]
   matchedRuleLabel: string | null
   disabled?: boolean
@@ -277,6 +310,7 @@ function SplitRowEditor({
         <AssignmentFields
           assignment={row.assignment}
           categories={categories}
+          sinks={sinks}
           tags={tags}
           disabled={disabled}
           onAssignmentChange={onAssignmentChange}
@@ -380,6 +414,7 @@ export type TransactionEditPanelProps = {
   transaction: EditableTransaction
   splitRows: TransactionSplitRow[]
   categories: CategoryOption[]
+  sinks: SinkOption[]
   tags: TagOption[]
   rules: readonly MatchableRule[]
   matchedRuleLabel: string | null
@@ -406,6 +441,7 @@ export default function TransactionEditPanel({
   transaction,
   splitRows,
   categories,
+  sinks,
   tags,
   rules,
   matchedRuleLabel,
@@ -430,6 +466,7 @@ export default function TransactionEditPanel({
   const allocated = sumSplitRowAmounts(splitRows)
   const remaining = transaction.amount - allocated
   const isBalanced = splitRowsAreBalanced(transaction.amount, splitRows)
+  const hasRequiredSinks = assignmentsHaveSinks(splitRows.map((row) => row.assignment))
   const isSplit = splitRows.length > 1
   const singleRow = splitRows[0]
 
@@ -546,6 +583,7 @@ export default function TransactionEditPanel({
                   rowIndex={index}
                   transaction={transaction}
                   categories={categories}
+                  sinks={sinks}
                   tags={tags}
                   matchedRuleLabel={matchedRuleLabel}
                   disabled={disabled || isSaving}
@@ -560,6 +598,7 @@ export default function TransactionEditPanel({
               <AssignmentFields
                 assignment={singleRow.assignment}
                 categories={categories}
+                sinks={sinks}
                 tags={tags}
                 disabled={disabled || isSaving}
                 onAssignmentChange={(assignment) => updateRow(singleRow.id, { assignment })}
@@ -573,9 +612,16 @@ export default function TransactionEditPanel({
                 Split amounts must add up to {formatMoney(transaction.amount)}.
               </p>
             ) : null}
+            {!hasRequiredSinks ? (
+              <p className="m-0 text-sm text-[#e88a8a]">
+                {isSplit
+                  ? 'Each split must be connected to a sink.'
+                  : 'Select a sink before saving to the ledger.'}
+              </p>
+            ) : null}
             <Button
               type="button"
-              disabled={disabled || isSaving || (isSplit && !isBalanced)}
+              disabled={disabled || isSaving || (isSplit && !isBalanced) || !hasRequiredSinks}
               onClick={onSave}
             >
               {isSaving ? 'Saving…' : isSplit ? saveSplitLabel : saveLabel}

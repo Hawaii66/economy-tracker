@@ -15,6 +15,7 @@ import {
   getInternalTransferGroups,
   getLedgerTransactions,
   getRawTransactions,
+  getSinks,
   getSplitGroups,
   getTransferCounterpartyId,
   getUnlinkedRawTransactions,
@@ -124,6 +125,13 @@ function LedgerPageContent({
     ]),
   ])
 
+  const sinksById = Object.fromEntries(
+    getSinks(state.sinks).map((sink) => [
+      sink.id,
+      { id: sink.id, name: sink.name, color: sink.color, icon: sink.icon },
+    ]),
+  )
+
   async function handleDeleteLedger(ledger: BudgetLedgerTransaction) {
     setActionError(null)
     setActionMessage(null)
@@ -196,6 +204,7 @@ function LedgerPageContent({
           transactions={ledgerTransactions}
           accountNames={accountNames}
           categoriesById={categoriesById}
+          sinksById={sinksById}
           tagsById={tagsById}
           ledgerById={ledgerById}
           internalTransferGroups={internalTransferGroups}

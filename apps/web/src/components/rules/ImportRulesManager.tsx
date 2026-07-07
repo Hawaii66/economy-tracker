@@ -98,7 +98,11 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
   const sinkOptions = getSinks(data.state.sinks).map((sink) => ({
     id: sink.id,
     name: sink.name,
+    color: sink.color,
+    icon: sink.icon,
   }))
+
+  const sinksById = new Map(sinkOptions.map((sink) => [sink.id, sink]))
 
   const tagOptions = [
     ...[...lifestyleTagsById.values()].map((tag) => ({
@@ -196,6 +200,7 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
                   <th className="px-3 py-2">Matching subtext</th>
                   <th className="px-3 py-2">Type</th>
                   <th className="px-3 py-2">Category</th>
+                  <th className="px-3 py-2">Sink</th>
                   <th className="px-3 py-2">Tags</th>
                   <th className="px-3 py-2 text-right">Actions</th>
                 </tr>
@@ -206,6 +211,8 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
                   const category = rule.categoryId
                     ? categoriesById.get(rule.categoryId)
                     : undefined
+
+                  const sink = rule.sinkId ? sinksById.get(rule.sinkId) : undefined
 
                   const lifestyleTags = rule.lifestyleTagIds
                     .map((tagId) => lifestyleTagsById.get(tagId))
@@ -235,6 +242,18 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
                           <span className="inline-flex items-center gap-2 text-[var(--text)]">
                             <ColorSwatch color={category.color} />
                             {category.name}
+                          </span>
+                        ) : (
+                          <span className="text-[var(--text-muted)]">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 align-middle">
+                        {isInternalTransfer ? (
+                          <span className="text-[var(--text-muted)]">—</span>
+                        ) : sink ? (
+                          <span className="inline-flex items-center gap-1.5 text-[var(--text)]">
+                            <ColorSwatch color={sink.color} />
+                            {sink.name}
                           </span>
                         ) : (
                           <span className="text-[var(--text-muted)]">—</span>

@@ -11,7 +11,7 @@ import ImportedTransactionsTable from '@/components/import/ImportedTransactionsT
 import { ImportUploadModal } from '@/components/import/ImportUploadModal'
 import { Button } from '@/components/ui/button'
 import { type CsvParseResult, parseCsvText, readCsvText } from '@/lib/csv-import'
-import { getAccounts, getLedgerTransactions, getRawTransactions, getUnlinkedRawTransactions } from '@/lib/budget-types'
+import { getAccounts, getLedgerTransactions, getRawTransactions, getSinks, getUnlinkedRawTransactions } from '@/lib/budget-types'
 import type { BudgetRawTransaction } from '@/lib/budget-types'
 import { createEntityId } from '@/lib/entity-id'
 import {
@@ -137,6 +137,13 @@ function ImportPage() {
       kind: 'temporary' as const,
     })),
   ].sort((left, right) => left.name.localeCompare(right.name))
+
+  const sinkOptions = getSinks(data.state.sinks).map((sink) => ({
+    id: sink.id,
+    name: sink.name,
+    color: sink.color,
+    icon: sink.icon,
+  }))
 
   const reviewRows = flattenReviewRows(reviewBatches)
   const approvedRows = reviewRows.filter((row) => row.approved)
@@ -624,6 +631,7 @@ function ImportPage() {
           transactions={unlinkedRawTransactions}
           accountNames={accountNames}
           categories={categoryOptions}
+          sinks={sinkOptions}
           tags={tagOptions}
           rules={rules}
           rulesById={rulesById}

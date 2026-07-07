@@ -4,10 +4,12 @@ import {
   CurrencyCodeSchema,
   DEFAULT_ACCOUNT_ICON,
   DEFAULT_ENTITY_COLOR,
+  DEFAULT_SINK_ICON,
   EntityIdSchema,
   HexColorSchema,
   IsoDateSchema,
   MoneyAmountSchema,
+  SinkIconSchema,
 } from "../common.ts";
 
 export const GenesisEpochSchema = z.object({
@@ -36,9 +38,16 @@ export const DEFAULT_ACCOUNT_APPEARANCE = {
 } as const;
 export type Account = z.infer<typeof AccountSchema>;
 
+export const DEFAULT_SINK_APPEARANCE = {
+  color: DEFAULT_ENTITY_COLOR,
+  icon: DEFAULT_SINK_ICON,
+} as const;
+
 const sinkBaseFields = {
   id: EntityIdSchema,
   name: z.string().min(1),
+  color: HexColorSchema,
+  icon: SinkIconSchema,
   balance: MoneyAmountSchema,
   lastFundedOn: IsoDateSchema.nullable(),
 };
