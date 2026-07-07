@@ -92,7 +92,7 @@ Cons: still requires someone to use the app.
 
 ## 3. Require sink on ledger transactions (consistency fix)
 
-**Status:** Needs fix
+**Status:** Done
 
 **Problem:** `LEDGER_TRANSACTION_CREATED` allows fully unassigned entries (`sinkId: null`, no category/tags), but `LEDGER_TRANSACTION_UPDATED` rejects anything without a sink. The web app never emits `LEDGER_TRANSACTION_UPDATED`, so users can save imports without a sink and have no in-ledger way to fix it except delete and re-import.
 

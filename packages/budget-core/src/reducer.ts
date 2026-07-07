@@ -11,7 +11,7 @@ import {
 import type { BudgetState } from "./budget/state.ts";
 import type { EntityId } from "./common.ts";
 import type { DomainEvent } from "./events/domain-event.ts";
-import type { SinkCreatedPayload } from "./events/payloads.ts";
+import type { SinkCreatedPayload, LedgerTransactionCreatedPayload } from "./events/payloads.ts";
 
 type DraftBudgetState = Draft<BudgetState>;
 
@@ -72,6 +72,14 @@ function requireLifestyleTag(draft: DraftBudgetState, tagId: EntityId) {
     throw new Error(`Lifestyle tag not found: ${tagId}`);
   }
   return lifestyleTag;
+}
+
+function ledgerCreateExemptsSinkRequirement(
+  payload: LedgerTransactionCreatedPayload,
+): boolean {
+  return (
+    payload.internalTransferLeg === true || payload.virtualSliceParent === true
+  );
 }
 
 type SinkAllocation = {
@@ -462,8 +470,21 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
 
     case "LEDGER_TRANSACTION_CREATED": {
       const { payload } = event;
+      if (payload.internalTransferLeg && payload.virtualSliceParent) {
+        throw new Error(
+          "Ledger transaction cannot be both an internal transfer leg and a virtual slice parent",
+        );
+      }
+
+      const exemptSinkRequirement = ledgerCreateExemptsSinkRequirement(payload);
+      if (exemptSinkRequirement && !isFullyUnassignedAssignment(payload)) {
+        throw new Error(
+          "Exempt ledger transactions must be fully unassigned",
+        );
+      }
+
       assertTransactionSinkConnected(draft, payload, {
-        exemptWhenFullyUnassigned: true,
+        exemptWhenFullyUnassigned: exemptSinkRequirement,
       });
       requireAccount(draft, payload.accountId).balance += payload.amount;
       draft.ledgerTransactions[payload.ledgerTransactionId] = {
@@ -598,6 +619,13 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
         ledgerTransactionB.internalTransferGroupId
       ) {
         throw new Error("Transaction is already linked as an internal transfer");
+      }
+
+      if (
+        !isFullyUnassignedAssignment(ledgerTransactionA) ||
+        !isFullyUnassignedAssignment(ledgerTransactionB)
+      ) {
+        throw new Error("Internal transfer legs must be fully unassigned");
       }
 
       draft.internalTransferGroups[payload.transferGroupId] = {

@@ -304,6 +304,7 @@ describe("sink balance sync with ledger transactions", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          virtualSliceParent: true,
         },
       }),
       incomeSlicedEvent({
@@ -403,6 +404,7 @@ describe("sink balance sync with ledger transactions", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          internalTransferLeg: true,
         },
       }),
       ledgerTransactionCreatedEvent({
@@ -420,6 +422,7 @@ describe("sink balance sync with ledger transactions", () => {
           sinkId: null,
           lifestyleTagIds: [],
           eventTagIds: [],
+          internalTransferLeg: true,
         },
       }),
       {

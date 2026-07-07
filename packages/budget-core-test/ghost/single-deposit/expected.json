@@ -29,7 +29,7 @@
         "internalTransferGroupId": null,
         "lifestyleTagIds": [],
         "rawTransactionId": null,
-        "sinkId": null,
+        "sinkId": "sink-salary",
         "splitGroupId": null,
         "virtualSlices": []
       }
@@ -38,7 +38,19 @@
     "parserTemplates": {},
     "rawTransactions": {},
     "rules": {},
-    "sinks": {},
+    "sinks": {
+      "sink-salary": {
+        "balance": 10000,
+        "cap": 50000,
+        "color": "#5EAEFF",
+        "icon": "briefcase",
+        "id": "sink-salary",
+        "lastFundedOn": null,
+        "monthlyTarget": 10000,
+        "name": "Salary",
+        "sinkType": "capped_reserve"
+      }
+    },
     "splitGroups": {},
     "version": 1
   }

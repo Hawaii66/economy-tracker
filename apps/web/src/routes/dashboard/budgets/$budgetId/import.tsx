@@ -405,6 +405,7 @@ function ImportPage() {
               sinkId: null,
               lifestyleTagIds: [],
               eventTagIds: [],
+              internalTransferLeg: true,
             },
           },
           {
@@ -420,6 +421,7 @@ function ImportPage() {
               sinkId: null,
               lifestyleTagIds: [],
               eventTagIds: [],
+              internalTransferLeg: true,
             },
           },
           {
@@ -492,6 +494,7 @@ function ImportPage() {
                 sinkId: null,
                 lifestyleTagIds: [],
                 eventTagIds: [],
+                virtualSliceParent: true,
               },
             },
             {

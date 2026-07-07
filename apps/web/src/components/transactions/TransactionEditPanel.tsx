@@ -616,7 +616,7 @@ export default function TransactionEditPanel({
               <p className="m-0 text-sm text-[#e88a8a]">
                 {isSplit
                   ? 'Each split must be connected to a sink.'
-                  : 'Select a sink before saving to the ledger.'}
+                  : 'Connect to a sink before saving.'}
               </p>
             ) : null}
             <Button
