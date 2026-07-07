@@ -1,0 +1,48 @@
+export type BudgetAccount = {
+  id: string
+  name: string
+  balance: number
+  currency: string
+}
+
+export type BudgetRawTransaction = {
+  id: string
+  accountId: string
+  importBatchId: string
+  date: string
+  amount: number
+  description: string
+}
+
+export type BudgetLedgerTransaction = {
+  id: string
+  accountId: string
+  date: string
+  amount: number
+  description: string
+}
+
+function asRecord<T>(value: unknown): Record<string, T> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, T>
+  }
+  return {}
+}
+
+export function getAccounts(accounts: unknown): BudgetAccount[] {
+  return Object.values(asRecord<BudgetAccount>(accounts))
+}
+
+export function getRawTransactions(rawTransactions: unknown): BudgetRawTransaction[] {
+  return Object.values(asRecord<BudgetRawTransaction>(rawTransactions)).sort((left, right) =>
+    right.date.localeCompare(left.date),
+  )
+}
+
+export function getLedgerTransactions(
+  ledgerTransactions: unknown,
+): BudgetLedgerTransaction[] {
+  return Object.values(asRecord<BudgetLedgerTransaction>(ledgerTransactions)).sort(
+    (left, right) => right.date.localeCompare(left.date),
+  )
+}
