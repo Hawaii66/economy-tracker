@@ -6,19 +6,22 @@ import { Import, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '@economy-tracker/convex/api'
 import type { Id } from '@economy-tracker/convex/dataModel'
-import { ImportUploadModal } from '@/components/import/ImportUploadModal'
 import ImportReviewTable from '@/components/import/ImportReviewTable'
-import TransactionTable from '@/components/TransactionTable'
+import ImportedTransactionsTable from '@/components/import/ImportedTransactionsTable'
+import { ImportUploadModal } from '@/components/import/ImportUploadModal'
 import { Button } from '@/components/ui/button'
 import { type CsvParseResult, parseCsvText, readCsvText } from '@/lib/csv-import'
-import { getAccounts, getRawTransactions } from '@/lib/budget-types'
+import { getAccounts, getLedgerTransactions, getRawTransactions, getUnlinkedRawTransactions } from '@/lib/budget-types'
+import type { BudgetRawTransaction } from '@/lib/budget-types'
 import { createEntityId } from '@/lib/entity-id'
 import {
   applyReviewRowUpdates,
   buildImportReviewRows,
   buildParsePreview,
+  collectStoredTransactionDedupeKeys,
   collectTransactionDedupeKeys,
   dedupeReviewRows,
+  mergeTransactionDedupeKeys,
   filterParsedRowsByGenesisDate,
   flattenReviewRows,
   groupApprovedRowsByAccount,
@@ -27,6 +30,9 @@ import {
   type ImportReviewRow,
 } from '@/lib/import-review'
 import type { MatchableRule } from 'budget-core'
+import {
+  type SaveImportedTransactionInput,
+} from '@/lib/transaction-split'
 
 export const Route = createFileRoute('/dashboard/budgets/$budgetId/import')({
   component: ImportPage,
@@ -59,6 +65,8 @@ function ImportPage() {
   const [isImporting, setIsImporting] = useState(false)
   const [importMessage, setImportMessage] = useState<string | null>(null)
   const [importError, setImportError] = useState<string | null>(null)
+  const [ledgerMessage, setLedgerMessage] = useState<string | null>(null)
+  const [ledgerError, setLedgerError] = useState<string | null>(null)
 
   if (isPending) {
     return (
@@ -84,6 +92,17 @@ function ImportPage() {
     accounts.map((account) => [account.id, account.genesisDate]),
   )
   const rawTransactions = getRawTransactions(data.state.rawTransactions)
+  const ledgerTransactions = getLedgerTransactions(data.state.ledgerTransactions)
+
+  const storedDedupeKeys = collectStoredTransactionDedupeKeys(
+    rawTransactions,
+    ledgerTransactions,
+  )
+
+  const unlinkedRawTransactions = getUnlinkedRawTransactions(
+    data.state.rawTransactions,
+    data.state.ledgerTransactions,
+  )
 
   const rules = (Object.values(data.state.rules ?? {}) as Rule[]).sort((left, right) =>
     (left.keywords[0] ?? left.name).localeCompare(right.keywords[0] ?? right.name),
@@ -92,8 +111,9 @@ function ImportPage() {
     rules.map((rule) => [rule.id, { name: rule.name, keywords: rule.keywords }]),
   )
 
-  const categoryOptions = (Object.values(data.state.categories ?? {}) as Category[])
-    .sort((left, right) => left.name.localeCompare(right.name))
+  const categoryOptions = (Object.values(data.state.categories ?? {}) as Category[]).sort(
+    (left, right) => left.name.localeCompare(right.name),
+  )
 
   const lifestyleTags = Object.values(data.state.lifestyleTags ?? {}) as LifestyleTag[]
   const eventTags = (Object.values(data.state.eventTags ?? {}) as EventTag[]).filter(
@@ -118,6 +138,13 @@ function ImportPage() {
   const reviewRows = flattenReviewRows(reviewBatches)
   const approvedRows = reviewRows.filter((row) => row.approved)
   const canImport = approvedRows.length > 0
+
+  function getExistingDedupeKeys() {
+    return mergeTransactionDedupeKeys(
+      storedDedupeKeys,
+      collectTransactionDedupeKeys(flattenReviewRows(reviewBatches)),
+    )
+  }
 
   function clearModalDraft() {
     setSelectedFileName(null)
@@ -151,7 +178,7 @@ function ImportPage() {
           verificationNumber: row.verificationNumber,
           saldo: row.saldo,
         })),
-        collectTransactionDedupeKeys(flattenReviewRows(reviewBatches)),
+        getExistingDedupeKeys(),
       )
       eligibleRowCount = deduped.rows.length
       duplicateSkippedRowCount = deduped.duplicateSkippedCount
@@ -167,7 +194,7 @@ function ImportPage() {
 
     if (accountId && genesisDate && eligibleRowCount === 0 && parsed.rows.length > 0) {
       if (duplicateSkippedRowCount > 0) {
-        setParseError('All transactions are duplicates of rows already in review.')
+        setParseError('All transactions are already imported or in review.')
         return
       }
 
@@ -247,14 +274,13 @@ function ImportPage() {
         selectedAccountId,
         batchOrder,
       )
-      const existingKeys = collectTransactionDedupeKeys(flattenReviewRows(reviewBatches))
       const { rows: dedupedRows, duplicateSkippedCount } = dedupeReviewRows(
         builtRows,
-        existingKeys,
+        getExistingDedupeKeys(),
       )
 
       if (dedupedRows.length === 0) {
-        setParseError('All transactions were duplicates of rows already in review.')
+        setParseError('All transactions were already imported or in review.')
         return
       }
 
@@ -323,30 +349,6 @@ function ImportPage() {
             transactions: importedTransactions,
           },
         })
-
-        for (let index = 0; index < rows.length; index += 1) {
-          const row = rows[index]
-          const rawTransaction = importedTransactions[index]
-          if (!row || !rawTransaction) {
-            continue
-          }
-
-          events.push({
-            eventType: 'LEDGER_TRANSACTION_CREATED',
-            payload: {
-              ledgerTransactionId: createEntityId('txn'),
-              rawTransactionId: rawTransaction.rawTransactionId,
-              accountId,
-              date: row.date,
-              amount: row.amount,
-              description: row.description,
-              categoryId: row.assignment.categoryId,
-              sinkId: row.assignment.sinkId,
-              lifestyleTagIds: row.assignment.lifestyleTagIds,
-              eventTagIds: row.assignment.eventTagIds,
-            },
-          })
-        }
       }
 
       await appendEvents({
@@ -355,13 +357,93 @@ function ImportPage() {
       })
 
       setImportMessage(
-        `Imported ${approvedRows.length} transaction${approvedRows.length === 1 ? '' : 's'} from ${approvedByAccount.size} account${approvedByAccount.size === 1 ? '' : 's'}.`,
+        `Imported ${approvedRows.length} raw transaction${approvedRows.length === 1 ? '' : 's'} from ${approvedByAccount.size} account${approvedByAccount.size === 1 ? '' : 's'}.`,
       )
       resetImportSession()
     } catch (error) {
       setImportError(error instanceof Error ? error.message : 'Import failed.')
     } finally {
       setIsImporting(false)
+    }
+  }
+
+  async function handleSaveToLedger(
+    transaction: BudgetRawTransaction,
+    input: SaveImportedTransactionInput,
+  ) {
+    setLedgerError(null)
+    setLedgerMessage(null)
+
+    const ledgerTransactionId = createEntityId('txn')
+
+    try {
+      if (input.mode === 'single') {
+        await appendEvents({
+          budgetId: budgetId as Id<'budgets'>,
+          events: [
+            {
+              eventType: 'LEDGER_TRANSACTION_CREATED',
+              payload: {
+                ledgerTransactionId,
+                rawTransactionId: transaction.id,
+                accountId: transaction.accountId,
+                date: transaction.date,
+                amount: transaction.amount,
+                description: transaction.description,
+                categoryId: input.assignment.categoryId,
+                sinkId: input.assignment.sinkId,
+                lifestyleTagIds: input.assignment.lifestyleTagIds,
+                eventTagIds: input.assignment.eventTagIds,
+              },
+            },
+          ],
+        })
+      } else {
+        await appendEvents({
+          budgetId: budgetId as Id<'budgets'>,
+          events: [
+            {
+              eventType: 'LEDGER_TRANSACTION_CREATED',
+              payload: {
+                ledgerTransactionId,
+                rawTransactionId: transaction.id,
+                accountId: transaction.accountId,
+                date: transaction.date,
+                amount: transaction.amount,
+                description: transaction.description,
+                categoryId: null,
+                sinkId: null,
+                lifestyleTagIds: [],
+                eventTagIds: [],
+              },
+            },
+            {
+              eventType: 'INCOME_SLICED',
+              payload: {
+                ledgerTransactionId,
+                slices: input.slices.map((slice) => ({
+                  sliceId: createEntityId('slice'),
+                  amount: slice.amount,
+                  description: transaction.description,
+                  categoryId: slice.assignment.categoryId,
+                  sinkId: slice.assignment.sinkId,
+                  lifestyleTagIds: slice.assignment.lifestyleTagIds,
+                  eventTagIds: slice.assignment.eventTagIds,
+                })),
+              },
+            },
+          ],
+        })
+      }
+
+      setLedgerMessage(
+        input.mode === 'split'
+          ? `Saved ${transaction.description || 'transaction'} to the ledger as ${input.slices.length} splits.`
+          : `Saved ${transaction.description || 'transaction'} to the ledger.`,
+      )
+    } catch (error) {
+      setLedgerError(error instanceof Error ? error.message : 'Failed to save to ledger.')
+      throw error
     }
   }
 
@@ -420,8 +502,6 @@ function ImportPage() {
 
             <ImportReviewTable
               rows={reviewRows}
-              categories={categoryOptions}
-              tags={tagOptions}
               rulesById={rulesById}
               accountNames={accountNames}
               onRowsChange={handleRowsChange}
@@ -437,8 +517,8 @@ function ImportPage() {
                 {isImporting
                   ? 'Importing…'
                   : approvedRows.length > 0
-                    ? `Import ${approvedRows.length} approved transaction${approvedRows.length === 1 ? '' : 's'}`
-                    : 'Approve rows to import'}
+                    ? `Import ${approvedRows.length} selected transaction${approvedRows.length === 1 ? '' : 's'}`
+                    : 'Select rows to import'}
               </Button>
               <Button
                 type="button"
@@ -460,10 +540,26 @@ function ImportPage() {
       <section className="budget-panel">
         <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Imported transactions</h2>
         <p className="mt-2 mb-4 text-sm text-[var(--text-muted)]">
-          {rawTransactions.length} raw transaction{rawTransactions.length === 1 ? '' : 's'} stored
-          in this budget.
+          {unlinkedRawTransactions.length === 0
+            ? 'No unprocessed imports. Expand a row after importing to categorize and save to the ledger.'
+            : `${unlinkedRawTransactions.length} imported transaction${unlinkedRawTransactions.length === 1 ? '' : 's'} waiting to be saved to the ledger.`}
         </p>
-        <TransactionTable transactions={rawTransactions} accountNames={accountNames} />
+        {ledgerError ? (
+          <p className="demo-alert demo-alert-danger mb-4 text-sm">{ledgerError}</p>
+        ) : null}
+        {ledgerMessage ? (
+          <p className="demo-alert mb-4 text-sm">{ledgerMessage}</p>
+        ) : null}
+        <ImportedTransactionsTable
+          transactions={unlinkedRawTransactions}
+          accountNames={accountNames}
+          categories={categoryOptions}
+          tags={tagOptions}
+          rules={rules}
+          rulesById={rulesById}
+          onSave={handleSaveToLedger}
+          disabled={isImporting}
+        />
       </section>
 
       <ImportUploadModal

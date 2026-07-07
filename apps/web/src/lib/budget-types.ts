@@ -16,10 +16,12 @@ export type BudgetRawTransaction = {
   date: string
   amount: number
   description: string
+  rawRow: Record<string, string>
 }
 
 export type BudgetLedgerTransaction = {
   id: string
+  rawTransactionId: string | null
   accountId: string
   date: string
   amount: number
@@ -48,5 +50,20 @@ export function getLedgerTransactions(
 ): BudgetLedgerTransaction[] {
   return Object.values(asRecord<BudgetLedgerTransaction>(ledgerTransactions)).sort(
     (left, right) => right.date.localeCompare(left.date),
+  )
+}
+
+export function getUnlinkedRawTransactions(
+  rawTransactions: unknown,
+  ledgerTransactions: unknown,
+): BudgetRawTransaction[] {
+  const linkedRawIds = new Set(
+    getLedgerTransactions(ledgerTransactions)
+      .map((transaction) => transaction.rawTransactionId)
+      .filter((rawTransactionId): rawTransactionId is string => rawTransactionId !== null),
+  )
+
+  return getRawTransactions(rawTransactions).filter(
+    (transaction) => !linkedRawIds.has(transaction.id),
   )
 }
