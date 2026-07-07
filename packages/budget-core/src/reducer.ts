@@ -66,6 +66,68 @@ function requireLifestyleTag(draft: DraftBudgetState, tagId: EntityId) {
   return lifestyleTag;
 }
 
+function deleteLedgerTransaction(
+  draft: DraftBudgetState,
+  ledgerTransactionId: EntityId,
+  options: { skipTransferCounterpartyDeletion?: boolean } = {},
+) {
+  const ledgerTransaction = draft.ledgerTransactions[ledgerTransactionId];
+  if (!ledgerTransaction) {
+    return;
+  }
+
+  const counterpartyIds: EntityId[] = [];
+  if (
+    ledgerTransaction.internalTransferGroupId &&
+    !options.skipTransferCounterpartyDeletion
+  ) {
+    const transferGroup =
+      draft.internalTransferGroups[ledgerTransaction.internalTransferGroupId];
+    if (transferGroup) {
+      for (const id of transferGroup.ledgerTransactionIds) {
+        if (id !== ledgerTransactionId) {
+          counterpartyIds.push(id);
+        }
+      }
+      delete draft.internalTransferGroups[
+        ledgerTransaction.internalTransferGroupId
+      ];
+    }
+  }
+
+  requireAccount(draft, ledgerTransaction.accountId).balance -=
+    ledgerTransaction.amount;
+
+  if (ledgerTransaction.splitGroupId) {
+    const splitGroup = draft.splitGroups[ledgerTransaction.splitGroupId];
+    if (splitGroup) {
+      if (splitGroup.parentLedgerTransactionId === ledgerTransactionId) {
+        for (const linkedLedgerTransactionId of splitGroup.linkedLedgerTransactionIds) {
+          const linkedLedgerTransaction =
+            draft.ledgerTransactions[linkedLedgerTransactionId];
+          if (linkedLedgerTransaction) {
+            linkedLedgerTransaction.splitGroupId = null;
+          }
+        }
+        delete draft.splitGroups[ledgerTransaction.splitGroupId];
+      } else {
+        splitGroup.linkedLedgerTransactionIds =
+          splitGroup.linkedLedgerTransactionIds.filter(
+            (id) => id !== ledgerTransactionId,
+          );
+      }
+    }
+  }
+
+  delete draft.ledgerTransactions[ledgerTransactionId];
+
+  for (const counterpartyId of counterpartyIds) {
+    deleteLedgerTransaction(draft, counterpartyId, {
+      skipTransferCounterpartyDeletion: true,
+    });
+  }
+}
+
 function sinkFromCreatedPayload(payload: SinkCreatedPayload): Sink {
   const base = {
     id: payload.sinkId,
@@ -319,9 +381,15 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       ledgerTransaction.sinkId = payload.sinkId;
       ledgerTransaction.lifestyleTagIds = payload.lifestyleTagIds;
       ledgerTransaction.eventTagIds = payload.eventTagIds;
+      ledgerTransaction.virtualSlices = [];
       if (payload.description !== undefined) {
         ledgerTransaction.description = payload.description;
       }
+      return;
+    }
+
+    case "LEDGER_TRANSACTION_DELETED": {
+      deleteLedgerTransaction(draft, event.payload.ledgerTransactionId);
       return;
     }
 
@@ -403,6 +471,22 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       };
       ledgerTransactionA.internalTransferGroupId = payload.transferGroupId;
       ledgerTransactionB.internalTransferGroupId = payload.transferGroupId;
+      return;
+    }
+
+    case "INTERNAL_TRANSFER_UNLINKED": {
+      const { payload } = event;
+      const transferGroup = draft.internalTransferGroups[payload.transferGroupId];
+      if (!transferGroup) {
+        throw new Error("Internal transfer group not found");
+      }
+
+      for (const ledgerTransactionId of transferGroup.ledgerTransactionIds) {
+        const ledgerTransaction = requireLedgerTransaction(draft, ledgerTransactionId);
+        ledgerTransaction.internalTransferGroupId = null;
+      }
+
+      delete draft.internalTransferGroups[payload.transferGroupId];
       return;
     }
 

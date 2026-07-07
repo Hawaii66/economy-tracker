@@ -17,7 +17,9 @@ import {
   IncomeSlicedPayloadSchema,
   InternalTransferLinkedPayloadSchema,
   InternalTransferRecordedPayloadSchema,
+  InternalTransferUnlinkedPayloadSchema,
   LedgerTransactionCreatedPayloadSchema,
+  LedgerTransactionDeletedPayloadSchema,
   LedgerTransactionUpdatedPayloadSchema,
   LifestyleTagCreatedPayloadSchema,
   LifestyleTagUpdatedPayloadSchema,
@@ -55,10 +57,12 @@ export const EVENT_TYPES = [
   "TRANSACTIONS_IMPORTED",
   "LEDGER_TRANSACTION_CREATED",
   "LEDGER_TRANSACTION_UPDATED",
+  "LEDGER_TRANSACTION_DELETED",
   "SPLIT_INITIATED",
   "SPLIT_LINKED",
   "INCOME_SLICED",
   "INTERNAL_TRANSFER_LINKED",
+  "INTERNAL_TRANSFER_UNLINKED",
   "INTERNAL_TRANSFER_RECORDED",
 ] as const;
 
@@ -198,6 +202,12 @@ export const LedgerTransactionUpdatedEventSchema = z.object({
   ...domainEventBase,
 });
 
+export const LedgerTransactionDeletedEventSchema = z.object({
+  eventType: z.literal("LEDGER_TRANSACTION_DELETED"),
+  payload: LedgerTransactionDeletedPayloadSchema,
+  ...domainEventBase,
+});
+
 export const SplitInitiatedEventSchema = z.object({
   eventType: z.literal("SPLIT_INITIATED"),
   payload: SplitInitiatedPayloadSchema,
@@ -219,6 +229,12 @@ export const IncomeSlicedEventSchema = z.object({
 export const InternalTransferLinkedEventSchema = z.object({
   eventType: z.literal("INTERNAL_TRANSFER_LINKED"),
   payload: InternalTransferLinkedPayloadSchema,
+  ...domainEventBase,
+});
+
+export const InternalTransferUnlinkedEventSchema = z.object({
+  eventType: z.literal("INTERNAL_TRANSFER_UNLINKED"),
+  payload: InternalTransferUnlinkedPayloadSchema,
   ...domainEventBase,
 });
 
@@ -250,10 +266,12 @@ export const DomainEventSchema = z.discriminatedUnion("eventType", [
   TransactionsImportedEventSchema,
   LedgerTransactionCreatedEventSchema,
   LedgerTransactionUpdatedEventSchema,
+  LedgerTransactionDeletedEventSchema,
   SplitInitiatedEventSchema,
   SplitLinkedEventSchema,
   IncomeSlicedEventSchema,
   InternalTransferLinkedEventSchema,
+  InternalTransferUnlinkedEventSchema,
   InternalTransferRecordedEventSchema,
 ]);
 export type DomainEvent = z.infer<typeof DomainEventSchema>;
@@ -377,6 +395,11 @@ export const AppendEventInputSchema = z.discriminatedUnion("eventType", [
     ...appendEventBase,
   }),
   z.object({
+    eventType: z.literal("LEDGER_TRANSACTION_DELETED"),
+    payload: LedgerTransactionDeletedPayloadSchema,
+    ...appendEventBase,
+  }),
+  z.object({
     eventType: z.literal("SPLIT_INITIATED"),
     payload: SplitInitiatedPayloadSchema,
     ...appendEventBase,
@@ -394,6 +417,11 @@ export const AppendEventInputSchema = z.discriminatedUnion("eventType", [
   z.object({
     eventType: z.literal("INTERNAL_TRANSFER_LINKED"),
     payload: InternalTransferLinkedPayloadSchema,
+    ...appendEventBase,
+  }),
+  z.object({
+    eventType: z.literal("INTERNAL_TRANSFER_UNLINKED"),
+    payload: InternalTransferUnlinkedPayloadSchema,
     ...appendEventBase,
   }),
   z.object({

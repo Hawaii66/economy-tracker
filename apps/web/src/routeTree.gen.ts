@@ -17,7 +17,6 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardBudgetsBudgetIdRouteImport } from './routes/dashboard/budgets/$budgetId'
 import { Route as DashboardBudgetsBudgetIdIndexRouteImport } from './routes/dashboard/budgets/$budgetId/index'
 import { Route as DashboardBudgetsBudgetIdTagsRouteImport } from './routes/dashboard/budgets/$budgetId/tags'
-import { Route as DashboardBudgetsBudgetIdSplitsRouteImport } from './routes/dashboard/budgets/$budgetId/splits'
 import { Route as DashboardBudgetsBudgetIdSinksRouteImport } from './routes/dashboard/budgets/$budgetId/sinks'
 import { Route as DashboardBudgetsBudgetIdSettingsRouteImport } from './routes/dashboard/budgets/$budgetId/settings'
 import { Route as DashboardBudgetsBudgetIdRulesRouteImport } from './routes/dashboard/budgets/$budgetId/rules'
@@ -66,12 +65,6 @@ const DashboardBudgetsBudgetIdTagsRoute =
   DashboardBudgetsBudgetIdTagsRouteImport.update({
     id: '/tags',
     path: '/tags',
-    getParentRoute: () => DashboardBudgetsBudgetIdRoute,
-  } as any)
-const DashboardBudgetsBudgetIdSplitsRoute =
-  DashboardBudgetsBudgetIdSplitsRouteImport.update({
-    id: '/splits',
-    path: '/splits',
     getParentRoute: () => DashboardBudgetsBudgetIdRoute,
   } as any)
 const DashboardBudgetsBudgetIdSinksRoute =
@@ -124,7 +117,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/budgets/$budgetId/rules': typeof DashboardBudgetsBudgetIdRulesRoute
   '/dashboard/budgets/$budgetId/settings': typeof DashboardBudgetsBudgetIdSettingsRoute
   '/dashboard/budgets/$budgetId/sinks': typeof DashboardBudgetsBudgetIdSinksRoute
-  '/dashboard/budgets/$budgetId/splits': typeof DashboardBudgetsBudgetIdSplitsRoute
   '/dashboard/budgets/$budgetId/tags': typeof DashboardBudgetsBudgetIdTagsRoute
   '/dashboard/budgets/$budgetId/': typeof DashboardBudgetsBudgetIdIndexRoute
 }
@@ -139,7 +131,6 @@ export interface FileRoutesByTo {
   '/dashboard/budgets/$budgetId/rules': typeof DashboardBudgetsBudgetIdRulesRoute
   '/dashboard/budgets/$budgetId/settings': typeof DashboardBudgetsBudgetIdSettingsRoute
   '/dashboard/budgets/$budgetId/sinks': typeof DashboardBudgetsBudgetIdSinksRoute
-  '/dashboard/budgets/$budgetId/splits': typeof DashboardBudgetsBudgetIdSplitsRoute
   '/dashboard/budgets/$budgetId/tags': typeof DashboardBudgetsBudgetIdTagsRoute
   '/dashboard/budgets/$budgetId': typeof DashboardBudgetsBudgetIdIndexRoute
 }
@@ -157,7 +148,6 @@ export interface FileRoutesById {
   '/dashboard/budgets/$budgetId/rules': typeof DashboardBudgetsBudgetIdRulesRoute
   '/dashboard/budgets/$budgetId/settings': typeof DashboardBudgetsBudgetIdSettingsRoute
   '/dashboard/budgets/$budgetId/sinks': typeof DashboardBudgetsBudgetIdSinksRoute
-  '/dashboard/budgets/$budgetId/splits': typeof DashboardBudgetsBudgetIdSplitsRoute
   '/dashboard/budgets/$budgetId/tags': typeof DashboardBudgetsBudgetIdTagsRoute
   '/dashboard/budgets/$budgetId/': typeof DashboardBudgetsBudgetIdIndexRoute
 }
@@ -176,7 +166,6 @@ export interface FileRouteTypes {
     | '/dashboard/budgets/$budgetId/rules'
     | '/dashboard/budgets/$budgetId/settings'
     | '/dashboard/budgets/$budgetId/sinks'
-    | '/dashboard/budgets/$budgetId/splits'
     | '/dashboard/budgets/$budgetId/tags'
     | '/dashboard/budgets/$budgetId/'
   fileRoutesByTo: FileRoutesByTo
@@ -191,7 +180,6 @@ export interface FileRouteTypes {
     | '/dashboard/budgets/$budgetId/rules'
     | '/dashboard/budgets/$budgetId/settings'
     | '/dashboard/budgets/$budgetId/sinks'
-    | '/dashboard/budgets/$budgetId/splits'
     | '/dashboard/budgets/$budgetId/tags'
     | '/dashboard/budgets/$budgetId'
   id:
@@ -208,7 +196,6 @@ export interface FileRouteTypes {
     | '/dashboard/budgets/$budgetId/rules'
     | '/dashboard/budgets/$budgetId/settings'
     | '/dashboard/budgets/$budgetId/sinks'
-    | '/dashboard/budgets/$budgetId/splits'
     | '/dashboard/budgets/$budgetId/tags'
     | '/dashboard/budgets/$budgetId/'
   fileRoutesById: FileRoutesById
@@ -278,13 +265,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBudgetsBudgetIdTagsRouteImport
       parentRoute: typeof DashboardBudgetsBudgetIdRoute
     }
-    '/dashboard/budgets/$budgetId/splits': {
-      id: '/dashboard/budgets/$budgetId/splits'
-      path: '/splits'
-      fullPath: '/dashboard/budgets/$budgetId/splits'
-      preLoaderRoute: typeof DashboardBudgetsBudgetIdSplitsRouteImport
-      parentRoute: typeof DashboardBudgetsBudgetIdRoute
-    }
     '/dashboard/budgets/$budgetId/sinks': {
       id: '/dashboard/budgets/$budgetId/sinks'
       path: '/sinks'
@@ -337,7 +317,6 @@ interface DashboardBudgetsBudgetIdRouteChildren {
   DashboardBudgetsBudgetIdRulesRoute: typeof DashboardBudgetsBudgetIdRulesRoute
   DashboardBudgetsBudgetIdSettingsRoute: typeof DashboardBudgetsBudgetIdSettingsRoute
   DashboardBudgetsBudgetIdSinksRoute: typeof DashboardBudgetsBudgetIdSinksRoute
-  DashboardBudgetsBudgetIdSplitsRoute: typeof DashboardBudgetsBudgetIdSplitsRoute
   DashboardBudgetsBudgetIdTagsRoute: typeof DashboardBudgetsBudgetIdTagsRoute
   DashboardBudgetsBudgetIdIndexRoute: typeof DashboardBudgetsBudgetIdIndexRoute
 }
@@ -352,7 +331,6 @@ const DashboardBudgetsBudgetIdRouteChildren: DashboardBudgetsBudgetIdRouteChildr
     DashboardBudgetsBudgetIdSettingsRoute:
       DashboardBudgetsBudgetIdSettingsRoute,
     DashboardBudgetsBudgetIdSinksRoute: DashboardBudgetsBudgetIdSinksRoute,
-    DashboardBudgetsBudgetIdSplitsRoute: DashboardBudgetsBudgetIdSplitsRoute,
     DashboardBudgetsBudgetIdTagsRoute: DashboardBudgetsBudgetIdTagsRoute,
     DashboardBudgetsBudgetIdIndexRoute: DashboardBudgetsBudgetIdIndexRoute,
   }

@@ -5,7 +5,11 @@ import {
   type MatchableRule,
   type RuleAssignment,
 } from 'budget-core'
-import type { BudgetRawTransaction } from '@/lib/budget-types'
+
+export type SplittableTransaction = {
+  description: string
+  amount: number
+}
 
 export type TransactionSplitRow = {
   id: string
@@ -21,7 +25,7 @@ export type SaveImportedTransactionInput =
     }
 
 export function createSplitRow(
-  transaction: BudgetRawTransaction,
+  transaction: SplittableTransaction,
   rules: readonly MatchableRule[],
   amountMinor: number,
 ): TransactionSplitRow {
@@ -33,7 +37,7 @@ export function createSplitRow(
 }
 
 export function buildInitialSplitRows(
-  transaction: BudgetRawTransaction,
+  transaction: SplittableTransaction,
   rules: readonly MatchableRule[],
 ): TransactionSplitRow[] {
   return [createSplitRow(transaction, rules, transaction.amount)]

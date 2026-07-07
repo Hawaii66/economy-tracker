@@ -218,6 +218,13 @@ export type LedgerTransactionUpdatedPayload = z.infer<
   typeof LedgerTransactionUpdatedPayloadSchema
 >;
 
+export const LedgerTransactionDeletedPayloadSchema = z.object({
+  ledgerTransactionId: EntityIdSchema,
+});
+export type LedgerTransactionDeletedPayload = z.infer<
+  typeof LedgerTransactionDeletedPayloadSchema
+>;
+
 export const SplitInitiatedPayloadSchema = z.object({
   splitGroupId: EntityIdSchema,
   parentLedgerTransactionId: EntityIdSchema,
@@ -253,6 +260,13 @@ export const InternalTransferLinkedPayloadSchema = z.object({
 });
 export type InternalTransferLinkedPayload = z.infer<
   typeof InternalTransferLinkedPayloadSchema
+>;
+
+export const InternalTransferUnlinkedPayloadSchema = z.object({
+  transferGroupId: EntityIdSchema,
+});
+export type InternalTransferUnlinkedPayload = z.infer<
+  typeof InternalTransferUnlinkedPayloadSchema
 >;
 
 export const InternalTransferRecordedPayloadSchema = z.object({
