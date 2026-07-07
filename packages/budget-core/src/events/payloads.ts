@@ -245,6 +245,15 @@ export const IncomeSlicedPayloadSchema = z.object({
 });
 export type IncomeSlicedPayload = z.infer<typeof IncomeSlicedPayloadSchema>;
 
+export const InternalTransferLinkedPayloadSchema = z.object({
+  transferGroupId: EntityIdSchema,
+  ledgerTransactionIdA: EntityIdSchema,
+  ledgerTransactionIdB: EntityIdSchema,
+});
+export type InternalTransferLinkedPayload = z.infer<
+  typeof InternalTransferLinkedPayloadSchema
+>;
+
 export const InternalTransferRecordedPayloadSchema = z.object({
   transferId: EntityIdSchema,
   fromAccountId: EntityIdSchema,

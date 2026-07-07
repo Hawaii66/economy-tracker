@@ -97,6 +97,8 @@ start_convex() {
   fi
 
   echo "[economy-tracker] convex deployment=${CONVEX_DEPLOYMENT} env=${ENVIRONMENT}"
+  echo "[economy-tracker] building budget-core..."
+  (cd "$ROOT_DIR" && economy_tracker_pnpm --filter budget-core build)
   (cd "$CONVEX_DIR" && economy_tracker_pnpm exec convex "${args[@]}") &
   SERVICE_PID="$!"
 }

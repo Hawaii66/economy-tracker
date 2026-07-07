@@ -367,6 +367,73 @@ function ImportPage() {
     }
   }
 
+  async function handleSaveInternalTransfer(
+    source: BudgetRawTransaction,
+    counterparty: BudgetRawTransaction,
+  ) {
+    setLedgerError(null)
+    setLedgerMessage(null)
+
+    const sourceLedgerTransactionId = createEntityId('txn')
+    const counterpartyLedgerTransactionId = createEntityId('txn')
+    const transferGroupId = createEntityId('xfer')
+
+    try {
+      await appendEvents({
+        budgetId: budgetId as Id<'budgets'>,
+        events: [
+          {
+            eventType: 'LEDGER_TRANSACTION_CREATED',
+            payload: {
+              ledgerTransactionId: sourceLedgerTransactionId,
+              rawTransactionId: source.id,
+              accountId: source.accountId,
+              date: source.date,
+              amount: source.amount,
+              description: source.description,
+              categoryId: null,
+              sinkId: null,
+              lifestyleTagIds: [],
+              eventTagIds: [],
+            },
+          },
+          {
+            eventType: 'LEDGER_TRANSACTION_CREATED',
+            payload: {
+              ledgerTransactionId: counterpartyLedgerTransactionId,
+              rawTransactionId: counterparty.id,
+              accountId: counterparty.accountId,
+              date: counterparty.date,
+              amount: counterparty.amount,
+              description: counterparty.description,
+              categoryId: null,
+              sinkId: null,
+              lifestyleTagIds: [],
+              eventTagIds: [],
+            },
+          },
+          {
+            eventType: 'INTERNAL_TRANSFER_LINKED',
+            payload: {
+              transferGroupId,
+              ledgerTransactionIdA: sourceLedgerTransactionId,
+              ledgerTransactionIdB: counterpartyLedgerTransactionId,
+            },
+          },
+        ],
+      })
+
+      setLedgerMessage(
+        `Linked internal transfer between ${accountNames[source.accountId] ?? source.accountId} and ${accountNames[counterparty.accountId] ?? counterparty.accountId}.`,
+      )
+    } catch (error) {
+      setLedgerError(
+        error instanceof Error ? error.message : 'Failed to save internal transfer.',
+      )
+      throw error
+    }
+  }
+
   async function handleSaveToLedger(
     transaction: BudgetRawTransaction,
     input: SaveImportedTransactionInput,
@@ -467,7 +534,7 @@ function ImportPage() {
             <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Review import</h2>
             <p className="mt-2 mb-0 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
               Add exports from multiple accounts (e.g. Maestro and budget) to review together.
-              Transfer linking will be added later.
+              Mark paired rows as internal transfers when moving money between your own accounts.
             </p>
           </div>
           <Button type="button" onClick={openUploadModal} disabled={isImporting}>
@@ -558,6 +625,7 @@ function ImportPage() {
           rules={rules}
           rulesById={rulesById}
           onSave={handleSaveToLedger}
+          onSaveInternalTransfer={handleSaveInternalTransfer}
           disabled={isImporting}
         />
       </section>

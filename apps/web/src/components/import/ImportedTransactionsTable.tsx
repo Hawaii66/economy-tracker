@@ -1,5 +1,4 @@
 import {
-  assignmentFromRule,
   findMatchingRule,
   minorUnitsToDecimalString,
   type MatchableRule,
@@ -11,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { inputClassName } from '@/components/taxonomy/form-styles'
 import type { BudgetRawTransaction } from '@/lib/budget-types'
 import { formatMoney } from '@/lib/format-money'
+import { findInternalTransferCandidates } from '@/lib/internal-transfer'
 import {
   buildInitialSplitRows,
   buildSaveImportedTransactionInput,
@@ -34,6 +34,10 @@ type ImportedTransactionsTableProps = {
   rules: readonly MatchableRule[]
   rulesById: Record<string, { name: string; keywords: string[] }>
   onSave: (transaction: BudgetRawTransaction, input: SaveImportedTransactionInput) => Promise<void>
+  onSaveInternalTransfer: (
+    source: BudgetRawTransaction,
+    counterparty: BudgetRawTransaction,
+  ) => Promise<void>
   disabled?: boolean
 }
 
@@ -306,6 +310,91 @@ function SplitRowEditor({
   )
 }
 
+function InternalTransferPanel({
+  transaction,
+  candidates,
+  accountNames,
+  selectedCounterpartyId,
+  disabled,
+  isSaving,
+  onSelectCounterparty,
+  onSave,
+}: {
+  transaction: BudgetRawTransaction
+  candidates: BudgetRawTransaction[]
+  accountNames: Record<string, string>
+  selectedCounterpartyId: string | null
+  disabled?: boolean
+  isSaving?: boolean
+  onSelectCounterparty: (counterpartyId: string) => void
+  onSave: () => void
+}) {
+  return (
+    <div className="ml-auto max-w-2xl pr-2">
+      <p className="m-0 text-sm text-[var(--text-muted)]">
+        Internal transfers move cash between your own accounts without affecting expense
+        categories. Pick the matching transaction from another account with the opposite amount.
+      </p>
+
+      {candidates.length === 0 ? (
+        <p className="mt-4 mb-0 text-sm text-[#e88a8a]">
+          No matching transaction found in another account for {formatMoney(transaction.amount)}.
+          Import the other side of this transfer first.
+        </p>
+      ) : (
+        <div className="mt-4 flex flex-col gap-2">
+          {candidates.map((candidate) => {
+            const selected = selectedCounterpartyId === candidate.id
+
+            return (
+              <label
+                key={candidate.id}
+                className={cn(
+                  'flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-3 transition-colors',
+                  selected
+                    ? 'border-[var(--accent)] bg-[rgba(94,174,255,0.08)]'
+                    : 'border-[var(--border)] hover:border-[var(--text-muted)]',
+                  disabled && 'cursor-not-allowed opacity-50',
+                )}
+              >
+                <input
+                  type="radio"
+                  name={`transfer-counterparty-${transaction.id}`}
+                  className="mt-1"
+                  checked={selected}
+                  disabled={disabled || isSaving}
+                  onChange={() => onSelectCounterparty(candidate.id)}
+                />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-semibold text-[var(--text)]">
+                    {accountNames[candidate.accountId] ?? candidate.accountId}
+                  </span>
+                  <span className="mt-0.5 block truncate text-sm text-[var(--text-muted)]">
+                    {candidate.date} · {candidate.description || '—'}
+                  </span>
+                  <span className="mt-1 block text-sm font-semibold text-[var(--text)]">
+                    {formatMoney(candidate.amount)}
+                  </span>
+                </span>
+              </label>
+            )
+          })}
+        </div>
+      )}
+
+      <div className="mt-4 flex justify-end">
+        <Button
+          type="button"
+          disabled={disabled || isSaving || !selectedCounterpartyId || candidates.length === 0}
+          onClick={onSave}
+        >
+          {isSaving ? 'Saving…' : 'Save internal transfer'}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 function ExpandedTransactionPanel({
   transaction,
   splitRows,
@@ -313,10 +402,17 @@ function ExpandedTransactionPanel({
   tags,
   rules,
   matchedRuleLabel,
+  transferCandidates,
+  accountNames,
+  isInternalTransfer,
+  selectedCounterpartyId,
   disabled,
   isSaving,
+  onInternalTransferChange,
+  onSelectCounterparty,
   onSplitRowsChange,
   onSave,
+  onSaveInternalTransfer,
 }: {
   transaction: BudgetRawTransaction
   splitRows: TransactionSplitRow[]
@@ -324,10 +420,17 @@ function ExpandedTransactionPanel({
   tags: TagOption[]
   rules: readonly MatchableRule[]
   matchedRuleLabel: string | null
+  transferCandidates: BudgetRawTransaction[]
+  accountNames: Record<string, string>
+  isInternalTransfer: boolean
+  selectedCounterpartyId: string | null
   disabled?: boolean
   isSaving?: boolean
+  onInternalTransferChange: (enabled: boolean) => void
+  onSelectCounterparty: (counterpartyId: string) => void
   onSplitRowsChange: (rows: TransactionSplitRow[]) => void
   onSave: () => void
+  onSaveInternalTransfer: () => void
 }) {
   const allocated = sumSplitRowAmounts(splitRows)
   const remaining = transaction.amount - allocated
@@ -364,80 +467,110 @@ function ExpandedTransactionPanel({
       onClick={(event) => event.stopPropagation()}
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 pr-2">
-        {isSplit ? (
-          <div>
-            <p className="m-0 text-sm font-semibold text-[var(--text)]">Split across categories</p>
-            <p className="mt-1 mb-0 text-xs text-[var(--text-muted)]">
-              Total {formatMoney(transaction.amount)}
-              {' '}
-              · Allocated {formatMoney(allocated)}
-              {' '}
-              · Remaining{' '}
-              <span className={remaining === 0 ? 'text-green-400' : 'text-[#e88a8a]'}>
-                {formatMoney(remaining)}
-              </span>
-            </p>
+        <label className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--text)]">
+          <input
+            type="checkbox"
+            checked={isInternalTransfer}
+            disabled={disabled || isSaving}
+            onChange={(event) => onInternalTransferChange(event.target.checked)}
+          />
+          Internal transfer
+        </label>
+
+        {!isInternalTransfer ? (
+          <Button type="button" variant="outline" size="sm" disabled={disabled || isSaving} onClick={addRow}>
+            <Plus />
+            Add split
+          </Button>
+        ) : null}
+      </div>
+
+      {isInternalTransfer ? (
+        <InternalTransferPanel
+          transaction={transaction}
+          candidates={transferCandidates}
+          accountNames={accountNames}
+          selectedCounterpartyId={selectedCounterpartyId}
+          disabled={disabled}
+          isSaving={isSaving}
+          onSelectCounterparty={onSelectCounterparty}
+          onSave={onSaveInternalTransfer}
+        />
+      ) : (
+        <>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 pr-2">
+            {isSplit ? (
+              <div>
+                <p className="m-0 text-sm font-semibold text-[var(--text)]">Split across categories</p>
+                <p className="mt-1 mb-0 text-xs text-[var(--text-muted)]">
+                  Total {formatMoney(transaction.amount)}
+                  {' '}
+                  · Allocated {formatMoney(allocated)}
+                  {' '}
+                  · Remaining{' '}
+                  <span className={remaining === 0 ? 'text-green-400' : 'text-[#e88a8a]'}>
+                    {formatMoney(remaining)}
+                  </span>
+                </p>
+              </div>
+            ) : (
+              <div className="flex flex-1 justify-end">
+                {matchedRuleLabel ? (
+                  <p className="m-0 text-right text-xs text-[var(--text-muted)]">
+                    Auto-applied from rule:{' '}
+                    <span className="text-[var(--text)]">{matchedRuleLabel}</span>
+                  </p>
+                ) : null}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="flex flex-1 justify-end">
-            {matchedRuleLabel ? (
-              <p className="m-0 text-right text-xs text-[var(--text-muted)]">
-                Auto-applied from rule:{' '}
-                <span className="text-[var(--text)]">{matchedRuleLabel}</span>
+
+          {isSplit ? (
+            <div className="flex flex-col gap-3 pr-2">
+              {splitRows.map((row, index) => (
+                <SplitRowEditor
+                  key={row.id}
+                  row={row}
+                  rowIndex={index}
+                  transaction={transaction}
+                  categories={categories}
+                  tags={tags}
+                  matchedRuleLabel={matchedRuleLabel}
+                  disabled={disabled || isSaving}
+                  onAmountChange={(amountMinor) => updateRow(row.id, { amountMinor })}
+                  onAssignmentChange={(assignment) => updateRow(row.id, { assignment })}
+                  onRemove={() => removeRow(row.id)}
+                />
+              ))}
+            </div>
+          ) : singleRow ? (
+            <div className="ml-auto max-w-2xl pr-2">
+              <AssignmentFields
+                assignment={singleRow.assignment}
+                categories={categories}
+                tags={tags}
+                disabled={disabled || isSaving}
+                onAssignmentChange={(assignment) => updateRow(singleRow.id, { assignment })}
+              />
+            </div>
+          ) : null}
+
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-3 pr-2">
+            {isSplit && !isBalanced ? (
+              <p className="m-0 text-sm text-[#e88a8a]">
+                Split amounts must add up to {formatMoney(transaction.amount)}.
               </p>
             ) : null}
+            <Button
+              type="button"
+              disabled={disabled || isSaving || (isSplit && !isBalanced)}
+              onClick={onSave}
+            >
+              {isSaving ? 'Saving…' : isSplit ? 'Save splits to ledger' : 'Save to ledger'}
+            </Button>
           </div>
-        )}
-        <Button type="button" variant="outline" size="sm" disabled={disabled || isSaving} onClick={addRow}>
-          <Plus />
-          Add split
-        </Button>
-      </div>
-
-      {isSplit ? (
-        <div className="flex flex-col gap-3 pr-2">
-          {splitRows.map((row, index) => (
-            <SplitRowEditor
-              key={row.id}
-              row={row}
-              rowIndex={index}
-              transaction={transaction}
-              categories={categories}
-              tags={tags}
-              matchedRuleLabel={matchedRuleLabel}
-              disabled={disabled || isSaving}
-              onAmountChange={(amountMinor) => updateRow(row.id, { amountMinor })}
-              onAssignmentChange={(assignment) => updateRow(row.id, { assignment })}
-              onRemove={() => removeRow(row.id)}
-            />
-          ))}
-        </div>
-      ) : singleRow ? (
-        <div className="ml-auto max-w-2xl pr-2">
-          <AssignmentFields
-            assignment={singleRow.assignment}
-            categories={categories}
-            tags={tags}
-            disabled={disabled || isSaving}
-            onAssignmentChange={(assignment) => updateRow(singleRow.id, { assignment })}
-          />
-        </div>
-      ) : null}
-
-      <div className="mt-4 flex flex-wrap items-center justify-end gap-3 pr-2">
-        {isSplit && !isBalanced ? (
-          <p className="m-0 text-sm text-[#e88a8a]">
-            Split amounts must add up to {formatMoney(transaction.amount)}.
-          </p>
-        ) : null}
-        <Button
-          type="button"
-          disabled={disabled || isSaving || (isSplit && !isBalanced)}
-          onClick={onSave}
-        >
-          {isSaving ? 'Saving…' : isSplit ? 'Save splits to ledger' : 'Save to ledger'}
-        </Button>
-      </div>
+        </>
+      )}
     </div>
   )
 }
@@ -465,14 +598,23 @@ export default function ImportedTransactionsTable({
   rules,
   rulesById,
   onSave,
+  onSaveInternalTransfer,
   disabled = false,
 }: ImportedTransactionsTableProps) {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const [splitRowsByTransactionId, setSplitRowsByTransactionId] = useState<
     Record<string, TransactionSplitRow[]>
   >({})
+  const [internalTransferByTransactionId, setInternalTransferByTransactionId] = useState<
+    Record<string, boolean>
+  >({})
+  const [counterpartyByTransactionId, setCounterpartyByTransactionId] = useState<
+    Record<string, string>
+  >({})
   const [savingTransactionId, setSavingTransactionId] = useState<string | null>(null)
   const columnCount = 5
+
+  const reservedCounterpartyIds = new Set(Object.values(counterpartyByTransactionId))
 
   useEffect(() => {
     setSplitRowsByTransactionId((current) =>
@@ -530,6 +672,38 @@ export default function ImportedTransactionsTable({
     }
   }
 
+  async function handleSaveInternalTransfer(transaction: BudgetRawTransaction) {
+    const counterpartyId = counterpartyByTransactionId[transaction.id]
+    const counterparty = transactions.find((item) => item.id === counterpartyId)
+    if (!counterparty) {
+      return
+    }
+
+    setSavingTransactionId(transaction.id)
+
+    try {
+      await onSaveInternalTransfer(transaction, counterparty)
+      setInternalTransferByTransactionId((current) => {
+        const next = { ...current }
+        delete next[transaction.id]
+        delete next[counterparty.id]
+        return next
+      })
+      setCounterpartyByTransactionId((current) => {
+        const next = { ...current }
+        delete next[transaction.id]
+        return next
+      })
+      expandFirstTransaction(
+        transactions.filter(
+          (item) => item.id !== transaction.id && item.id !== counterparty.id,
+        ),
+      )
+    } finally {
+      setSavingTransactionId(null)
+    }
+  }
+
   if (transactions.length === 0) {
     return null
   }
@@ -564,19 +738,49 @@ export default function ImportedTransactionsTable({
             const matchedRuleLabel = matchedRuleMeta
               ? matchedRuleMeta.keywords.join(', ') || matchedRuleMeta.name
               : null
+            const isReservedCounterparty = reservedCounterpartyIds.has(transaction.id)
+            const reservedByTransaction = transactions.find(
+              (item) => counterpartyByTransactionId[item.id] === transaction.id,
+            )
+            const selectedCounterpartyId = counterpartyByTransactionId[transaction.id] ?? null
+            const transferCandidates = findInternalTransferCandidates(
+              transaction,
+              transactions.filter((candidate) => {
+                if (candidate.id === transaction.id) {
+                  return false
+                }
+
+                // Keep the selected match visible even though it is reserved for this pair.
+                if (candidate.id === selectedCounterpartyId) {
+                  return true
+                }
+
+                return !reservedCounterpartyIds.has(candidate.id)
+              }),
+            )
+            const isInternalTransfer = internalTransferByTransactionId[transaction.id] ?? false
 
             return (
               <Fragment key={transaction.id}>
                 <tr
                   className={cn(
-                    'cursor-pointer border-b border-[var(--border)] transition-colors hover:bg-[rgba(27,24,23,0.35)]',
+                    'border-b border-[var(--border)] transition-colors',
+                    isReservedCounterparty
+                      ? 'bg-[rgba(94,174,255,0.06)]'
+                      : 'cursor-pointer hover:bg-[rgba(27,24,23,0.35)]',
                     expanded && 'border-b-0',
                   )}
-                  onClick={() => toggleExpanded(transaction.id)}
+                  onClick={() => {
+                    if (!isReservedCounterparty) {
+                      toggleExpanded(transaction.id)
+                    }
+                  }}
                   aria-expanded={expanded}
                 >
                   <td className="px-2 py-2.5 align-middle">
-                    {expanded ? (
+                    {isReservedCounterparty ? (
+                      <span className="inline-block size-4" aria-hidden="true" />
+                    ) : expanded ? (
                       <ChevronDown className="size-4 text-[var(--text-muted)]" />
                     ) : (
                       <ChevronRight className="size-4 text-[var(--text-muted)]" />
@@ -590,6 +794,11 @@ export default function ImportedTransactionsTable({
                   </td>
                   <td className="truncate px-3 py-2.5 align-middle text-[var(--text)]">
                     {transaction.description || '—'}
+                    {isReservedCounterparty && reservedByTransaction ? (
+                      <span className="mt-0.5 block truncate text-xs text-[var(--accent)]">
+                        Paired with {reservedByTransaction.description || 'transfer'}
+                      </span>
+                    ) : null}
                     {matchedRuleLabel ? (
                       <span className="mt-0.5 block truncate text-xs text-[var(--text-muted)]">
                         Rule: {matchedRuleLabel}
@@ -605,7 +814,7 @@ export default function ImportedTransactionsTable({
                     {formatMoney(transaction.amount)}
                   </td>
                 </tr>
-                {expanded ? (
+                {expanded && !isReservedCounterparty ? (
                   <tr className="border-b border-[var(--border)]">
                     <td colSpan={columnCount} className="p-0">
                       <ExpandedTransactionPanel
@@ -615,8 +824,31 @@ export default function ImportedTransactionsTable({
                         tags={tags}
                         rules={rules}
                         matchedRuleLabel={matchedRuleLabel}
+                        transferCandidates={transferCandidates}
+                        accountNames={accountNames}
+                        isInternalTransfer={isInternalTransfer}
+                        selectedCounterpartyId={selectedCounterpartyId}
                         disabled={disabled}
                         isSaving={savingTransactionId === transaction.id}
+                        onInternalTransferChange={(enabled) => {
+                          setInternalTransferByTransactionId((current) => ({
+                            ...current,
+                            [transaction.id]: enabled,
+                          }))
+                          if (!enabled) {
+                            setCounterpartyByTransactionId((current) => {
+                              const next = { ...current }
+                              delete next[transaction.id]
+                              return next
+                            })
+                          }
+                        }}
+                        onSelectCounterparty={(counterpartyId) =>
+                          setCounterpartyByTransactionId((current) => ({
+                            ...current,
+                            [transaction.id]: counterpartyId,
+                          }))
+                        }
                         onSplitRowsChange={(rows) =>
                           setSplitRowsByTransactionId((current) => ({
                             ...current,
@@ -624,6 +856,7 @@ export default function ImportedTransactionsTable({
                           }))
                         }
                         onSave={() => void handleSave(transaction)}
+                        onSaveInternalTransfer={() => void handleSaveInternalTransfer(transaction)}
                       />
                     </td>
                   </tr>

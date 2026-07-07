@@ -162,6 +162,7 @@ export const LedgerTransactionSchema = z.object({
   lifestyleTagIds: z.array(EntityIdSchema),
   eventTagIds: z.array(EntityIdSchema),
   splitGroupId: EntityIdSchema.nullable(),
+  internalTransferGroupId: EntityIdSchema.nullable().default(null),
   virtualSlices: z.array(VirtualSliceSchema),
 });
 export type LedgerTransaction = z.infer<typeof LedgerTransactionSchema>;
@@ -173,3 +174,10 @@ export const SplitGroupSchema = z.object({
   initiatedByUserId: EntityIdSchema,
 });
 export type SplitGroup = z.infer<typeof SplitGroupSchema>;
+
+export const InternalTransferGroupSchema = z.object({
+  id: EntityIdSchema,
+  ledgerTransactionIds: z.tuple([EntityIdSchema, EntityIdSchema]),
+  initiatedByUserId: EntityIdSchema,
+});
+export type InternalTransferGroup = z.infer<typeof InternalTransferGroupSchema>;
