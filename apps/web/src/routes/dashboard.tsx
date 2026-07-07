@@ -1,5 +1,5 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router'
-import DashboardHeader from '@/components/DashboardHeader'
+import { createFileRoute } from '@tanstack/react-router'
+import DashboardShell from '@/components/DashboardShell'
 import { requireAuth } from '@/lib/auth'
 
 export const Route = createFileRoute('/dashboard')({
@@ -15,10 +15,5 @@ export const Route = createFileRoute('/dashboard')({
 function DashboardLayout() {
   const { user } = Route.useRouteContext()
 
-  return (
-    <>
-      <DashboardHeader user={user} />
-      <Outlet />
-    </>
-  )
+  return <DashboardShell user={user} />
 }
