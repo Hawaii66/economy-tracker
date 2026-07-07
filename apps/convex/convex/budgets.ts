@@ -7,13 +7,13 @@ import {
   requireBudget,
   requireBudgetMembership,
   requireUser,
-} from "./lib/budget-access.js";
+} from "./lib/budget_access.js";
 import {
   appendBudgetEvents,
   insertSnapshot,
   parseCachedBudgetState,
-} from "./lib/event-processing.js";
-import { projectBudgetState } from "./lib/state-projection.js";
+} from "./lib/event_processing.js";
+import { projectBudgetState } from "./lib/state_projection.js";
 
 const clientEventValidator = v.object({
   eventType: v.string(),

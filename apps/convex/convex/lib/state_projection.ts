@@ -5,7 +5,7 @@ import {
 } from "budget-core";
 import type { Id } from "../_generated/dataModel.js";
 import type { QueryCtx } from "../_generated/server.js";
-import { parseCachedBudgetState, storedEventToDomainEvent } from "./event-processing.js";
+import { parseCachedBudgetState, storedEventToDomainEvent } from "./event_processing.js";
 
 export async function projectBudgetState(
   ctx: QueryCtx,
