@@ -11,6 +11,26 @@ export async function requireBudget(ctx: BudgetCtx, budgetId: Id<"budgets">) {
   return budget;
 }
 
+export async function requireUser(ctx: BudgetCtx, userId: Id<"users">) {
+  const user = await ctx.db.get(userId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+  return user;
+}
+
+export async function getBudgetMembership(
+  ctx: BudgetCtx,
+  budgetId: Id<"budgets">,
+  userId: Id<"users">,
+) {
+  return ctx.db
+    .query("budgetMemberships")
+    .withIndex("by_budget", (q) => q.eq("budgetId", budgetId))
+    .filter((q) => q.eq(q.field("userId"), userId))
+    .first();
+}
+
 export async function requireBudgetMembership(
   ctx: BudgetCtx,
   budgetId: Id<"budgets">,

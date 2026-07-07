@@ -1,6 +1,12 @@
+import { INITIAL_BUDGET_STATE } from "budget-core";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server.js";
-import { requireBudget, requireBudgetMembership } from "./lib/budget-access.js";
+import {
+  getBudgetMembership,
+  requireBudget,
+  requireBudgetMembership,
+  requireUser,
+} from "./lib/budget-access.js";
 import {
   appendBudgetEvents,
   insertSnapshot,
@@ -80,6 +86,76 @@ export const createSnapshot = mutation({
       sequenceNumber: budget.currentSequence,
       createdAt,
     };
+  },
+});
+
+const membershipRoleValidator = v.union(
+  v.literal("OWNER"),
+  v.literal("EDITOR"),
+  v.literal("VIEWER"),
+);
+
+export const createBudget = mutation({
+  args: {
+    name: v.string(),
+    userId: v.id("users"),
+  },
+  handler: async (ctx, args) => {
+    await requireUser(ctx, args.userId);
+
+    const createdAt = new Date().toISOString();
+    const budgetId = await ctx.db.insert("budgets", {
+      name: args.name,
+      createdById: args.userId,
+      isBranch: false,
+      parentBudgetId: null,
+      branchedAtSequence: null,
+      cachedStateJson: JSON.stringify(INITIAL_BUDGET_STATE),
+      currentSequence: 0,
+    });
+
+    await ctx.db.insert("budgetMemberships", {
+      budgetId,
+      userId: args.userId,
+      role: "OWNER",
+    });
+
+    await insertSnapshot(ctx, budgetId, 0, INITIAL_BUDGET_STATE, createdAt);
+
+    return { budgetId };
+  },
+});
+
+export const addMember = mutation({
+  args: {
+    budgetId: v.id("budgets"),
+    actorUserId: v.id("users"),
+    userId: v.id("users"),
+    role: membershipRoleValidator,
+  },
+  handler: async (ctx, args) => {
+    await requireBudget(ctx, args.budgetId);
+    await requireBudgetMembership(ctx, args.budgetId, args.actorUserId, [
+      "OWNER",
+    ]);
+    await requireUser(ctx, args.userId);
+
+    const existingMembership = await getBudgetMembership(
+      ctx,
+      args.budgetId,
+      args.userId,
+    );
+    if (existingMembership) {
+      throw new Error("User is already a member of this budget");
+    }
+
+    const membershipId = await ctx.db.insert("budgetMemberships", {
+      budgetId: args.budgetId,
+      userId: args.userId,
+      role: args.role,
+    });
+
+    return { membershipId };
   },
 });
 
