@@ -1,6 +1,6 @@
 import {
   assignmentFromRule,
-  findMatchingRule,
+  findMatchingCategorizeRule,
   parseDecimalStringToMinorUnits,
   type MatchableRule,
   type RuleAssignment,
@@ -28,7 +28,7 @@ export function createSplitRow(
   return {
     id: crypto.randomUUID(),
     amountMinor,
-    assignment: assignmentFromRule(findMatchingRule(transaction.description, rules)),
+    assignment: assignmentFromRule(findMatchingCategorizeRule(transaction.description, rules)),
   }
 }
 

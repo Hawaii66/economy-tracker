@@ -1,5 +1,6 @@
 import {
-  findMatchingRule,
+  findMatchingCategorizeRule,
+  findMatchingInternalTransferRule,
   minorUnitsToDecimalString,
   type MatchableRule,
   type RuleAssignment,
@@ -32,7 +33,7 @@ type ImportedTransactionsTableProps = {
   categories: CategoryOption[]
   tags: TagOption[]
   rules: readonly MatchableRule[]
-  rulesById: Record<string, { name: string; keywords: string[] }>
+  rulesById: Record<string, { name: string; keywords: string[]; ruleType?: 'categorize' | 'internal_transfer' }>
   onSave: (transaction: BudgetRawTransaction, input: SaveImportedTransactionInput) => Promise<void>
   onSaveInternalTransfer: (
     source: BudgetRawTransaction,
@@ -623,6 +624,22 @@ export default function ImportedTransactionsTable({
   }, [transactions, rules])
 
   useEffect(() => {
+    setInternalTransferByTransactionId((current) => {
+      const next = { ...current }
+      for (const transaction of transactions) {
+        if (next[transaction.id] !== undefined) {
+          continue
+        }
+        const matched = findMatchingInternalTransferRule(transaction.description, rules)
+        if (matched) {
+          next[transaction.id] = true
+        }
+      }
+      return next
+    })
+  }, [transactions, rules])
+
+  useEffect(() => {
     setExpandedIds((current) => {
       const validIds = new Set(transactions.map((transaction) => transaction.id))
       const stillExpanded = [...current].filter((id) => validIds.has(id))
@@ -733,11 +750,18 @@ export default function ImportedTransactionsTable({
             const splitRows =
               splitRowsByTransactionId[transaction.id] ??
               buildInitialSplitRows(transaction, rules)
-            const matchedRule = findMatchingRule(transaction.description, rules)
+            const matchedCategorizeRule = findMatchingCategorizeRule(transaction.description, rules)
+            const matchedInternalTransferRule = findMatchingInternalTransferRule(
+              transaction.description,
+              rules,
+            )
+            const matchedRule = matchedCategorizeRule ?? matchedInternalTransferRule
             const matchedRuleMeta = matchedRule ? rulesById[matchedRule.id] : undefined
             const matchedRuleLabel = matchedRuleMeta
               ? matchedRuleMeta.keywords.join(', ') || matchedRuleMeta.name
               : null
+            const isInternalTransferRule =
+              (matchedRuleMeta?.ruleType ?? 'categorize') === 'internal_transfer'
             const isReservedCounterparty = reservedCounterpartyIds.has(transaction.id)
             const reservedByTransaction = transactions.find(
               (item) => counterpartyByTransactionId[item.id] === transaction.id,
@@ -802,6 +826,7 @@ export default function ImportedTransactionsTable({
                     {matchedRuleLabel ? (
                       <span className="mt-0.5 block truncate text-xs text-[var(--text-muted)]">
                         Rule: {matchedRuleLabel}
+                        {isInternalTransferRule ? ' (internal transfer)' : ''}
                       </span>
                     ) : null}
                   </td>
@@ -823,7 +848,9 @@ export default function ImportedTransactionsTable({
                         categories={categories}
                         tags={tags}
                         rules={rules}
-                        matchedRuleLabel={matchedRuleLabel}
+                        matchedRuleLabel={
+                          isInternalTransferRule ? null : matchedRuleLabel
+                        }
                         transferCandidates={transferCandidates}
                         accountNames={accountNames}
                         isInternalTransfer={isInternalTransfer}

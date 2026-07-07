@@ -108,7 +108,10 @@ function ImportPage() {
     (left.keywords[0] ?? left.name).localeCompare(right.keywords[0] ?? right.name),
   )
   const rulesById = Object.fromEntries(
-    rules.map((rule) => [rule.id, { name: rule.name, keywords: rule.keywords }]),
+    rules.map((rule) => [
+      rule.id,
+      { name: rule.name, keywords: rule.keywords, ruleType: rule.ruleType },
+    ]),
   )
 
   const categoryOptions = (Object.values(data.state.categories ?? {}) as Category[]).sort(

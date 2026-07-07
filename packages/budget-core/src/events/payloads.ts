@@ -160,6 +160,7 @@ export const RuleCreatedPayloadSchema = z.object({
   ruleId: EntityIdSchema,
   name: z.string().min(1),
   keywords: z.array(z.string().min(1)),
+  ruleType: z.enum(["categorize", "internal_transfer"]).default("categorize"),
   categoryId: EntityIdSchema.nullable(),
   sinkId: EntityIdSchema.nullable(),
   lifestyleTagIds: z.array(EntityIdSchema),

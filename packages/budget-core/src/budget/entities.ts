@@ -117,10 +117,14 @@ export const ParserTemplateSchema = z.object({
 });
 export type ParserTemplate = z.infer<typeof ParserTemplateSchema>;
 
+export const RuleTypeSchema = z.enum(["categorize", "internal_transfer"]);
+export type RuleType = z.infer<typeof RuleTypeSchema>;
+
 export const RuleSchema = z.object({
   id: EntityIdSchema,
   name: z.string().min(1),
   keywords: z.array(z.string().min(1)),
+  ruleType: RuleTypeSchema.default("categorize"),
   categoryId: EntityIdSchema.nullable(),
   sinkId: EntityIdSchema.nullable(),
   lifestyleTagIds: z.array(EntityIdSchema),

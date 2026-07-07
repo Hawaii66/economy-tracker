@@ -47,6 +47,7 @@ export {
   ParserTemplateSchema,
   RawTransactionSchema,
   RuleSchema,
+  RuleTypeSchema,
   SinkSchema,
   InternalTransferGroupSchema,
   SplitGroupSchema,
@@ -64,6 +65,7 @@ export type {
   ParserTemplate,
   RawTransaction,
   Rule,
+  RuleType,
   Sink,
   InternalTransferGroup,
   SplitGroup,
@@ -188,6 +190,8 @@ export {
 
 export {
   assignmentFromRule,
+  findMatchingCategorizeRule,
+  findMatchingInternalTransferRule,
   findMatchingRule,
   ruleMatchesDescription,
 } from "./rules/match-rule.ts";
