@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
+import type { RuleType } from 'budget-core'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { fieldHintClassName, inputClassName } from '@/components/taxonomy/form-styles'
 
 export type RuleFormValues = {
   subtext: string
+  ruleType: RuleType
   categoryId: string | null
   lifestyleTagIds: string[]
   eventTagIds: string[]
@@ -19,6 +21,7 @@ type RuleEditModalProps = {
   rule?: {
     id: string
     keywords: string[]
+    ruleType?: RuleType
     categoryId: string | null
     lifestyleTagIds: string[]
     eventTagIds: string[]
@@ -49,6 +52,7 @@ export function RuleEditModal({
 }: RuleEditModalProps) {
   const isCreate = rule === undefined
   const [subtext, setSubtext] = useState(rule?.keywords[0] ?? '')
+  const [ruleType, setRuleType] = useState<RuleType>(rule?.ruleType ?? 'categorize')
   const [categoryId, setCategoryId] = useState<string | null>(rule?.categoryId ?? null)
   const [selectedLifestyleTagIds, setSelectedLifestyleTagIds] = useState<string[]>(
     rule?.lifestyleTagIds ?? [],
@@ -63,11 +67,13 @@ export function RuleEditModal({
     }
 
     setSubtext(rule?.keywords[0] ?? '')
+    setRuleType(rule?.ruleType ?? 'categorize')
     setCategoryId(rule?.categoryId ?? null)
     setSelectedLifestyleTagIds(rule?.lifestyleTagIds ?? [])
     setSelectedEventTagIds(rule?.eventTagIds ?? [])
   }, [open, rule])
 
+  const isInternalTransfer = ruleType === 'internal_transfer'
   const permanentTags = tags.filter((tag) => tag.kind === 'permanent')
   const temporaryTags = tags.filter((tag) => tag.kind === 'temporary')
 
@@ -92,24 +98,46 @@ export function RuleEditModal({
 
     await onSave({
       subtext: trimmedSubtext,
-      categoryId,
-      lifestyleTagIds: selectedLifestyleTagIds,
-      eventTagIds: selectedEventTagIds,
+      ruleType,
+      categoryId: isInternalTransfer ? null : categoryId,
+      lifestyleTagIds: isInternalTransfer ? [] : selectedLifestyleTagIds,
+      eventTagIds: isInternalTransfer ? [] : selectedEventTagIds,
     })
     onOpenChange(false)
   }
 
-  const hasActions = categoryId !== null || selectedLifestyleTagIds.length > 0 || selectedEventTagIds.length > 0
+  const hasActions =
+    isInternalTransfer ||
+    categoryId !== null ||
+    selectedLifestyleTagIds.length > 0 ||
+    selectedEventTagIds.length > 0
 
   return (
     <Modal
       open={open}
       onOpenChange={onOpenChange}
       title={isCreate ? 'Add import rule' : 'Edit import rule'}
-      description="When imported transaction text contains this subtext, the selected category and tags are applied automatically."
+      description={
+        isInternalTransfer
+          ? 'When imported transaction text contains this subtext, the transaction is pre-marked as an internal transfer.'
+          : 'When imported transaction text contains this subtext, the selected category and tags are applied automatically.'
+      }
       className="w-[min(36rem,calc(100vw-2rem))]"
     >
       <form className="flex flex-col gap-4" onSubmit={(event) => void handleSubmit(event)}>
+        <label className="flex flex-col gap-1 text-sm font-semibold text-[var(--text)]">
+          Rule type
+          <select
+            className={inputClassName}
+            value={ruleType}
+            onChange={(event) => setRuleType(event.target.value as RuleType)}
+            disabled={isSaving}
+          >
+            <option value="categorize">Categorize &amp; tag</option>
+            <option value="internal_transfer">Internal transfer</option>
+          </select>
+        </label>
+
         <label className="flex flex-col gap-1 text-sm font-semibold text-[var(--text)]">
           Matching subtext
           <input
@@ -125,77 +153,86 @@ export function RuleEditModal({
           </p>
         </label>
 
-        <label className="flex flex-col gap-1 text-sm font-semibold text-[var(--text)]">
-          Category
-          <select
-            className={inputClassName}
-            value={categoryId ?? ''}
-            onChange={(event) => setCategoryId(event.target.value || null)}
-            disabled={isSaving}
-          >
-            <option value="">None</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        {tags.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            <p className="m-0 text-sm font-semibold text-[var(--text)]">Tags</p>
-
-            {permanentTags.length > 0 ? (
-              <fieldset className="m-0 flex flex-col gap-2 rounded-xl border border-[var(--border)] p-3">
-                <legend className="px-1 text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
-                  Permanent
-                </legend>
-                {permanentTags.map((tag) => (
-                  <label
-                    key={tag.id}
-                    className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text)]"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedLifestyleTagIds.includes(tag.id)}
-                      onChange={() => toggleLifestyleTag(tag.id)}
-                      disabled={isSaving}
-                    />
-                    <ColorSwatch color={tag.color} />
-                    {tag.name}
-                  </label>
-                ))}
-              </fieldset>
-            ) : null}
-
-            {temporaryTags.length > 0 ? (
-              <fieldset className="m-0 flex flex-col gap-2 rounded-xl border border-[var(--border)] p-3">
-                <legend className="px-1 text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
-                  Temporary
-                </legend>
-                {temporaryTags.map((tag) => (
-                  <label
-                    key={tag.id}
-                    className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text)]"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedEventTagIds.includes(tag.id)}
-                      onChange={() => toggleEventTag(tag.id)}
-                      disabled={isSaving}
-                    />
-                    <ColorSwatch color={tag.color} />
-                    {tag.name}
-                  </label>
-                ))}
-              </fieldset>
-            ) : null}
-          </div>
-        ) : (
+        {isInternalTransfer ? (
           <p className={`${fieldHintClassName} rounded-xl border border-dashed border-[var(--border)] p-3`}>
-            No tags yet. Create tags under Categories & Tags to assign them here.
+            Matching transactions will have &ldquo;Internal transfer&rdquo; preselected when you
+            categorize them after import. You still pick the counterparty transaction manually.
           </p>
+        ) : (
+          <>
+            <label className="flex flex-col gap-1 text-sm font-semibold text-[var(--text)]">
+              Category
+              <select
+                className={inputClassName}
+                value={categoryId ?? ''}
+                onChange={(event) => setCategoryId(event.target.value || null)}
+                disabled={isSaving}
+              >
+                <option value="">None</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {tags.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                <p className="m-0 text-sm font-semibold text-[var(--text)]">Tags</p>
+
+                {permanentTags.length > 0 ? (
+                  <fieldset className="m-0 flex flex-col gap-2 rounded-xl border border-[var(--border)] p-3">
+                    <legend className="px-1 text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
+                      Permanent
+                    </legend>
+                    {permanentTags.map((tag) => (
+                      <label
+                        key={tag.id}
+                        className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text)]"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedLifestyleTagIds.includes(tag.id)}
+                          onChange={() => toggleLifestyleTag(tag.id)}
+                          disabled={isSaving}
+                        />
+                        <ColorSwatch color={tag.color} />
+                        {tag.name}
+                      </label>
+                    ))}
+                  </fieldset>
+                ) : null}
+
+                {temporaryTags.length > 0 ? (
+                  <fieldset className="m-0 flex flex-col gap-2 rounded-xl border border-[var(--border)] p-3">
+                    <legend className="px-1 text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
+                      Temporary
+                    </legend>
+                    {temporaryTags.map((tag) => (
+                      <label
+                        key={tag.id}
+                        className="flex cursor-pointer items-center gap-2 text-sm text-[var(--text)]"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedEventTagIds.includes(tag.id)}
+                          onChange={() => toggleEventTag(tag.id)}
+                          disabled={isSaving}
+                        />
+                        <ColorSwatch color={tag.color} />
+                        {tag.name}
+                      </label>
+                    ))}
+                  </fieldset>
+                ) : null}
+              </div>
+            ) : (
+              <p className={`${fieldHintClassName} rounded-xl border border-dashed border-[var(--border)] p-3`}>
+                No tags yet. Create tags under Categories & Tags to assign them here.
+              </p>
+            )}
+          </>
         )}
 
         <div className="flex justify-end gap-2 pt-1">

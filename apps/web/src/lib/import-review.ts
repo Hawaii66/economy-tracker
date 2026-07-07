@@ -1,6 +1,7 @@
 import {
   assignmentFromRule,
-  findMatchingRule,
+  findMatchingCategorizeRule,
+  findMatchingInternalTransferRule,
   type MatchableRule,
   type RuleAssignment,
 } from 'budget-core'
@@ -25,6 +26,7 @@ export type ImportReviewRow = {
   rawRow: Record<string, string>
   assignment: RuleAssignment
   matchedRuleId: string | null
+  matchedInternalTransferRuleId: string | null
   approved: boolean
   expanded: boolean
 }
@@ -237,7 +239,8 @@ export function buildImportReviewRows(
   batchOrder: number,
 ): ImportReviewRow[] {
   return rows.map((row, index) => {
-    const matchedRule = findMatchingRule(row.description, rules)
+    const matchedCategorizeRule = findMatchingCategorizeRule(row.description, rules)
+    const matchedInternalTransferRule = findMatchingInternalTransferRule(row.description, rules)
 
     return {
       id: `${batchId}-${row.sourceRowIndex ?? index}`,
@@ -251,8 +254,9 @@ export function buildImportReviewRows(
       verificationNumber: row.verificationNumber,
       saldo: row.saldo,
       rawRow: row.rawRow,
-      assignment: assignmentFromRule(matchedRule),
-      matchedRuleId: matchedRule?.id ?? null,
+      assignment: assignmentFromRule(matchedCategorizeRule),
+      matchedRuleId: matchedCategorizeRule?.id ?? null,
+      matchedInternalTransferRuleId: matchedInternalTransferRule?.id ?? null,
       approved: false,
       expanded: false,
     }

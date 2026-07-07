@@ -325,6 +325,7 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
         id: payload.ruleId,
         name: payload.name,
         keywords: payload.keywords,
+        ruleType: payload.ruleType ?? "categorize",
         categoryId: payload.categoryId,
         sinkId: payload.sinkId,
         lifestyleTagIds: payload.lifestyleTagIds,

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 
 type ImportReviewTableProps = {
   rows: ImportReviewRow[]
-  rulesById: Record<string, { name: string; keywords: string[] }>
+  rulesById: Record<string, { name: string; keywords: string[]; ruleType?: 'categorize' | 'internal_transfer' }>
   accountNames: Record<string, string>
   onRowsChange: (rows: ImportReviewRow[]) => void
   disabled?: boolean
@@ -115,10 +115,18 @@ export default function ImportReviewTable({
           </thead>
           <tbody>
             {rows.map((row) => {
-              const matchedRule = row.matchedRuleId ? rulesById[row.matchedRuleId] : undefined
+              const matchedCategorizeRule = row.matchedRuleId
+                ? rulesById[row.matchedRuleId]
+                : undefined
+              const matchedInternalTransferRule = row.matchedInternalTransferRuleId
+                ? rulesById[row.matchedInternalTransferRuleId]
+                : undefined
+              const matchedRule = matchedCategorizeRule ?? matchedInternalTransferRule
               const matchedRuleLabel = matchedRule
                 ? matchedRule.keywords.join(', ') || matchedRule.name
                 : null
+              const isInternalTransferRule =
+                (matchedRule?.ruleType ?? 'categorize') === 'internal_transfer'
 
               return (
                 <tr
@@ -139,6 +147,7 @@ export default function ImportReviewTable({
                     {matchedRuleLabel ? (
                       <span className="mt-0.5 block truncate text-xs text-[var(--text-muted)]">
                         Rule: {matchedRuleLabel}
+                        {isInternalTransferRule ? ' (internal transfer)' : ''}
                       </span>
                     ) : null}
                   </td>

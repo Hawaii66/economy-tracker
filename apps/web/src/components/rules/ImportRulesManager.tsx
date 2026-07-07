@@ -1,3 +1,4 @@
+import type { RuleType } from 'budget-core'
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
 import { Pencil, Plus } from 'lucide-react'
@@ -17,6 +18,7 @@ type Rule = {
   id: string
   name: string
   keywords: string[]
+  ruleType?: RuleType
   categoryId: string | null
   sinkId: string | null
   lifestyleTagIds: string[]
@@ -131,6 +133,7 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
       ruleId,
       name: values.subtext,
       keywords: [values.subtext],
+      ruleType: values.ruleType,
       categoryId: values.categoryId,
       sinkId: null,
       lifestyleTagIds: values.lifestyleTagIds,
@@ -169,7 +172,8 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
           <div>
             <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Import rules</h2>
             <p className="mt-1 mb-0 text-sm text-[var(--text-muted)]">
-              Match subtext in imported transactions and automatically apply categories and tags.
+              Match subtext in imported transactions to auto-categorize, tag, or mark as internal
+              transfers.
             </p>
           </div>
           <Button onClick={openCreateRule}>
@@ -184,6 +188,7 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
               <thead>
                 <tr className="border-b border-[var(--border)] bg-[rgba(27,24,23,0.9)] text-left text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
                   <th className="px-3 py-2">Matching subtext</th>
+                  <th className="px-3 py-2">Type</th>
                   <th className="px-3 py-2">Category</th>
                   <th className="px-3 py-2">Tags</th>
                   <th className="px-3 py-2 text-right">Actions</th>
@@ -191,6 +196,7 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
               </thead>
               <tbody>
                 {rules.map((rule) => {
+                  const isInternalTransfer = (rule.ruleType ?? 'categorize') === 'internal_transfer'
                   const category = rule.categoryId
                     ? categoriesById.get(rule.categoryId)
                     : undefined
@@ -213,8 +219,13 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
                       <td className="px-3 py-2.5 align-middle font-medium text-[var(--text)]">
                         {rule.keywords.join(', ') || rule.name}
                       </td>
+                      <td className="px-3 py-2.5 align-middle text-[var(--text-muted)]">
+                        {isInternalTransfer ? 'Internal transfer' : 'Categorize & tag'}
+                      </td>
                       <td className="px-3 py-2.5 align-middle">
-                        {category ? (
+                        {isInternalTransfer ? (
+                          <span className="text-[var(--text-muted)]">—</span>
+                        ) : category ? (
                           <span className="inline-flex items-center gap-2 text-[var(--text)]">
                             <ColorSwatch color={category.color} />
                             {category.name}
@@ -224,7 +235,9 @@ export default function ImportRulesManager({ budgetId }: ImportRulesManagerProps
                         )}
                       </td>
                       <td className="px-3 py-2.5 align-middle">
-                        {allTags.length > 0 ? (
+                        {isInternalTransfer ? (
+                          <span className="text-[var(--text-muted)]">—</span>
+                        ) : allTags.length > 0 ? (
                           <div className="flex flex-wrap gap-1.5">
                             {allTags.map((tag) => (
                               <TagChip key={tag.id} name={tag.name} color={tag.color} />

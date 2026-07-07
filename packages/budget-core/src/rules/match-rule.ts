@@ -1,3 +1,5 @@
+import type { RuleType } from "../budget/entities.ts";
+
 export type RuleAssignment = {
   categoryId: string | null;
   sinkId: string | null;
@@ -8,11 +10,16 @@ export type RuleAssignment = {
 export type MatchableRule = {
   id: string;
   keywords: string[];
+  ruleType?: RuleType;
   categoryId: string | null;
   sinkId: string | null;
   lifestyleTagIds: string[];
   eventTagIds: string[];
 };
+
+function ruleTypeOf(rule: MatchableRule): RuleType {
+  return rule.ruleType ?? "categorize";
+}
 
 export function ruleMatchesDescription(
   description: string,
@@ -24,16 +31,42 @@ export function ruleMatchesDescription(
   );
 }
 
-export function findMatchingRule(
+export function findMatchingCategorizeRule(
   description: string,
   rules: readonly MatchableRule[],
 ): MatchableRule | null {
   for (const rule of rules) {
+    if (ruleTypeOf(rule) !== "categorize") {
+      continue;
+    }
     if (ruleMatchesDescription(description, rule)) {
       return rule;
     }
   }
   return null;
+}
+
+export function findMatchingInternalTransferRule(
+  description: string,
+  rules: readonly MatchableRule[],
+): MatchableRule | null {
+  for (const rule of rules) {
+    if (ruleTypeOf(rule) !== "internal_transfer") {
+      continue;
+    }
+    if (ruleMatchesDescription(description, rule)) {
+      return rule;
+    }
+  }
+  return null;
+}
+
+/** @deprecated Use findMatchingCategorizeRule for clarity. */
+export function findMatchingRule(
+  description: string,
+  rules: readonly MatchableRule[],
+): MatchableRule | null {
+  return findMatchingCategorizeRule(description, rules);
 }
 
 export function assignmentFromRule(rule: MatchableRule | null): RuleAssignment {
