@@ -102,6 +102,15 @@ start_convex() {
 }
 
 start_web() {
+  if [ -z "${VITE_CONVEX_URL:-}" ] && [ -n "${CONVEX_URL:-}" ]; then
+    export VITE_CONVEX_URL="$CONVEX_URL"
+  fi
+
+  if [ -z "${VITE_CONVEX_URL:-}" ]; then
+    echo "[economy-tracker] Missing VITE_CONVEX_URL (or CONVEX_URL) in Doppler config '${ENVIRONMENT}'"
+    exit 1
+  fi
+
   local args=("$@")
   if [ "${#args[@]}" -eq 0 ]; then
     args=("dev")
