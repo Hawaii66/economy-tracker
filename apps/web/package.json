@@ -6,6 +6,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
+    "predev": "pnpm --filter budget-core build",
     "dev": "vite dev --port 3000",
     "generate-routes": "tsr generate",
     "build": "vite build",
