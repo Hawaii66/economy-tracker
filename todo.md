@@ -11,7 +11,7 @@ Scope decisions from IDEA.md review (2026-07-08):
 
 ## 1. Sync sink balances when expenses are categorized
 
-**Status:** Planned
+**Status:** Done
 
 **Problem:** Assigning a ledger transaction to a sink updates the account balance but not the sink balance. Manual `SINK_FUNDED` / `SINK_WITHDRAWN` are the only ways sink balances change today.
 

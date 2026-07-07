@@ -2,7 +2,7 @@
   "state": {
     "accounts": {
       "acct-checking": {
-        "balance": 5000,
+        "balance": 95000,
         "color": "#5EAEFF",
         "currency": "SEK",
         "description": "",
@@ -24,21 +24,6 @@
     "genesisEpoch": null,
     "internalTransferGroups": {},
     "ledgerTransactions": {
-      "txn-deposit": {
-        "accountId": "acct-checking",
-        "amount": 10000,
-        "categoryId": null,
-        "date": "2026-01-02",
-        "description": "Salary",
-        "eventTagIds": [],
-        "id": "txn-deposit",
-        "internalTransferGroupId": null,
-        "lifestyleTagIds": [],
-        "rawTransactionId": null,
-        "sinkId": null,
-        "splitGroupId": null,
-        "virtualSlices": []
-      },
       "txn-groceries": {
         "accountId": "acct-checking",
         "amount": -5000,
@@ -61,12 +46,12 @@
     "rules": {},
     "sinks": {
       "sink-groceries": {
-        "balance": -5000,
+        "balance": 5000,
         "cap": 20000,
         "color": "#5EAEFF",
         "icon": "shopping-cart",
         "id": "sink-groceries",
-        "lastFundedOn": null,
+        "lastFundedOn": "2026-01-02",
         "monthlyTarget": 5000,
         "name": "Groceries",
         "sinkType": "capped_reserve"
