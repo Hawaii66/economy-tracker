@@ -5,6 +5,7 @@ import {
   categoryCreatedEvent,
   ledgerTransactionCreatedEvent,
   sinkCreatedEvent,
+  sinkFundedEvent,
 } from "../../helpers/domain-event.js";
 
 describe("account balance after transactions", () => {
@@ -76,10 +77,31 @@ describe("account balance after transactions", () => {
           eventTagIds: [],
         },
       }),
-      ledgerTransactionCreatedEvent({
+      {
+        eventType: "SINK_WITHDRAWN",
+        v: 1,
         sequenceNumber: 6,
         userId: "user-1",
         createdAt: "2026-01-03T00:00:00.000Z",
+        payload: {
+          sinkId: "sink-salary",
+          amount: 5_000,
+        },
+      },
+      sinkFundedEvent({
+        sequenceNumber: 7,
+        userId: "user-1",
+        createdAt: "2026-01-03T00:00:01.000Z",
+        payload: {
+          sinkId: "sink-groceries",
+          amount: 5_000,
+          ledgerTransactionId: null,
+        },
+      }),
+      ledgerTransactionCreatedEvent({
+        sequenceNumber: 8,
+        userId: "user-1",
+        createdAt: "2026-01-03T00:00:02.000Z",
         payload: {
           ledgerTransactionId: "txn-groceries",
           rawTransactionId: null,
