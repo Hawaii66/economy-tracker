@@ -1,5 +1,6 @@
 import {
   assignmentsHaveSinks,
+  findInsufficientSinkBalance,
   minorUnitsToDecimalString,
   type MatchableRule,
   type RuleAssignment,
@@ -467,6 +468,18 @@ export default function TransactionEditPanel({
   const remaining = transaction.amount - allocated
   const isBalanced = splitRowsAreBalanced(transaction.amount, splitRows)
   const hasRequiredSinks = assignmentsHaveSinks(splitRows.map((row) => row.assignment))
+  const sinkBalances = Object.fromEntries(sinks.map((sink) => [sink.id, { balance: sink.balance }]))
+  const insufficientSinkBalance = findInsufficientSinkBalance(
+    sinkBalances,
+    splitRows.flatMap((row) =>
+      row.assignment.sinkId
+        ? [{ sinkId: row.assignment.sinkId, amount: row.amountMinor }]
+        : [],
+    ),
+  )
+  const insufficientSink = insufficientSinkBalance
+    ? sinks.find((sink) => sink.id === insufficientSinkBalance.sinkId)
+    : null
   const isSplit = splitRows.length > 1
   const singleRow = splitRows[0]
 
@@ -619,9 +632,22 @@ export default function TransactionEditPanel({
                   : 'Connect to a sink before saving.'}
               </p>
             ) : null}
+            {hasRequiredSinks && insufficientSinkBalance ? (
+              <p className="m-0 text-sm text-[#e88a8a]">
+                {insufficientSink?.name ?? 'This sink'} only has{' '}
+                {formatMoney(insufficientSinkBalance.available)} available but this expense needs{' '}
+                {formatMoney(insufficientSinkBalance.required)}. Fund the sink first.
+              </p>
+            ) : null}
             <Button
               type="button"
-              disabled={disabled || isSaving || (isSplit && !isBalanced) || !hasRequiredSinks}
+              disabled={
+                disabled ||
+                isSaving ||
+                (isSplit && !isBalanced) ||
+                !hasRequiredSinks ||
+                insufficientSinkBalance !== null
+              }
               onClick={onSave}
             >
               {isSaving ? 'Saving…' : isSplit ? saveSplitLabel : saveLabel}

@@ -5,6 +5,7 @@ import {
   aggregateLedgerByTag,
   aggregateMonthlyTrend,
 } from 'budget-core'
+import { useNavigate } from '@tanstack/react-router'
 import { Cell, Label, Pie, PieChart, Bar, BarChart, XAxis, YAxis } from 'recharts'
 import {
   type BudgetAccount,
@@ -25,6 +26,7 @@ type CategoryRecord = Record<string, { name: string; color: string }>
 type TagRecord = Record<string, { name: string; color: string }>
 
 type BudgetOverviewChartsProps = {
+  budgetId: string
   accounts: BudgetAccount[]
   sinks: BudgetSink[]
   categories: CategoryRecord
@@ -43,14 +45,17 @@ function BalancePieChart({
   description,
   rows,
   emptyMessage,
+  onItemClick,
 }: {
   title: string
   description: string
   rows: ReturnType<typeof toNamedAmounts>
   emptyMessage: string
+  onItemClick?: (id: string) => void
 }) {
   const chartConfig = buildChartConfig(rows) satisfies ChartConfig
   const total = rows.reduce((sum, row) => sum + row.amount, 0)
+  const clickable = Boolean(onItemClick)
 
   return (
     <ChartPanel
@@ -84,6 +89,17 @@ function BalancePieChart({
             outerRadius={92}
             strokeWidth={2}
             stroke="var(--border)"
+            className={clickable ? 'cursor-pointer' : undefined}
+            onClick={
+              onItemClick
+                ? (slice) => {
+                    const payload = slice?.payload as { id?: string } | undefined
+                    if (payload?.id) {
+                      onItemClick(payload.id)
+                    }
+                  }
+                : undefined
+            }
           >
             {rows.map((entry) => (
               <Cell key={entry.id} fill={entry.fill} />
@@ -313,6 +329,7 @@ function MonthlyTrendChart({
 }
 
 export function BudgetOverviewCharts({
+  budgetId,
   accounts,
   sinks,
   categories,
@@ -320,6 +337,7 @@ export function BudgetOverviewCharts({
   ledgerTransactions,
   guardRail,
 }: BudgetOverviewChartsProps) {
+  const navigate = useNavigate()
   const ledger = getLedgerTransactions(ledgerTransactions)
   const categoryLookup = (id: string) => categories[id]?.name ?? 'Uncategorized'
   const categoryColor = (id: string) => categories[id]?.color
@@ -365,51 +383,69 @@ export function BudgetOverviewCharts({
   const { income, expenses } = aggregateIncomeAndExpenses(ledger)
   const hasLedgerData = ledger.length > 0
 
+  function openLedgerFilter(search: {
+    accountId?: string
+    categoryId?: string
+    sinkId?: string
+    tagId?: string
+  }) {
+    navigate({
+      to: '/dashboard/budgets/$budgetId/ledger',
+      params: { budgetId },
+      search,
+    })
+  }
+
   return (
     <div className="budget-charts-grid">
       <BalancePieChart
         title="Account cash"
-        description="Physical cash held across accounts."
+        description="Physical cash held across accounts. Click a slice to filter the ledger."
         rows={accountRows}
         emptyMessage="Add an account to see cash breakdown."
+        onItemClick={(accountId) => openLedgerFilter({ accountId })}
       />
       <BalancePieChart
         title="Sink allocation"
-        description="Virtual funds reserved in sinks."
+        description="Virtual funds reserved in sinks. Click a slice to filter the ledger."
         rows={sinkRows}
         emptyMessage="Create sinks to see virtual allocation."
+        onItemClick={(sinkId) => openLedgerFilter({ sinkId })}
       />
       <GuardRailChart guardRail={guardRail} />
       <IncomeExpenseChart income={income} expenses={expenses} />
       <SpendingBarChart
         title="Spending by category"
-        description="Categorized expenses from the ledger."
+        description="Categorized expenses from the ledger. Click a bar to filter the ledger."
         rows={spendingByCategory}
         emptyMessage={
           hasLedgerData
             ? 'No categorized spending yet.'
             : 'Import and categorize transactions to see spending breakdown.'
         }
+        onItemClick={(categoryId) => openLedgerFilter({ categoryId })}
       />
       <SpendingBarChart
         title="Spending by sink"
-        description="Expenses assigned to each sink."
+        description="Expenses assigned to each sink. Click a bar to filter the ledger."
         rows={spendingBySink}
         emptyMessage={
           hasLedgerData
             ? 'No sink-assigned spending yet.'
             : 'Import and categorize transactions to see sink spending.'
         }
+        onItemClick={(sinkId) => openLedgerFilter({ sinkId })}
       />
       <SpendingBarChart
         title="Spending by tag"
-        description="Expenses tagged with lifestyle or event labels."
+        description="Expenses tagged with lifestyle or event labels. Click a bar to filter the ledger."
         rows={spendingByTag}
         emptyMessage={
           hasLedgerData
             ? 'No tagged spending yet.'
             : 'Import and categorize transactions to see tag spending.'
         }
+        onItemClick={(tagId) => openLedgerFilter({ tagId })}
       />
       <MonthlyTrendChart rows={monthlyTrend} />
     </div>

@@ -411,6 +411,7 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
       ) : null}
 
       <BudgetSinksChartsClient
+        budgetId={budgetId}
         sinks={sinks}
         ledgerTransactions={data.state.ledgerTransactions}
       />

@@ -7,6 +7,7 @@ import {
   accountAddedEvent,
   ledgerTransactionCreatedEvent,
   sinkCreatedEvent,
+  sinkFundedEvent,
 } from "../../helpers/domain-event.js";
 
 describe("ledger transaction deletion", () => {
@@ -58,8 +59,18 @@ describe("ledger transaction deletion", () => {
           cap: 20_000,
         },
       }),
-      ledgerTransactionCreatedEvent({
+      sinkFundedEvent({
         sequenceNumber: 4,
+        userId: "user-1",
+        createdAt: "2026-01-02T00:00:00.750Z",
+        payload: {
+          sinkId: "sink-groceries",
+          amount: 1_500,
+          ledgerTransactionId: null,
+        },
+      }),
+      ledgerTransactionCreatedEvent({
+        sequenceNumber: 5,
         userId: "user-1",
         createdAt: "2026-01-02T00:00:01.000Z",
         payload: {
@@ -78,7 +89,7 @@ describe("ledger transaction deletion", () => {
       {
         eventType: "LEDGER_TRANSACTION_DELETED",
         v: 1,
-        sequenceNumber: 5,
+        sequenceNumber: 6,
         userId: "user-1",
         createdAt: "2026-01-02T00:00:02.000Z",
         payload: {

@@ -42,13 +42,16 @@ export function SpendingBarChart({
   description,
   rows,
   emptyMessage,
+  onItemClick,
 }: {
   title: string
   description: string
   rows: NamedAmount[]
   emptyMessage: string
+  onItemClick?: (id: string) => void
 }) {
   const chartConfig = buildChartConfig(rows) satisfies ChartConfig
+  const clickable = Boolean(onItemClick)
 
   return (
     <ChartPanel
@@ -77,7 +80,21 @@ export function SpendingBarChart({
               />
             }
           />
-          <Bar dataKey="amount" radius={4}>
+          <Bar
+            dataKey="amount"
+            radius={4}
+            className={clickable ? 'cursor-pointer' : undefined}
+            onClick={
+              onItemClick
+                ? (bar) => {
+                    const payload = bar?.payload as NamedAmount | undefined
+                    if (payload?.id) {
+                      onItemClick(payload.id)
+                    }
+                  }
+                : undefined
+            }
+          >
             {rows.map((entry) => (
               <Cell key={entry.id} fill={entry.fill} />
             ))}

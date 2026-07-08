@@ -7,6 +7,7 @@ import {
   accountAddedEvent,
   ledgerTransactionCreatedEvent,
   sinkCreatedEvent,
+  sinkFundedEvent,
 } from "../../helpers/domain-event.js";
 
 describe("sink requirement on ledger transactions", () => {
@@ -128,7 +129,7 @@ describe("sink requirement on ledger transactions", () => {
         payload: {
           accountId: "acct-checking",
           name: "Checking",
-          openingBalance: 0,
+          openingBalance: 1_500,
           currency: "SEK",
           genesisDate: "2026-01-01",
         },
@@ -147,8 +148,18 @@ describe("sink requirement on ledger transactions", () => {
           cap: 20_000,
         },
       }),
-      ledgerTransactionCreatedEvent({
+      sinkFundedEvent({
         sequenceNumber: 3,
+        userId: "user-1",
+        createdAt: "2026-01-01T00:02:00.000Z",
+        payload: {
+          sinkId: "sink-groceries",
+          amount: 1_500,
+          ledgerTransactionId: null,
+        },
+      }),
+      ledgerTransactionCreatedEvent({
+        sequenceNumber: 4,
         userId: "user-1",
         createdAt: "2026-01-02T00:00:00.000Z",
         payload: {
@@ -168,7 +179,7 @@ describe("sink requirement on ledger transactions", () => {
       {
         eventType: "INCOME_SLICED",
         v: 1,
-        sequenceNumber: 4,
+        sequenceNumber: 5,
         userId: "user-1",
         createdAt: "2026-01-02T00:00:01.000Z",
         payload: {

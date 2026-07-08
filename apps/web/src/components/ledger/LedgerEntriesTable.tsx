@@ -26,8 +26,9 @@ type LedgerEntriesTableProps = {
   deletingLedgerId: string | null
   onNavigateToRaw: (rawId: string) => void
   onNavigateToLedger: (ledgerId: string) => void
-  onDelete: (ledger: BudgetLedgerTransaction) => Promise<void>
+  onDelete?: (ledger: BudgetLedgerTransaction) => Promise<void>
   disabled?: boolean
+  readOnly?: boolean
 }
 
 const EMPTY = '\u2014'
@@ -219,11 +220,13 @@ function SliceRow({
   categoriesById,
   sinksById,
   tagsById,
+  readOnly,
 }: {
   slice: BudgetVirtualSlice
   categoriesById: Record<string, CategoryOption>
   sinksById: Record<string, SinkOption>
   tagsById: Record<string, TagOption>
+  readOnly: boolean
 }) {
   return (
     <tr className="border-l-2 border-l-[rgba(94,174,255,0.2)]">
@@ -246,7 +249,7 @@ function SliceRow({
         tagsById={tagsById}
       />
       <td />
-      <td className="text-[var(--text-muted)]">Slice</td>
+      {!readOnly ? <td className="text-[var(--text-muted)]">Slice</td> : null}
     </tr>
   )
 }
@@ -265,6 +268,7 @@ export default function LedgerEntriesTable({
   onNavigateToLedger,
   onDelete,
   disabled = false,
+  readOnly = false,
 }: LedgerEntriesTableProps) {
   const [ledgerToDelete, setLedgerToDelete] = useState<BudgetLedgerTransaction | null>(null)
 
@@ -274,7 +278,7 @@ export default function LedgerEntriesTable({
     }
 
     try {
-      await onDelete(ledgerToDelete)
+      await onDelete?.(ledgerToDelete)
       setLedgerToDelete(null)
     } catch {
       // Error message is handled by the page.
@@ -314,7 +318,7 @@ export default function LedgerEntriesTable({
               <th className="px-3 py-2">Sink</th>
               <th className="px-3 py-2">Tags</th>
               <th className="px-3 py-2">Links</th>
-              <th className="px-3 py-2 text-right">Actions</th>
+              {!readOnly ? <th className="px-3 py-2 text-right">Actions</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -384,18 +388,20 @@ export default function LedgerEntriesTable({
                         />
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 align-middle text-right">
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        disabled={disabled || isDeleting}
-                        onClick={() => setLedgerToDelete(ledger)}
-                      >
-                        <Trash2 />
-                        Remove
-                      </Button>
-                    </td>
+                    {!readOnly ? (
+                      <td className="px-3 py-2.5 align-middle text-right">
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          disabled={disabled || isDeleting}
+                          onClick={() => setLedgerToDelete(ledger)}
+                        >
+                          <Trash2 />
+                          Remove
+                        </Button>
+                      </td>
+                    ) : null}
                   </tr>
                   {ledger.virtualSlices.map((slice) => (
                     <SliceRow
@@ -404,6 +410,7 @@ export default function LedgerEntriesTable({
                       categoriesById={categoriesById}
                       sinksById={sinksById}
                       tagsById={tagsById}
+                      readOnly={readOnly}
                     />
                   ))}
                 </Fragment>
@@ -413,7 +420,8 @@ export default function LedgerEntriesTable({
         </table>
       </div>
 
-      <Modal
+      {!readOnly ? (
+        <Modal
         open={ledgerToDelete !== null}
         onOpenChange={(open) => {
           if (!open) {
@@ -459,7 +467,8 @@ export default function LedgerEntriesTable({
             </Button>
           </div>
         </div>
-      </Modal>
+        </Modal>
+      ) : null}
     </>
   )
 }

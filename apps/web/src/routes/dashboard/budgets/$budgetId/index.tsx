@@ -159,6 +159,7 @@ function BudgetOverviewPage() {
       </section>
 
       <BudgetOverviewChartsClient
+        budgetId={budgetId}
         accounts={accounts}
         sinks={sinks}
         categories={(data.state.categories ?? {}) as Record<string, { name: string; color: string }>}

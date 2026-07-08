@@ -23,7 +23,10 @@ import { Route as DashboardBudgetsBudgetIdRulesRouteImport } from './routes/dash
 import { Route as DashboardBudgetsBudgetIdLedgerRouteImport } from './routes/dashboard/budgets/$budgetId/ledger'
 import { Route as DashboardBudgetsBudgetIdImportRouteImport } from './routes/dashboard/budgets/$budgetId/import'
 import { Route as DashboardBudgetsBudgetIdAccountsRouteImport } from './routes/dashboard/budgets/$budgetId/accounts'
+import { Route as DashboardBudgetsBudgetIdTagsTagIdRouteImport } from './routes/dashboard/budgets/$budgetId/tags/$tagId'
 import { Route as DashboardBudgetsBudgetIdSinksSinkIdRouteImport } from './routes/dashboard/budgets/$budgetId/sinks/$sinkId'
+import { Route as DashboardBudgetsBudgetIdCategoriesCategoryIdRouteImport } from './routes/dashboard/budgets/$budgetId/categories/$categoryId'
+import { Route as DashboardBudgetsBudgetIdAccountsAccountIdRouteImport } from './routes/dashboard/budgets/$budgetId/accounts/$accountId'
 
 const SignInRoute = SignInRouteImport.update({
   id: '/sign-in',
@@ -104,11 +107,29 @@ const DashboardBudgetsBudgetIdAccountsRoute =
     path: '/accounts',
     getParentRoute: () => DashboardBudgetsBudgetIdRoute,
   } as any)
+const DashboardBudgetsBudgetIdTagsTagIdRoute =
+  DashboardBudgetsBudgetIdTagsTagIdRouteImport.update({
+    id: '/$tagId',
+    path: '/$tagId',
+    getParentRoute: () => DashboardBudgetsBudgetIdTagsRoute,
+  } as any)
 const DashboardBudgetsBudgetIdSinksSinkIdRoute =
   DashboardBudgetsBudgetIdSinksSinkIdRouteImport.update({
     id: '/$sinkId',
     path: '/$sinkId',
     getParentRoute: () => DashboardBudgetsBudgetIdSinksRoute,
+  } as any)
+const DashboardBudgetsBudgetIdCategoriesCategoryIdRoute =
+  DashboardBudgetsBudgetIdCategoriesCategoryIdRouteImport.update({
+    id: '/categories/$categoryId',
+    path: '/categories/$categoryId',
+    getParentRoute: () => DashboardBudgetsBudgetIdRoute,
+  } as any)
+const DashboardBudgetsBudgetIdAccountsAccountIdRoute =
+  DashboardBudgetsBudgetIdAccountsAccountIdRouteImport.update({
+    id: '/$accountId',
+    path: '/$accountId',
+    getParentRoute: () => DashboardBudgetsBudgetIdAccountsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -118,30 +139,36 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/budgets/$budgetId': typeof DashboardBudgetsBudgetIdRouteWithChildren
-  '/dashboard/budgets/$budgetId/accounts': typeof DashboardBudgetsBudgetIdAccountsRoute
+  '/dashboard/budgets/$budgetId/accounts': typeof DashboardBudgetsBudgetIdAccountsRouteWithChildren
   '/dashboard/budgets/$budgetId/import': typeof DashboardBudgetsBudgetIdImportRoute
   '/dashboard/budgets/$budgetId/ledger': typeof DashboardBudgetsBudgetIdLedgerRoute
   '/dashboard/budgets/$budgetId/rules': typeof DashboardBudgetsBudgetIdRulesRoute
   '/dashboard/budgets/$budgetId/settings': typeof DashboardBudgetsBudgetIdSettingsRoute
   '/dashboard/budgets/$budgetId/sinks': typeof DashboardBudgetsBudgetIdSinksRouteWithChildren
-  '/dashboard/budgets/$budgetId/tags': typeof DashboardBudgetsBudgetIdTagsRoute
+  '/dashboard/budgets/$budgetId/tags': typeof DashboardBudgetsBudgetIdTagsRouteWithChildren
   '/dashboard/budgets/$budgetId/': typeof DashboardBudgetsBudgetIdIndexRoute
+  '/dashboard/budgets/$budgetId/accounts/$accountId': typeof DashboardBudgetsBudgetIdAccountsAccountIdRoute
+  '/dashboard/budgets/$budgetId/categories/$categoryId': typeof DashboardBudgetsBudgetIdCategoriesCategoryIdRoute
   '/dashboard/budgets/$budgetId/sinks/$sinkId': typeof DashboardBudgetsBudgetIdSinksSinkIdRoute
+  '/dashboard/budgets/$budgetId/tags/$tagId': typeof DashboardBudgetsBudgetIdTagsTagIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/sign-in': typeof SignInRoute
   '/dashboard': typeof DashboardIndexRoute
-  '/dashboard/budgets/$budgetId/accounts': typeof DashboardBudgetsBudgetIdAccountsRoute
+  '/dashboard/budgets/$budgetId/accounts': typeof DashboardBudgetsBudgetIdAccountsRouteWithChildren
   '/dashboard/budgets/$budgetId/import': typeof DashboardBudgetsBudgetIdImportRoute
   '/dashboard/budgets/$budgetId/ledger': typeof DashboardBudgetsBudgetIdLedgerRoute
   '/dashboard/budgets/$budgetId/rules': typeof DashboardBudgetsBudgetIdRulesRoute
   '/dashboard/budgets/$budgetId/settings': typeof DashboardBudgetsBudgetIdSettingsRoute
   '/dashboard/budgets/$budgetId/sinks': typeof DashboardBudgetsBudgetIdSinksRouteWithChildren
-  '/dashboard/budgets/$budgetId/tags': typeof DashboardBudgetsBudgetIdTagsRoute
+  '/dashboard/budgets/$budgetId/tags': typeof DashboardBudgetsBudgetIdTagsRouteWithChildren
   '/dashboard/budgets/$budgetId': typeof DashboardBudgetsBudgetIdIndexRoute
+  '/dashboard/budgets/$budgetId/accounts/$accountId': typeof DashboardBudgetsBudgetIdAccountsAccountIdRoute
+  '/dashboard/budgets/$budgetId/categories/$categoryId': typeof DashboardBudgetsBudgetIdCategoriesCategoryIdRoute
   '/dashboard/budgets/$budgetId/sinks/$sinkId': typeof DashboardBudgetsBudgetIdSinksSinkIdRoute
+  '/dashboard/budgets/$budgetId/tags/$tagId': typeof DashboardBudgetsBudgetIdTagsTagIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -151,15 +178,18 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/dashboard/': typeof DashboardIndexRoute
   '/dashboard/budgets/$budgetId': typeof DashboardBudgetsBudgetIdRouteWithChildren
-  '/dashboard/budgets/$budgetId/accounts': typeof DashboardBudgetsBudgetIdAccountsRoute
+  '/dashboard/budgets/$budgetId/accounts': typeof DashboardBudgetsBudgetIdAccountsRouteWithChildren
   '/dashboard/budgets/$budgetId/import': typeof DashboardBudgetsBudgetIdImportRoute
   '/dashboard/budgets/$budgetId/ledger': typeof DashboardBudgetsBudgetIdLedgerRoute
   '/dashboard/budgets/$budgetId/rules': typeof DashboardBudgetsBudgetIdRulesRoute
   '/dashboard/budgets/$budgetId/settings': typeof DashboardBudgetsBudgetIdSettingsRoute
   '/dashboard/budgets/$budgetId/sinks': typeof DashboardBudgetsBudgetIdSinksRouteWithChildren
-  '/dashboard/budgets/$budgetId/tags': typeof DashboardBudgetsBudgetIdTagsRoute
+  '/dashboard/budgets/$budgetId/tags': typeof DashboardBudgetsBudgetIdTagsRouteWithChildren
   '/dashboard/budgets/$budgetId/': typeof DashboardBudgetsBudgetIdIndexRoute
+  '/dashboard/budgets/$budgetId/accounts/$accountId': typeof DashboardBudgetsBudgetIdAccountsAccountIdRoute
+  '/dashboard/budgets/$budgetId/categories/$categoryId': typeof DashboardBudgetsBudgetIdCategoriesCategoryIdRoute
   '/dashboard/budgets/$budgetId/sinks/$sinkId': typeof DashboardBudgetsBudgetIdSinksSinkIdRoute
+  '/dashboard/budgets/$budgetId/tags/$tagId': typeof DashboardBudgetsBudgetIdTagsTagIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -178,7 +208,10 @@ export interface FileRouteTypes {
     | '/dashboard/budgets/$budgetId/sinks'
     | '/dashboard/budgets/$budgetId/tags'
     | '/dashboard/budgets/$budgetId/'
+    | '/dashboard/budgets/$budgetId/accounts/$accountId'
+    | '/dashboard/budgets/$budgetId/categories/$categoryId'
     | '/dashboard/budgets/$budgetId/sinks/$sinkId'
+    | '/dashboard/budgets/$budgetId/tags/$tagId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -193,7 +226,10 @@ export interface FileRouteTypes {
     | '/dashboard/budgets/$budgetId/sinks'
     | '/dashboard/budgets/$budgetId/tags'
     | '/dashboard/budgets/$budgetId'
+    | '/dashboard/budgets/$budgetId/accounts/$accountId'
+    | '/dashboard/budgets/$budgetId/categories/$categoryId'
     | '/dashboard/budgets/$budgetId/sinks/$sinkId'
+    | '/dashboard/budgets/$budgetId/tags/$tagId'
   id:
     | '__root__'
     | '/'
@@ -210,7 +246,10 @@ export interface FileRouteTypes {
     | '/dashboard/budgets/$budgetId/sinks'
     | '/dashboard/budgets/$budgetId/tags'
     | '/dashboard/budgets/$budgetId/'
+    | '/dashboard/budgets/$budgetId/accounts/$accountId'
+    | '/dashboard/budgets/$budgetId/categories/$categoryId'
     | '/dashboard/budgets/$budgetId/sinks/$sinkId'
+    | '/dashboard/budgets/$budgetId/tags/$tagId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -320,6 +359,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBudgetsBudgetIdAccountsRouteImport
       parentRoute: typeof DashboardBudgetsBudgetIdRoute
     }
+    '/dashboard/budgets/$budgetId/tags/$tagId': {
+      id: '/dashboard/budgets/$budgetId/tags/$tagId'
+      path: '/$tagId'
+      fullPath: '/dashboard/budgets/$budgetId/tags/$tagId'
+      preLoaderRoute: typeof DashboardBudgetsBudgetIdTagsTagIdRouteImport
+      parentRoute: typeof DashboardBudgetsBudgetIdTagsRoute
+    }
     '/dashboard/budgets/$budgetId/sinks/$sinkId': {
       id: '/dashboard/budgets/$budgetId/sinks/$sinkId'
       path: '/$sinkId'
@@ -327,8 +373,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardBudgetsBudgetIdSinksSinkIdRouteImport
       parentRoute: typeof DashboardBudgetsBudgetIdSinksRoute
     }
+    '/dashboard/budgets/$budgetId/categories/$categoryId': {
+      id: '/dashboard/budgets/$budgetId/categories/$categoryId'
+      path: '/categories/$categoryId'
+      fullPath: '/dashboard/budgets/$budgetId/categories/$categoryId'
+      preLoaderRoute: typeof DashboardBudgetsBudgetIdCategoriesCategoryIdRouteImport
+      parentRoute: typeof DashboardBudgetsBudgetIdRoute
+    }
+    '/dashboard/budgets/$budgetId/accounts/$accountId': {
+      id: '/dashboard/budgets/$budgetId/accounts/$accountId'
+      path: '/$accountId'
+      fullPath: '/dashboard/budgets/$budgetId/accounts/$accountId'
+      preLoaderRoute: typeof DashboardBudgetsBudgetIdAccountsAccountIdRouteImport
+      parentRoute: typeof DashboardBudgetsBudgetIdAccountsRoute
+    }
   }
 }
+
+interface DashboardBudgetsBudgetIdAccountsRouteChildren {
+  DashboardBudgetsBudgetIdAccountsAccountIdRoute: typeof DashboardBudgetsBudgetIdAccountsAccountIdRoute
+}
+
+const DashboardBudgetsBudgetIdAccountsRouteChildren: DashboardBudgetsBudgetIdAccountsRouteChildren =
+  {
+    DashboardBudgetsBudgetIdAccountsAccountIdRoute:
+      DashboardBudgetsBudgetIdAccountsAccountIdRoute,
+  }
+
+const DashboardBudgetsBudgetIdAccountsRouteWithChildren =
+  DashboardBudgetsBudgetIdAccountsRoute._addFileChildren(
+    DashboardBudgetsBudgetIdAccountsRouteChildren,
+  )
 
 interface DashboardBudgetsBudgetIdSinksRouteChildren {
   DashboardBudgetsBudgetIdSinksSinkIdRoute: typeof DashboardBudgetsBudgetIdSinksSinkIdRoute
@@ -345,21 +420,37 @@ const DashboardBudgetsBudgetIdSinksRouteWithChildren =
     DashboardBudgetsBudgetIdSinksRouteChildren,
   )
 
+interface DashboardBudgetsBudgetIdTagsRouteChildren {
+  DashboardBudgetsBudgetIdTagsTagIdRoute: typeof DashboardBudgetsBudgetIdTagsTagIdRoute
+}
+
+const DashboardBudgetsBudgetIdTagsRouteChildren: DashboardBudgetsBudgetIdTagsRouteChildren =
+  {
+    DashboardBudgetsBudgetIdTagsTagIdRoute:
+      DashboardBudgetsBudgetIdTagsTagIdRoute,
+  }
+
+const DashboardBudgetsBudgetIdTagsRouteWithChildren =
+  DashboardBudgetsBudgetIdTagsRoute._addFileChildren(
+    DashboardBudgetsBudgetIdTagsRouteChildren,
+  )
+
 interface DashboardBudgetsBudgetIdRouteChildren {
-  DashboardBudgetsBudgetIdAccountsRoute: typeof DashboardBudgetsBudgetIdAccountsRoute
+  DashboardBudgetsBudgetIdAccountsRoute: typeof DashboardBudgetsBudgetIdAccountsRouteWithChildren
   DashboardBudgetsBudgetIdImportRoute: typeof DashboardBudgetsBudgetIdImportRoute
   DashboardBudgetsBudgetIdLedgerRoute: typeof DashboardBudgetsBudgetIdLedgerRoute
   DashboardBudgetsBudgetIdRulesRoute: typeof DashboardBudgetsBudgetIdRulesRoute
   DashboardBudgetsBudgetIdSettingsRoute: typeof DashboardBudgetsBudgetIdSettingsRoute
   DashboardBudgetsBudgetIdSinksRoute: typeof DashboardBudgetsBudgetIdSinksRouteWithChildren
-  DashboardBudgetsBudgetIdTagsRoute: typeof DashboardBudgetsBudgetIdTagsRoute
+  DashboardBudgetsBudgetIdTagsRoute: typeof DashboardBudgetsBudgetIdTagsRouteWithChildren
   DashboardBudgetsBudgetIdIndexRoute: typeof DashboardBudgetsBudgetIdIndexRoute
+  DashboardBudgetsBudgetIdCategoriesCategoryIdRoute: typeof DashboardBudgetsBudgetIdCategoriesCategoryIdRoute
 }
 
 const DashboardBudgetsBudgetIdRouteChildren: DashboardBudgetsBudgetIdRouteChildren =
   {
     DashboardBudgetsBudgetIdAccountsRoute:
-      DashboardBudgetsBudgetIdAccountsRoute,
+      DashboardBudgetsBudgetIdAccountsRouteWithChildren,
     DashboardBudgetsBudgetIdImportRoute: DashboardBudgetsBudgetIdImportRoute,
     DashboardBudgetsBudgetIdLedgerRoute: DashboardBudgetsBudgetIdLedgerRoute,
     DashboardBudgetsBudgetIdRulesRoute: DashboardBudgetsBudgetIdRulesRoute,
@@ -367,8 +458,11 @@ const DashboardBudgetsBudgetIdRouteChildren: DashboardBudgetsBudgetIdRouteChildr
       DashboardBudgetsBudgetIdSettingsRoute,
     DashboardBudgetsBudgetIdSinksRoute:
       DashboardBudgetsBudgetIdSinksRouteWithChildren,
-    DashboardBudgetsBudgetIdTagsRoute: DashboardBudgetsBudgetIdTagsRoute,
+    DashboardBudgetsBudgetIdTagsRoute:
+      DashboardBudgetsBudgetIdTagsRouteWithChildren,
     DashboardBudgetsBudgetIdIndexRoute: DashboardBudgetsBudgetIdIndexRoute,
+    DashboardBudgetsBudgetIdCategoriesCategoryIdRoute:
+      DashboardBudgetsBudgetIdCategoriesCategoryIdRoute,
   }
 
 const DashboardBudgetsBudgetIdRouteWithChildren =

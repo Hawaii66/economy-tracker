@@ -81,7 +81,9 @@ export type { BudgetState, BudgetStateV1 } from "./budget/state.ts";
 export {
   assertGuardRailFundingAllowed,
   assertGuardRailStateHealthy,
+  assertSinkBalanceCoversAllocation,
   calendarMonthsBetween,
+  findInsufficientSinkBalance,
   guardRailFromState,
   isGuardRailHealthy,
   maxFundableAmount,
@@ -98,6 +100,8 @@ export {
 export type {
   DueSinkFundingEntry,
   DueSinkFundingPlan,
+  InsufficientSinkBalance,
+  SinkAllocationAmount,
   SinkFundingStatus,
 } from "./budget/sinks.ts";
 
