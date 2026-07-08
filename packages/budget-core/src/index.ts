@@ -97,6 +97,7 @@ export {
   maxFundableAmount,
   missedFundingMonths,
   monthsUntilTarget,
+  planDueSinkFunding,
   sinkCatchUpAmount,
   sinkFundingPromptLabel,
   sinkFundingStatus,
@@ -104,7 +105,11 @@ export {
   totalAccountCash,
   totalSinkBalance,
 } from "./budget/sinks.ts";
-export type { SinkFundingStatus } from "./budget/sinks.ts";
+export type {
+  DueSinkFundingEntry,
+  DueSinkFundingPlan,
+  SinkFundingStatus,
+} from "./budget/sinks.ts";
 
 export {
   aggregateIncomeAndExpenses,
