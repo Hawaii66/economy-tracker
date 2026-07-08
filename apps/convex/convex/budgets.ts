@@ -21,6 +21,51 @@ const clientEventValidator = v.object({
   v: v.optional(v.number()),
 });
 
+const SINK_ACTIVITY_EVENT_TYPES = new Set([
+  "SINK_CREATED",
+  "SINK_FUNDED",
+  "SINK_WITHDRAWN",
+  "SINK_CAP_UPDATED",
+  "SINK_MONTHLY_TARGET_UPDATED",
+]);
+
+export const listSinkActivityEvents = query({
+  args: {
+    budgetId: v.id("budgets"),
+    sinkId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { userId } = await requireAuthUser(ctx);
+    await requireBudget(ctx, args.budgetId);
+    await requireBudgetMembership(ctx, args.budgetId, userId, [
+      "OWNER",
+      "EDITOR",
+      "VIEWER",
+    ]);
+
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_budget", (q) => q.eq("budgetId", args.budgetId))
+      .collect();
+
+    return events
+      .filter((event) => {
+        if (!SINK_ACTIVITY_EVENT_TYPES.has(event.eventType)) {
+          return false;
+        }
+
+        const payload = event.payload as { sinkId?: string };
+        return payload.sinkId === args.sinkId;
+      })
+      .map((event) => ({
+        sequenceNumber: event.sequenceNumber,
+        eventType: event.eventType,
+        payload: event.payload as Record<string, unknown>,
+        createdAt: event.createdAt,
+      }));
+  },
+});
+
 export const getBudgetState = query({
   args: {
     budgetId: v.id("budgets"),
