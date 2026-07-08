@@ -5,7 +5,6 @@ import {
   getInternalTransferGroups,
   getLedgerTransactions,
   getSinks,
-  getSplitGroups,
   type BudgetLedgerTransaction,
 } from '@/lib/budget-types'
 
@@ -20,7 +19,6 @@ export type LedgerTableContext = {
   tagsById: Record<string, TagOption>
   ledgerById: Map<string, BudgetLedgerTransaction>
   internalTransferGroups: ReturnType<typeof getInternalTransferGroups>
-  splitGroups: ReturnType<typeof getSplitGroups>
   allLedgerTransactions: BudgetLedgerTransaction[]
 }
 
@@ -64,7 +62,6 @@ export function buildLedgerTableContext(state: Record<string, unknown>): LedgerT
     tagsById,
     ledgerById: buildLedgerById(allLedgerTransactions),
     internalTransferGroups: getInternalTransferGroups(state.internalTransferGroups),
-    splitGroups: getSplitGroups(state.splitGroups),
     allLedgerTransactions,
   }
 }

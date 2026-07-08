@@ -7,7 +7,6 @@ import type { CategoryOption, SinkOption, TagOption } from '@/components/transac
 import type {
   BudgetInternalTransferGroup,
   BudgetLedgerTransaction,
-  BudgetSplitGroup,
   BudgetVirtualSlice,
 } from '@/lib/budget-types'
 import { getTransferCounterpartyId, shortEntityId } from '@/lib/budget-types'
@@ -23,7 +22,6 @@ type LedgerEntriesTableProps = {
   tagsById: Record<string, TagOption>
   ledgerById: Map<string, BudgetLedgerTransaction>
   internalTransferGroups: BudgetInternalTransferGroup[]
-  splitGroups: BudgetSplitGroup[]
   highlightedId: string | null
   deletingLedgerId: string | null
   onNavigateToRaw: (rawId: string) => void
@@ -217,43 +215,6 @@ function InternalTransferLink({
   )
 }
 
-function SplitGroupLink({
-  ledger,
-  splitGroups,
-  ledgerById,
-}: {
-  ledger: BudgetLedgerTransaction
-  splitGroups: BudgetSplitGroup[]
-  ledgerById: Map<string, BudgetLedgerTransaction>
-}) {
-  if (!ledger.splitGroupId) {
-    return null
-  }
-
-  const group = splitGroups.find((candidate) => candidate.id === ledger.splitGroupId)
-  if (!group) {
-    return <span className="demo-pill">Split group</span>
-  }
-
-  const isParent = group.parentLedgerTransactionId === ledger.id
-  const linkedCount = group.linkedLedgerTransactionIds.length
-
-  if (isParent) {
-    return (
-      <span className="demo-pill">
-        Split parent / {linkedCount} linked reimbursement{linkedCount === 1 ? '' : 's'}
-      </span>
-    )
-  }
-
-  const parent = ledgerById.get(group.parentLedgerTransactionId)
-  return (
-    <span className="demo-pill">
-      Split reimbursement of {parent?.description || shortEntityId(group.parentLedgerTransactionId)}
-    </span>
-  )
-}
-
 function SliceRow({
   slice,
   categoriesById,
@@ -301,7 +262,6 @@ export default function LedgerEntriesTable({
   tagsById,
   ledgerById,
   internalTransferGroups,
-  splitGroups,
   highlightedId,
   deletingLedgerId,
   onNavigateToRaw,
@@ -425,11 +385,6 @@ export default function LedgerEntriesTable({
                           ledgerById={ledgerById}
                           internalTransferGroups={internalTransferGroups}
                           onNavigateToLedger={onNavigateToLedger}
-                        />
-                        <SplitGroupLink
-                          ledger={ledger}
-                          splitGroups={splitGroups}
-                          ledgerById={ledgerById}
                         />
                       </div>
                     </td>

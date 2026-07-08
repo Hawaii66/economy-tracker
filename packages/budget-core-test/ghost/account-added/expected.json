@@ -9,21 +9,17 @@
         "genesisDate": "2026-01-01",
         "icon": "wallet",
         "id": "acct-checking",
-        "name": "Checking",
-        "parserTemplateId": null
+        "name": "Checking"
       }
     },
     "categories": {},
     "eventTags": {},
-    "genesisEpoch": null,
     "internalTransferGroups": {},
     "ledgerTransactions": {},
     "lifestyleTags": {},
-    "parserTemplates": {},
     "rawTransactions": {},
     "rules": {},
     "sinks": {},
-    "splitGroups": {},
     "version": 1
   }
 }

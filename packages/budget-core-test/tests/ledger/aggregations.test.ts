@@ -18,7 +18,6 @@ const baseTransaction = {
   sinkId: "sink-food",
   lifestyleTagIds: ["tag-home"],
   eventTagIds: ["tag-trip"],
-  splitGroupId: null,
   internalTransferGroupId: null,
   virtualSlices: [],
 } satisfies Omit<LedgerTransaction, "id" | "amount">;

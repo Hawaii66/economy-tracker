@@ -20,7 +20,6 @@ function ledger(overrides: Partial<BudgetLedgerTransaction> = {}): BudgetLedgerT
     sinkId: 'sink-1',
     lifestyleTagIds: ['tag-1'],
     eventTagIds: [],
-    splitGroupId: null,
     internalTransferGroupId: null,
     virtualSlices: [],
     ...overrides,

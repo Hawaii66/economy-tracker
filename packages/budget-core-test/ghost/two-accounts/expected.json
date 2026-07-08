@@ -9,8 +9,7 @@
         "genesisDate": "2026-01-01",
         "icon": "wallet",
         "id": "acct-checking",
-        "name": "Checking",
-        "parserTemplateId": null
+        "name": "Checking"
       },
       "acct-savings": {
         "balance": 500000,
@@ -20,21 +19,17 @@
         "genesisDate": "2026-01-01",
         "icon": "wallet",
         "id": "acct-savings",
-        "name": "Savings",
-        "parserTemplateId": null
+        "name": "Savings"
       }
     },
     "categories": {},
     "eventTags": {},
-    "genesisEpoch": null,
     "internalTransferGroups": {},
     "ledgerTransactions": {},
     "lifestyleTags": {},
-    "parserTemplates": {},
     "rawTransactions": {},
     "rules": {},
     "sinks": {},
-    "splitGroups": {},
     "version": 1
   }
 }

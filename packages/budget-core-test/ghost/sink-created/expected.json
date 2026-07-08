@@ -3,11 +3,9 @@
     "accounts": {},
     "categories": {},
     "eventTags": {},
-    "genesisEpoch": null,
     "internalTransferGroups": {},
     "ledgerTransactions": {},
     "lifestyleTags": {},
-    "parserTemplates": {},
     "rawTransactions": {},
     "rules": {},
     "sinks": {
@@ -45,7 +43,6 @@
         "targetDate": "2026-12-01"
       }
     },
-    "splitGroups": {},
     "version": 1
   }
 }

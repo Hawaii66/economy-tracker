@@ -69,7 +69,6 @@ export function FilteredLedgerPanel({
           tagsById={context.tagsById}
           ledgerById={context.ledgerById}
           internalTransferGroups={context.internalTransferGroups}
-          splitGroups={context.splitGroups}
           highlightedId={null}
           deletingLedgerId={null}
           onNavigateToRaw={() => {}}

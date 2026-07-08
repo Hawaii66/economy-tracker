@@ -9,8 +9,7 @@
         "genesisDate": "2026-01-01",
         "icon": "wallet",
         "id": "acct-checking",
-        "name": "Checking",
-        "parserTemplateId": null
+        "name": "Checking"
       }
     },
     "categories": {
@@ -21,7 +20,6 @@
       }
     },
     "eventTags": {},
-    "genesisEpoch": null,
     "internalTransferGroups": {},
     "ledgerTransactions": {
       "txn-groceries": {
@@ -36,12 +34,10 @@
         "lifestyleTagIds": [],
         "rawTransactionId": null,
         "sinkId": "sink-groceries",
-        "splitGroupId": null,
         "virtualSlices": []
       }
     },
     "lifestyleTags": {},
-    "parserTemplates": {},
     "rawTransactions": {},
     "rules": {},
     "sinks": {
@@ -57,7 +53,6 @@
         "sinkType": "capped_reserve"
       }
     },
-    "splitGroups": {},
     "version": 1
   }
 }

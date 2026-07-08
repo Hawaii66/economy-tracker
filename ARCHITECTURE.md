@@ -33,14 +33,6 @@ $$ \text{Allocation Amount} = \min(M_{\text{target}}, C_{\text{cap}} - B_{\text{
 
 *Where \( M_{\text{target}} \) is the monthly target, \( C_{\text{cap}} \) is the ceiling cap, and \( B_{\text{curr}} \) is the current balance.*
 
-### 4. Workspace Settlement Formulation
-
-In collaborative budgets, a user's relative financial footprint settlement balance \( S_u \) is calculated as:
-
-$$ S_u = E_u - \left( \frac{\text{Total Budget Expenses}}{N} \right) $$
-
-*Where \( E_u \) is the expenses paid by user \( u \), and \( N \) is the total active participants in the budget.*
-
 ---
 
 ## 3. Database Schema Blueprint (`convex/schema.ts`)

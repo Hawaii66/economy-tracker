@@ -3,11 +3,9 @@
     "accounts": {},
     "categories": {},
     "eventTags": {},
-    "genesisEpoch": null,
     "internalTransferGroups": {},
     "ledgerTransactions": {},
     "lifestyleTags": {},
-    "parserTemplates": {},
     "rawTransactions": {},
     "rules": {},
     "sinks": {
@@ -23,7 +21,6 @@
         "sinkType": "capped_reserve"
       }
     },
-    "splitGroups": {},
     "version": 1
   }
 }

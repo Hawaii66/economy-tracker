@@ -86,7 +86,6 @@ export type BudgetLedgerTransaction = {
   sinkId: string | null
   lifestyleTagIds: string[]
   eventTagIds: string[]
-  splitGroupId: string | null
   internalTransferGroupId: string | null
   virtualSlices: BudgetVirtualSlice[]
 }
@@ -94,13 +93,6 @@ export type BudgetLedgerTransaction = {
 export type BudgetInternalTransferGroup = {
   id: string
   ledgerTransactionIds: [string, string]
-  initiatedByUserId: string
-}
-
-export type BudgetSplitGroup = {
-  id: string
-  parentLedgerTransactionId: string
-  linkedLedgerTransactionIds: string[]
   initiatedByUserId: string
 }
 
@@ -142,7 +134,6 @@ export function getLedgerTransactions(
       eventTagIds: transaction.eventTagIds ?? [],
       virtualSlices: transaction.virtualSlices ?? [],
       internalTransferGroupId: transaction.internalTransferGroupId ?? null,
-      splitGroupId: transaction.splitGroupId ?? null,
     }))
     .sort((left, right) => right.date.localeCompare(left.date))
 }
@@ -151,10 +142,6 @@ export function getInternalTransferGroups(
   internalTransferGroups: unknown,
 ): BudgetInternalTransferGroup[] {
   return Object.values(asRecord<BudgetInternalTransferGroup>(internalTransferGroups))
-}
-
-export function getSplitGroups(splitGroups: unknown): BudgetSplitGroup[] {
-  return Object.values(asRecord<BudgetSplitGroup>(splitGroups))
 }
 
 export function buildLedgerByRawId(

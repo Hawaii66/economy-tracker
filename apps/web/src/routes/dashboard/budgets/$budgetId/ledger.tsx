@@ -231,7 +231,6 @@ function LedgerPageContent({
           tagsById={context.tagsById}
           ledgerById={context.ledgerById}
           internalTransferGroups={context.internalTransferGroups}
-          splitGroups={context.splitGroups}
           highlightedId={highlightedLedgerId}
           deletingLedgerId={deletingLedgerId}
           onNavigateToRaw={(rawId) => navigateTo('raw', rawId)}
