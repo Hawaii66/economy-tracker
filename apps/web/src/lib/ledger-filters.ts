@@ -9,6 +9,78 @@ export type LedgerFilters = {
   to?: string
 }
 
+export type LedgerFilterKey = keyof LedgerFilters
+
+export function activeFilterCount(filters: LedgerFilters): number {
+  return Object.values(filters).filter(Boolean).length
+}
+
+export function buildLedgerSearch(filters: LedgerFilters): LedgerFilters {
+  const search: LedgerFilters = {}
+
+  if (filters.accountId) {
+    search.accountId = filters.accountId
+  }
+  if (filters.categoryId) {
+    search.categoryId = filters.categoryId
+  }
+  if (filters.sinkId) {
+    search.sinkId = filters.sinkId
+  }
+  if (filters.tagId) {
+    search.tagId = filters.tagId
+  }
+  if (filters.from) {
+    search.from = filters.from
+  }
+  if (filters.to) {
+    search.to = filters.to
+  }
+
+  return search
+}
+
+export function omitLedgerFilter(
+  filters: LedgerFilters,
+  key: LedgerFilterKey,
+): LedgerFilters {
+  const next = { ...filters }
+  delete next[key]
+  return next
+}
+
+export function summarizeFilteredLedger(
+  transactions: readonly BudgetLedgerTransaction[],
+): { count: number; totalIn: number; totalOut: number } {
+  let totalIn = 0
+  let totalOut = 0
+
+  for (const transaction of transactions) {
+    if (transaction.internalTransferGroupId) {
+      continue
+    }
+
+    if (transaction.virtualSlices.length > 0) {
+      for (const slice of transaction.virtualSlices) {
+        if (slice.amount > 0) {
+          totalIn += slice.amount
+        } else if (slice.amount < 0) {
+          totalOut += Math.abs(slice.amount)
+        }
+      }
+      continue
+    }
+
+    if (transaction.amount > 0) {
+      totalIn += transaction.amount
+    } else if (transaction.amount < 0) {
+      totalOut += Math.abs(transaction.amount)
+    }
+  }
+
+  return { count: transactions.length, totalIn, totalOut }
+}
+
 function transactionMatchesSink(
   transaction: BudgetLedgerTransaction,
   sinkId: string,

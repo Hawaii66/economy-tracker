@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useMatch } from '@tanstack/react-router'
 import { Wallet } from 'lucide-react'
 import AccountsManager from '@/components/accounts/AccountsManager'
 import type { Id } from '@economy-tracker/convex/dataModel'
@@ -9,6 +9,14 @@ export const Route = createFileRoute('/dashboard/budgets/$budgetId/accounts')({
 
 function AccountsPage() {
   const { budgetId } = Route.useParams()
+  const accountDetailMatch = useMatch({
+    from: '/dashboard/budgets/$budgetId/accounts/$accountId',
+    shouldThrow: false,
+  })
+
+  if (accountDetailMatch) {
+    return <Outlet />
+  }
 
   return (
     <div className="budget-page">

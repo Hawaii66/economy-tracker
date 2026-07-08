@@ -7,16 +7,11 @@ import { useEffect, useState } from 'react'
 import { api } from '@economy-tracker/convex/api'
 import type { Id } from '@economy-tracker/convex/dataModel'
 import LedgerEntriesTable from '@/components/ledger/LedgerEntriesTable'
+import { LedgerFilterBar } from '@/components/ledger/LedgerFilterBar'
 import RawImportsTable from '@/components/ledger/RawImportsTable'
 import {
-  buildLedgerById,
   buildLedgerByRawId,
-  getAccounts,
-  getInternalTransferGroups,
-  getLedgerTransactions,
   getRawTransactions,
-  getSinks,
-  getSplitGroups,
   getTransferCounterpartyId,
   getUnlinkedRawTransactions,
   type BudgetLedgerTransaction,
@@ -25,7 +20,14 @@ import {
   type LedgerHighlightTarget,
   navigateToLedgerRow,
 } from '@/lib/ledger-navigation'
-import { filterLedgerTransactions, type LedgerFilters } from '@/lib/ledger-filters'
+import {
+  activeFilterCount,
+  filterLedgerTransactions,
+  summarizeFilteredLedger,
+  type LedgerFilters,
+} from '@/lib/ledger-filters'
+import { buildLedgerTableContext } from '@/lib/ledger-table-context'
+import { formatMoney } from '@/lib/format-money'
 
 export const Route = createFileRoute('/dashboard/budgets/$budgetId/ledger')({
   component: LedgerPage,
@@ -38,10 +40,6 @@ export const Route = createFileRoute('/dashboard/budgets/$budgetId/ledger')({
     to: typeof search.to === 'string' ? search.to : undefined,
   }),
 })
-
-type Category = { id: string; name: string; color: string }
-type LifestyleTag = { id: string; name: string; color: string }
-type EventTag = { id: string; name: string; color: string; archived: boolean }
 
 function LedgerPage() {
   const { budgetId } = Route.useParams()
@@ -99,59 +97,23 @@ function LedgerPageContent({
     setHighlighted(navigateToLedgerRow(type, id))
   }
 
-  const accounts = getAccounts(state.accounts)
-  const accountNames = Object.fromEntries(accounts.map((account) => [account.id, account.name]))
+  const context = buildLedgerTableContext(state)
+  const ledgerTransactions = filterLedgerTransactions(context.allLedgerTransactions, filters)
+  const ledgerByRawId = buildLedgerByRawId(context.allLedgerTransactions)
   const rawTransactions = getRawTransactions(state.rawTransactions)
-  const allLedgerTransactions = getLedgerTransactions(state.ledgerTransactions)
-  const ledgerTransactions = filterLedgerTransactions(allLedgerTransactions, filters)
-  const internalTransferGroups = getInternalTransferGroups(state.internalTransferGroups)
-  const splitGroups = getSplitGroups(state.splitGroups)
-  const ledgerById = buildLedgerById(ledgerTransactions)
-  const ledgerByRawId = buildLedgerByRawId(ledgerTransactions)
   const unlinkedRawTransactions = getUnlinkedRawTransactions(
     state.rawTransactions,
     state.ledgerTransactions,
   )
-
-  const categoriesById = Object.fromEntries(
-    (Object.values(state.categories ?? {}) as Category[]).map((category) => [
-      category.id,
-      category,
-    ]),
-  )
-
-  const lifestyleTags = Object.values(state.lifestyleTags ?? {}) as LifestyleTag[]
-  const eventTags = (Object.values(state.eventTags ?? {}) as EventTag[]).filter(
-    (tag) => !tag.archived,
-  )
-
-  const tagsById = Object.fromEntries([
-    ...lifestyleTags.map((tag) => [
-      tag.id,
-      { id: tag.id, name: tag.name, color: tag.color, kind: 'permanent' as const },
-    ]),
-    ...eventTags.map((tag) => [
-      tag.id,
-      { id: tag.id, name: tag.name, color: tag.color, kind: 'temporary' as const },
-    ]),
-  ])
-
-  const sinksById = Object.fromEntries(
-    getSinks(state.sinks).map((sink) => [
-      sink.id,
-      { id: sink.id, name: sink.name, color: sink.color, icon: sink.icon, balance: sink.balance },
-    ]),
-  )
+  const summary = summarizeFilteredLedger(ledgerTransactions)
 
   async function handleDeleteLedger(ledger: BudgetLedgerTransaction) {
     setActionError(null)
     setActionMessage(null)
     setDeletingLedgerId(ledger.id)
 
-    const counterpartyId = getTransferCounterpartyId(ledger, internalTransferGroups)
-    const ledgerIdsToDelete = counterpartyId
-      ? [ledger.id, counterpartyId]
-      : [ledger.id]
+    const counterpartyId = getTransferCounterpartyId(ledger, context.internalTransferGroups)
+    const ledgerIdsToDelete = counterpartyId ? [ledger.id, counterpartyId] : [ledger.id]
 
     try {
       await appendEvents({
@@ -178,8 +140,7 @@ function LedgerPageContent({
 
   const highlightedRawId = highlighted?.type === 'raw' ? highlighted.id : null
   const highlightedLedgerId = highlighted?.type === 'ledger' ? highlighted.id : null
-  const activeFilterCount = Object.values(filters).filter(Boolean).length
-  const activeSink = filters.sinkId ? sinksById[filters.sinkId] : undefined
+  const filterCount = activeFilterCount(filters)
 
   return (
     <div className="budget-page">
@@ -191,18 +152,6 @@ function LedgerPageContent({
           <div>
             <p className="kicker mb-1">Transactions</p>
             <h1 className="display-title m-0 text-2xl text-[var(--text)] sm:text-3xl">Ledger</h1>
-            {activeSink ? (
-              <p className="mt-2 mb-0 text-sm text-[var(--text-muted)]">
-                Filtered to sink:{' '}
-                <Link
-                  to="/dashboard/budgets/$budgetId/sinks/$sinkId"
-                  params={{ budgetId, sinkId: activeSink.id }}
-                  className="text-[var(--accent)] no-underline hover:underline"
-                >
-                  {activeSink.name}
-                </Link>
-              </p>
-            ) : null}
           </div>
         </div>
       </header>
@@ -211,28 +160,63 @@ function LedgerPageContent({
         <div className="mb-4">
           <h2 className="m-0 text-lg font-semibold text-[var(--text)]">Ledger entries</h2>
           <p className="mt-1 mb-0 max-w-3xl text-sm text-[var(--text-muted)]">
-            Categorized transactions that affect account balances. Remove an entry to send its
-            bank import back to the Import tab for re-categorization.
+            Categorized transactions that affect account balances. Remove an entry to send its bank
+            import back to the Import tab for re-categorization.
           </p>
-          {activeFilterCount > 0 ? (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="demo-pill">
-                {ledgerTransactions.length} of {allLedgerTransactions.length} entries
-              </span>
-              <Link
-                to="/dashboard/budgets/$budgetId/ledger"
-                params={{ budgetId }}
-                className="text-sm text-[var(--accent)] no-underline hover:underline"
-              >
-                Clear filters
-              </Link>
-            </div>
+          {filterCount > 0 ? (
+            <>
+              <LedgerFilterBar
+                budgetId={budgetId}
+                filters={filters}
+                entities={{
+                  accountId: filters.accountId
+                    ? {
+                        label: context.accountNames[filters.accountId] ?? filters.accountId,
+                        href: `/dashboard/budgets/${budgetId}/accounts/${filters.accountId}`,
+                      }
+                    : undefined,
+                  categoryId: filters.categoryId
+                    ? {
+                        label: context.categoriesById[filters.categoryId]?.name ?? filters.categoryId,
+                        href: `/dashboard/budgets/${budgetId}/categories/${filters.categoryId}`,
+                      }
+                    : undefined,
+                  sinkId: filters.sinkId
+                    ? {
+                        label: context.sinksById[filters.sinkId]?.name ?? filters.sinkId,
+                        href: `/dashboard/budgets/${budgetId}/sinks/${filters.sinkId}`,
+                      }
+                    : undefined,
+                  tagId: filters.tagId
+                    ? {
+                        label: context.tagsById[filters.tagId]?.name ?? filters.tagId,
+                        href: `/dashboard/budgets/${budgetId}/tags/${filters.tagId}`,
+                      }
+                    : undefined,
+                }}
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="demo-pill">
+                  {ledgerTransactions.length} of {context.allLedgerTransactions.length} entries
+                </span>
+                {summary.totalIn > 0 ? (
+                  <span className="demo-pill text-[var(--accent)]">
+                    In {formatMoney(summary.totalIn)}
+                  </span>
+                ) : null}
+                {summary.totalOut > 0 ? (
+                  <span className="demo-pill text-[#E88A8A]">
+                    Out {formatMoney(summary.totalOut)}
+                  </span>
+                ) : null}
+              </div>
+            </>
           ) : null}
           {actionError ? (
             <p className="demo-alert demo-alert-danger mt-3 mb-0 text-sm">{actionError}</p>
           ) : null}
           {actionMessage ? <p className="demo-alert mt-3 mb-0 text-sm">{actionMessage}</p> : null}
-          {ledgerTransactions.length > 0 ? (
+          {filterCount === 0 && ledgerTransactions.length > 0 ? (
             <div className="mt-3 flex flex-wrap gap-2">
               <span className="demo-pill">{ledgerTransactions.length} entries</span>
             </div>
@@ -241,13 +225,13 @@ function LedgerPageContent({
 
         <LedgerEntriesTable
           transactions={ledgerTransactions}
-          accountNames={accountNames}
-          categoriesById={categoriesById}
-          sinksById={sinksById}
-          tagsById={tagsById}
-          ledgerById={ledgerById}
-          internalTransferGroups={internalTransferGroups}
-          splitGroups={splitGroups}
+          accountNames={context.accountNames}
+          categoriesById={context.categoriesById}
+          sinksById={context.sinksById}
+          tagsById={context.tagsById}
+          ledgerById={context.ledgerById}
+          internalTransferGroups={context.internalTransferGroups}
+          splitGroups={context.splitGroups}
           highlightedId={highlightedLedgerId}
           deletingLedgerId={deletingLedgerId}
           onNavigateToRaw={(rawId) => navigateTo('raw', rawId)}
@@ -288,7 +272,7 @@ function LedgerPageContent({
         <RawImportsTable
           transactions={rawTransactions}
           ledgerByRawId={ledgerByRawId}
-          accountNames={accountNames}
+          accountNames={context.accountNames}
           highlightedId={highlightedRawId}
           onNavigateToLedger={(ledgerId) => navigateTo('ledger', ledgerId)}
         />

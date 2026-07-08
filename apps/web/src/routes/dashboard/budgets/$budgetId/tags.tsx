@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useMatch } from '@tanstack/react-router'
 import { Tags } from 'lucide-react'
 import CategoriesTagsManager from '@/components/taxonomy/CategoriesTagsManager'
 import type { Id } from '@economy-tracker/convex/dataModel'
@@ -9,6 +9,14 @@ export const Route = createFileRoute('/dashboard/budgets/$budgetId/tags')({
 
 function TagsPage() {
   const { budgetId } = Route.useParams()
+  const tagDetailMatch = useMatch({
+    from: '/dashboard/budgets/$budgetId/tags/$tagId',
+    shouldThrow: false,
+  })
+
+  if (tagDetailMatch) {
+    return <Outlet />
+  }
 
   return (
     <div className="budget-page">
