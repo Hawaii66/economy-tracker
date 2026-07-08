@@ -53,7 +53,7 @@ export function buildLedgerTableContext(state: Record<string, unknown>): LedgerT
   const sinksById = Object.fromEntries(
     getSinks(state.sinks).map((sink) => [
       sink.id,
-      { id: sink.id, name: sink.name, color: sink.color, icon: sink.icon },
+      { id: sink.id, name: sink.name, color: sink.color, icon: sink.icon, balance: sink.balance },
     ]),
   )
 

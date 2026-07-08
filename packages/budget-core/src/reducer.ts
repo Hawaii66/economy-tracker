@@ -7,6 +7,7 @@ import { DEFAULT_ACCOUNT_APPEARANCE, type Sink } from "./budget/entities.ts";
 import {
   assertGuardRailFundingAllowed,
   assertGuardRailStateHealthy,
+  assertSinkBalanceCoversAllocation,
 } from "./budget/sinks.ts";
 import type { BudgetState } from "./budget/state.ts";
 import type { EntityId } from "./common.ts";
@@ -125,7 +126,9 @@ function applySinkAllocations(
   multiplier: 1 | -1 = 1,
 ) {
   for (const { sinkId, amount } of allocations) {
-    requireSink(draft, sinkId).balance += multiplier * amount;
+    const sink = requireSink(draft, sinkId);
+    assertSinkBalanceCoversAllocation(sink, amount, multiplier);
+    sink.balance += multiplier * amount;
   }
 }
 
