@@ -30,7 +30,7 @@ function SinkProgressChart({ sinks }: { sinks: BudgetSink[] }) {
         label: sink.name,
         balance: Math.min(sink.balance, goal),
         remaining: Math.max(0, goal - sink.balance),
-        fill: chartColor(index, sink.color),
+        balanceFill: chartColor(index, sink.color),
       }
     })
     .filter((row): row is NonNullable<typeof row> => row !== null)
@@ -77,7 +77,7 @@ function SinkProgressChart({ sinks }: { sinks: BudgetSink[] }) {
           />
           <Bar dataKey="balance" stackId="progress" fill="var(--color-balance)" radius={[4, 0, 0, 4]}>
             {rows.map((entry) => (
-              <Cell key={`${entry.id}-balance`} fill={entry.fill} />
+              <Cell key={`${entry.id}-balance`} fill={entry.balanceFill} />
             ))}
           </Bar>
           <Bar
@@ -85,7 +85,11 @@ function SinkProgressChart({ sinks }: { sinks: BudgetSink[] }) {
             stackId="progress"
             fill="var(--color-remaining)"
             radius={[0, 4, 4, 0]}
-          />
+          >
+            {rows.map((entry) => (
+              <Cell key={`${entry.id}-remaining`} fill="var(--color-remaining)" />
+            ))}
+          </Bar>
         </BarChart>
       </ChartContainer>
     </ChartPanel>
