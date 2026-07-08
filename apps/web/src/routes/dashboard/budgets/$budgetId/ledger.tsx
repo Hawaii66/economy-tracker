@@ -25,9 +25,18 @@ import {
   type LedgerHighlightTarget,
   navigateToLedgerRow,
 } from '@/lib/ledger-navigation'
+import { filterLedgerTransactions, type LedgerFilters } from '@/lib/ledger-filters'
 
 export const Route = createFileRoute('/dashboard/budgets/$budgetId/ledger')({
   component: LedgerPage,
+  validateSearch: (search: Record<string, unknown>): LedgerFilters => ({
+    sinkId: typeof search.sinkId === 'string' ? search.sinkId : undefined,
+    categoryId: typeof search.categoryId === 'string' ? search.categoryId : undefined,
+    accountId: typeof search.accountId === 'string' ? search.accountId : undefined,
+    tagId: typeof search.tagId === 'string' ? search.tagId : undefined,
+    from: typeof search.from === 'string' ? search.from : undefined,
+    to: typeof search.to === 'string' ? search.to : undefined,
+  }),
 })
 
 type Category = { id: string; name: string; color: string }
@@ -70,6 +79,7 @@ function LedgerPageContent({
   budgetId: string
   state: Record<string, unknown>
 }) {
+  const filters = Route.useSearch()
   const [highlighted, setHighlighted] = useState<LedgerHighlightTarget | null>(null)
   const [actionMessage, setActionMessage] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -92,7 +102,8 @@ function LedgerPageContent({
   const accounts = getAccounts(state.accounts)
   const accountNames = Object.fromEntries(accounts.map((account) => [account.id, account.name]))
   const rawTransactions = getRawTransactions(state.rawTransactions)
-  const ledgerTransactions = getLedgerTransactions(state.ledgerTransactions)
+  const allLedgerTransactions = getLedgerTransactions(state.ledgerTransactions)
+  const ledgerTransactions = filterLedgerTransactions(allLedgerTransactions, filters)
   const internalTransferGroups = getInternalTransferGroups(state.internalTransferGroups)
   const splitGroups = getSplitGroups(state.splitGroups)
   const ledgerById = buildLedgerById(ledgerTransactions)
@@ -167,6 +178,8 @@ function LedgerPageContent({
 
   const highlightedRawId = highlighted?.type === 'raw' ? highlighted.id : null
   const highlightedLedgerId = highlighted?.type === 'ledger' ? highlighted.id : null
+  const activeFilterCount = Object.values(filters).filter(Boolean).length
+  const activeSink = filters.sinkId ? sinksById[filters.sinkId] : undefined
 
   return (
     <div className="budget-page">
@@ -178,6 +191,18 @@ function LedgerPageContent({
           <div>
             <p className="kicker mb-1">Transactions</p>
             <h1 className="display-title m-0 text-2xl text-[var(--text)] sm:text-3xl">Ledger</h1>
+            {activeSink ? (
+              <p className="mt-2 mb-0 text-sm text-[var(--text-muted)]">
+                Filtered to sink:{' '}
+                <Link
+                  to="/dashboard/budgets/$budgetId/sinks/$sinkId"
+                  params={{ budgetId, sinkId: activeSink.id }}
+                  className="text-[var(--accent)] no-underline hover:underline"
+                >
+                  {activeSink.name}
+                </Link>
+              </p>
+            ) : null}
           </div>
         </div>
       </header>
@@ -189,6 +214,20 @@ function LedgerPageContent({
             Categorized transactions that affect account balances. Remove an entry to send its
             bank import back to the Import tab for re-categorization.
           </p>
+          {activeFilterCount > 0 ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="demo-pill">
+                {ledgerTransactions.length} of {allLedgerTransactions.length} entries
+              </span>
+              <Link
+                to="/dashboard/budgets/$budgetId/ledger"
+                params={{ budgetId }}
+                className="text-sm text-[var(--accent)] no-underline hover:underline"
+              >
+                Clear filters
+              </Link>
+            </div>
+          ) : null}
           {actionError ? (
             <p className="demo-alert demo-alert-danger mt-3 mb-0 text-sm">{actionError}</p>
           ) : null}

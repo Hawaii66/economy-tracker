@@ -1,5 +1,6 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { ArrowDownCircle, ArrowUpCircle, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '@economy-tracker/convex/api'
@@ -370,14 +371,14 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
               const fundingStatus = sinkFundingStatus(sink, today)
 
               return (
-                <article
+                <div
                   key={sink.id}
-                  className="rounded-xl border border-[var(--border)] bg-[rgba(27,24,23,0.55)] p-4"
+                  className="rounded-xl border border-[var(--border)] bg-[rgba(27,24,23,0.55)]"
                 >
                   {fundingStatus.needsFunding ? (
                     <button
                       type="button"
-                      className="mb-4 w-full cursor-pointer rounded-xl border border-[rgba(94,174,255,0.45)] bg-[rgba(94,174,255,0.12)] px-4 py-3 text-left transition hover:bg-[rgba(94,174,255,0.2)]"
+                      className="w-full cursor-pointer rounded-t-xl border-0 border-b border-[rgba(94,174,255,0.45)] bg-[rgba(94,174,255,0.12)] px-4 py-3 text-left transition hover:bg-[rgba(94,174,255,0.2)]"
                       onClick={() =>
                         openFundSink(sink, {
                           prefillAmount: fundingStatus.suggestedAmount,
@@ -403,60 +404,62 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
                       )}
                     </button>
                   ) : null}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-3">
-                      <span
-                        className="flex size-10 shrink-0 items-center justify-center rounded-xl"
-                        style={{ backgroundColor: `${sink.color}22`, color: sink.color }}
-                      >
-                        <SinkIcon icon={sink.icon} />
-                      </span>
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="m-0 truncate text-base font-semibold text-[var(--text)]">
-                            {sink.name}
-                          </h3>
-                          <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-xs font-medium text-[var(--text-muted)]">
-                            {sinkTypeLabel(sink)}
-                          </span>
+                  <Link
+                    to="/dashboard/budgets/$budgetId/sinks/$sinkId"
+                    params={{ budgetId, sinkId: sink.id }}
+                    className="block p-4 text-[var(--text)] no-underline transition hover:bg-[rgba(27,24,23,0.75)]"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
+                        <span
+                          className="flex size-10 shrink-0 items-center justify-center rounded-xl"
+                          style={{ backgroundColor: `${sink.color}22`, color: sink.color }}
+                        >
+                          <SinkIcon icon={sink.icon} />
+                        </span>
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="m-0 truncate text-base font-semibold text-[var(--text)]">
+                              {sink.name}
+                            </h3>
+                            <span className="rounded-full border border-[var(--border)] px-2 py-0.5 text-xs font-medium text-[var(--text-muted)]">
+                              {sinkTypeLabel(sink)}
+                            </span>
+                          </div>
+                          <p className="m-0 mt-1 text-sm font-semibold text-[var(--text)]">
+                            {formatMoney(sink.balance)}
+                          </p>
                         </div>
-                        <p className="m-0 mt-1 text-sm font-semibold text-[var(--text)]">
-                          {formatMoney(sink.balance)}
-                        </p>
                       </div>
                     </div>
-                    <div className="flex shrink-0 flex-wrap gap-1">
-                      <Button size="sm" variant="outline" onClick={() => openFundSink(sink)}>
-                        <ArrowUpCircle />
-                        Fund
-                      </Button>
-                      <Button size="sm" variant="outline" onClick={() => openWithdrawSink(sink)}>
-                        <ArrowDownCircle />
-                        Withdraw
-                      </Button>
-                      {sink.sinkType === 'capped_reserve' ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openCapEdit(sink)}
-                        >
-                          <Pencil />
-                          Edit
-                        </Button>
-                      ) : null}
-                    </div>
-                  </div>
 
-                  <div className="mt-4">
-                    <div className="mb-1.5 flex items-center justify-between text-xs text-[var(--text-muted)]">
-                      <span>{sinkProgressLabel(sink)}</span>
-                      <span>{progress}%</span>
+                    <div className="mt-4">
+                      <div className="mb-1.5 flex items-center justify-between text-xs text-[var(--text-muted)]">
+                        <span>{sinkProgressLabel(sink)}</span>
+                        <span>{progress}%</span>
+                      </div>
+                      <ProgressBar percent={progress} />
                     </div>
-                    <ProgressBar percent={progress} />
-                  </div>
 
-                  <SinkMetadata sink={sink} today={today} />
-                </article>
+                    <SinkMetadata sink={sink} today={today} />
+                  </Link>
+                  <div className="flex flex-wrap gap-1 border-t border-[var(--border)] px-4 py-3">
+                    <Button size="sm" variant="outline" onClick={() => openFundSink(sink)}>
+                      <ArrowUpCircle />
+                      Fund
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => openWithdrawSink(sink)}>
+                      <ArrowDownCircle />
+                      Withdraw
+                    </Button>
+                    {sink.sinkType === 'capped_reserve' ? (
+                      <Button size="sm" variant="outline" onClick={() => openCapEdit(sink)}>
+                        <Pencil />
+                        Edit
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
               )
             })}
           </div>
