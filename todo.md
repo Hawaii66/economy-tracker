@@ -7,27 +7,27 @@ Scope decisions from IDEA.md review (2026-07-08):
 - **Dropped:** workspace-level genesis epoch (per-account genesis date + opening balance is enough)
 - **Dropped:** Swish / reactive split / net-expense / collaborative reimbursement linking
 
+Implementation audit (2026-07-08): core financial model, import pipeline, theme, Overview/Sinks charts, Option A auto-funding, sink detail, and ledger filter infra are shipped. Remaining work is mostly exploration UX — entity drill-down, chart→ledger navigation, and ledger filter controls.
+
 ---
 
 ## 1. Auto-funding sinks
 
-**Status:** Design needed, then implement
+**Status:** Option A done — optional enhancements remain
 
-**Problem:** Sinks show monthly pace and catch-up suggestions, but funding is always manual.
+**Problem:** Sinks show monthly pace and catch-up suggestions; batch funding is available but not hands-off scheduled.
 
 **Goal:** Optionally auto-allocate virtual funds to sinks on a schedule (e.g. monthly), respecting the guard-rail.
 
-### How to implement
+### Shipped (Option A)
 
-**Option A — Client-triggered (simplest)**
+- `sinkFundingStatus` / `planDueSinkFunding` in `packages/budget-core/src/budget/sinks.ts`
+- "Fund due sinks" button + confirmation modal on Sinks page (`FundDueSinksModal.tsx`)
+- Banner when sinks need funding (`SinksManager.tsx`)
+- Guard-rail validation via reducer on `SINK_FUNDED`; partial headroom funds by `missedMonths` desc
+- Tests: `bulk-funding.test.ts`, `funding-schedule.test.ts`
 
-1. On Sinks page load (or a "Fund due sinks" button), compute `sinkFundingStatus(sink, today)` for each sink.
-2. For sinks where `needsFunding` is true, sum `suggestedAmount` across sinks.
-3. If `sum <= maxFundableAmount(accounts, sinks)`, append one `SINK_FUNDED` event per sink (or a batch via `appendEvents`).
-4. Show a confirmation modal listing sinks and amounts before submitting.
-
-Pros: no cron, no Convex scheduler, reuses existing events.  
-Cons: only runs when a user opens the app / clicks the button.
+### Still open (optional)
 
 **Option B — Scheduled Convex job**
 
@@ -46,108 +46,86 @@ Cons: needs scheduler infra, timezone/month-boundary policy, and idempotency (do
 Pros: no cron; feels automatic to the user.  
 Cons: still requires someone to use the app.
 
-**Recommended path:** Start with **Option A** (explicit "Fund due sinks" action + optional prompt on Sinks page when `needsFunding`). Add **Option B** later if truly hands-off funding is wanted.
-
-**Shared rules (all options):**
-
-- Use existing `assertGuardRailFundingAllowed` before each `SINK_FUNDED`.
-- If headroom is insufficient, fund sinks in priority order (user-defined or by `missedMonths` desc) and stop when cash runs out — surface a clear message.
-- Set `lastFundedOn` via existing reducer behavior on `SINK_FUNDED`.
-- Add tests: multiple sinks due, partial headroom, zero headroom (no events emitted).
-
 **Optional UI additions:**
 
-- Per-sink toggle: "Include in auto-fund" (would need a new field on `Sink` or budget-level settings).
-- Overview banner: "3 sinks need funding — [Fund all]".
+- Overview banner: "N sinks need funding — [Fund all]" (Sinks page banner exists; Overview does not)
+- Per-sink toggle: "Include in auto-fund" (needs a new field on `Sink` or budget-level settings)
 
 ---
 
 ## 2. Budget charts and visual summaries
 
-**Status:** Partially done — Overview charts shipped; tag/month charts, Sinks-page charts, and chart→ledger drill-down still open
+**Status:** Charts done — chart→ledger drill-down remains
 
-**Problem:** Overview shows counts and the guard-rail only. There is no visual breakdown of where money sits (accounts vs sinks) or where it went (categories, tags, sinks over time).
+**Problem:** Charts display breakdowns but segments are not clickable; users cannot jump from a chart slice into filtered ledger rows.
 
-**Goal:** Charts on Overview (and optionally Sinks) so the budget is understandable at a glance, using the Analog Darkroom palette (`--chart-1` … `--chart-5` in `styles.css`).
+**Goal:** Complete the exploration loop: Overview (and Sinks) charts link into filtered ledger or entity detail views.
 
 ### Chart library
 
-- Add a small chart dependency (e.g. Recharts) or build minimal SVG bar/donut components if bundle size matters.
+- **Done:** Recharts in `BudgetOverviewCharts.tsx`, `BudgetSinksCharts.tsx`, `chart-panels.tsx`
 - Reuse existing `formatMoney` and theme colors; no new palette.
 
-### Suggested charts
+### Chart status
 
 | Chart | Data source | Where | Status |
 |---|---|---|---|
 | Account cash breakdown | `state.accounts[].balance` | Overview | Done |
-| Virtual sink allocation | `state.sinks[].balance` (+ target/cap for context) | Overview, Sinks | Overview done |
-| Guard-rail headroom | `guardRailFromState` | Overview (stacked bar: cash vs allocated sinks vs free headroom) | Done |
-| Sink progress | per-sink `balance` vs `targetAmount` / `cap` / amortized bill | Sinks page | Not started |
-| Spending by category | sum negative `ledgerTransactions` (+ virtual slice amounts) by `categoryId` | Overview | Done |
-| Spending by sink | same, grouped by `sinkId` | Overview, Sinks | Overview done |
-| Spending by tag | lifestyle + event tag ids on transactions/slices | Overview, tag detail | Not started |
-| Income vs expenses | sum positive vs negative ledger amounts (exclude internal transfers) | Overview | Done |
-| Monthly trend | bucket ledger by `date` month | Overview (optional v2) | Not started |
+| Virtual sink allocation | `state.sinks[].balance` | Overview, Sinks | Done |
+| Guard-rail headroom | `guardRailFromState` | Overview | Done |
+| Sink progress | per-sink `balance` vs target/cap/bill | Sinks page | Done (`SinkProgressChart`) |
+| Spending by category | ledger by `categoryId` (+ slices) | Overview | Done |
+| Spending by sink | ledger by `sinkId` | Overview, Sinks | Done |
+| Spending by tag | lifestyle + event tag ids | Overview | Done |
+| Income vs expenses | positive vs negative (excl. internal transfers) | Overview | Done |
+| Monthly trend | ledger bucketed by month | Overview | Done (`MonthlyTrendChart`) |
+| Chart → ledger drill-down | click segment → `?categoryId=` etc. | Overview, Sinks | **Not started** |
 
 ### Aggregation layer
 
-Add pure functions in `packages/budget-core` or `apps/web/src/lib/` (prefer core if reused in tests):
+**Done** in `packages/budget-core/src/budget/aggregations.ts` with unit tests in `aggregations.test.ts`:
 
 ```text
-aggregateLedgerByCategory(ledgerTransactions, options?)
+aggregateLedgerByCategory(...)
 aggregateLedgerBySink(...)
 aggregateLedgerByTag(...)
 aggregateLedgerByAccount(...)
-aggregateLedgerByMonth(...)
+aggregateMonthlyTrend(...)
+aggregateIncomeAndExpenses(...)
 ```
 
-Rules:
+Rules implemented: virtual slices included, internal transfers excluded, optional `{ from, to }` date range.
 
-- Include `virtualSlices` when present (use slice amounts + assignments instead of parent row).
-- Exclude internal-transfer legs (`internalTransferGroupId` set) from expense/income totals.
-- Respect optional date range `{ from, to }` on all aggregators.
+### Remaining UI work
 
-**Status:** Core aggregators and unit tests exist; wire remaining charts and drill-down.
-
-### UI
-
-1. **Overview page** — row of summary charts + link to filtered ledger per segment (click slice → navigate with query params).
-2. **Sinks page** — per-sink progress bars (partially exists) plus optional mini chart of spend vs funded over time.
-3. **Empty states** — “Import and categorize transactions to see spending breakdown.”
-
-### Tests
-
-- Unit tests for aggregators (slices, internal transfers excluded, date filter).
-- No snapshot tests on chart DOM unless necessary.
+1. **Overview + Sinks charts** — click slice/bar → navigate to filtered ledger (`?categoryId=`, `?sinkId=`, `?tagId=`, `?accountId=`) or entity detail page.
+2. **Empty states** — already present on chart panels; verify copy is consistent.
 
 ---
 
 ## 3. Entity detail views and ledger filtering
 
-**Status:** Not started
+**Status:** Partially done — sink detail + filter infra shipped; account/category/tag detail and filter UI remain
 
-**Problem:** Accounts, categories, and tags are managed as lists but there is no place to see *what happened* under each one. The ledger is one flat table with no filters.
+**Problem:** Accounts, categories, and tags are managed as lists with no activity view. Ledger filters work via URL but there is no in-page filter picker.
 
-**Goal:** Drill-down pages (or panels) for each account, category, tag, and sink, plus shared filters so users can explore and understand the budget.
+**Goal:** Drill-down pages for each account, category, tag, and sink, plus shared filters so users can explore the budget.
 
-### Shared filter model
+### Shipped
 
-Introduce URL search params on the Ledger route (and reuse on detail pages):
+- `filterLedgerTransactions` in `apps/web/src/lib/ledger-filters.ts`
+- URL search params on Ledger route: `accountId`, `categoryId`, `sinkId`, `tagId`, `from`, `to`
+- Filter applied in `ledger.tsx`; "Clear filters" when params active
+- **Sink detail** at `/dashboard/budgets/$budgetId/sinks/$sinkId` (`SinkDetailView.tsx`):
+  - Type, pace, target/cap/bill metadata
+  - Balance vs goal progress, monthly spending chart, activity timeline
+  - Transactions categorized to sink; fund/withdraw shortcuts
+  - Link to filtered ledger (`?sinkId=`)
+- Sink cards on Sinks page link to detail view
 
-```text
-?accountId=
-?categoryId=
-?sinkId=
-?tagId=        # matches lifestyle or event tag
-?from=YYYY-MM-DD
-?to=YYYY-MM-DD
-```
+### Account detail — not started
 
-Implement `filterLedgerTransactions(transactions, filters)` in `apps/web/src/lib/ledger-filters.ts` (or budget-core). Apply filters in `LedgerEntriesTable` and any detail view transaction list.
-
-### Account detail
-
-**Route:** `/dashboard/budgets/$budgetId/accounts/$accountId` (or expandable row on Accounts page)
+**Route:** `/dashboard/budgets/$budgetId/accounts/$accountId`
 
 Show:
 
@@ -157,9 +135,9 @@ Show:
 - Filtered transaction list for this account
 - Link to Import pre-scoped to this account
 
-### Category detail
+### Category detail — not started
 
-**Route:** `/dashboard/budgets/$budgetId/tags/categories/$categoryId` or query from Categories list
+**Route:** `/dashboard/budgets/$budgetId/tags/categories/$categoryId`
 
 Show:
 
@@ -167,39 +145,32 @@ Show:
 - Total spent (and count of transactions)
 - Small bar chart or top merchants by description (optional v2)
 - Filtered ledger list
-- Link: “View all in Ledger” with `?categoryId=`
+- Link: "View all in Ledger" with `?categoryId=`
 
-### Tag detail (lifestyle + event)
+### Tag detail (lifestyle + event) — not started
 
 Same pattern as category:
 
 - Distinguish permanent vs temporary (event) in the header
 - Show archived badge for event tags
 - Stats + filtered ledger
-- Event tags: note that archived tags still appear in historical data but not in suggestion lists (already partially true in import UI)
+- Event tags: note that archived tags still appear in historical data but not in suggestion lists (already true in import UI)
 
-### Sink detail
+### Navigation wiring — partial
 
-**Route:** `/dashboard/budgets/$budgetId/sinks/$sinkId`
+- **Done:** Sink cards → sink detail; sink detail → filtered ledger
+- **Not done:** Account cards, category rows, tag rows → detail views
+- **Not done:** Overview chart segments → detail page or filtered ledger
+- **Not done:** Breadcrumb: `Budget name / Accounts / Checking`
 
-Show:
+### Ledger filter UI — not started
 
-- Sink type, pace, target/cap/bill metadata (reuse `SinkMetadata` from `SinksManager`)
-- Balance vs goal progress
-- Total funded (`SINK_FUNDED` history is not stored separately today — infer from balance + categorized spend, or show “spent this period” from ledger)
-- Transactions categorized to this sink
-- Fund / withdraw shortcuts (existing modals)
+Add in-page pickers on Ledger route (account, category, sink, tag, date range) that update URL search params. Filters currently work only when navigating with params (e.g. from sink detail).
 
-### Navigation wiring
+### Categories & Tags page improvements — not started
 
-- Make account cards, category rows, tag rows, and sink cards link to their detail view.
-- From Overview charts (item 2), click segment → detail page or filtered ledger.
-- Breadcrumb: `Budget name / Accounts / Checking`
-
-### Categories & Tags page improvements
-
-- Add “View activity” action per row.
-- Show transaction count and total amount next to each category/tag (computed client-side from ledger).
+- Add "View activity" action per row
+- Show transaction count and total amount next to each category/tag (computed client-side from ledger)
 
 ### Performance
 
@@ -208,6 +179,28 @@ Show:
 
 ---
 
+## 4. Settings & workspace admin
+
+**Status:** Not started
+
+**Problem:** Settings page is a placeholder. Member management and branch genealogy exist in Convex but have no web UI.
+
+**Goal:** Workspace configuration UI for shared budgets.
+
+- Member invite/roles (OWNER / EDITOR / VIEWER) — backend in `apps/convex/convex/budgets.ts`
+- Budget rename, branch info display
+- Remove stale references to workspace genesis epoch onboarding from placeholder copy
+
+---
+
+## 5. Legacy schema cleanup (low priority)
+
+**Status:** Not started
+
+`genesisEpoch` and `parserTemplates` remain in `packages/budget-core` state/events but have no UI (scope dropped). Consider removing or formally deprecating in a future schema version.
+
+---
+
 ## IDEA.md
 
-Updated 2026-07-08 to match scope decisions above (liquid accounts, parser UI, workspace genesis, and Swish splits removed; charts, drill-down, sink spending sync, and optional auto-fund added).
+Updated 2026-07-08: scope decisions, implementation status section added after codebase audit.

@@ -48,7 +48,7 @@ Instead of separating "monthly budgets" from "savings goals", all expense projec
 *   **Recurring Bill Sinks:** Predictably amortizes expensive quarterly/yearly bills (e.g., dividing an annual Netflix bill into steady monthly portions).
 *   **Capped Reserve Sinks:** Continually funds unexpected categories (e.g., Car Repairs) with a set monthly contribution until it reaches a safety ceiling (Cap), at which point it stops demanding your money.
 
-**Funding:** Users manually fund or withdraw virtual sink balances. The app can suggest catch-up amounts and offer an optional **"Fund due sinks"** action that allocates suggested monthly amounts in one step, always respecting the guard-rail.
+**Funding:** Users manually fund or withdraw virtual sink balances. The app suggests catch-up amounts and offers an optional **"Fund due sinks"** action that allocates suggested monthly amounts in one step, always respecting the guard-rail.
 
 **Spending:** When a ledger expense is categorized to a sink, the sink balance decreases by the expense amount. Deleting or re-assigning a transaction reverses the adjustment. Physical account balances are unaffected by virtual funding — only real imported transactions move cash.
 
@@ -104,3 +104,54 @@ All physical accounts count toward total cash. If you attempt to manually fund o
 ### Problem D: The historical import backlog
 **Problem:** You cannot (and should not have to) download and import decades of CSV files just to see current balances on day one.
 **Solution:** Each account is created with a **genesis date** and **opening balance** representing day zero for that bank account. The import engine automatically ignores all CSV rows dated before that account's genesis date. Sinks are funded separately to their starting virtual balances; no workspace-wide genesis onboarding step is required.
+
+---
+
+## 5. Implementation Status
+
+Audit date: 2026-07-08. See `todo.md` for remaining work items.
+
+### Shipped
+
+| Area | Status |
+|---|---|
+| Multi-budget workspaces (Convex + UI list/create/switch) | Done |
+| Event-sourced state, cached projections, reducer | Done |
+| Accounts with per-account genesis date + opening balance | Done |
+| Dual-table ledger (raw imports + ledger entries) | Done |
+| Three sink types, pace/catch-up, fund/withdraw | Done |
+| Guard-rail enforcement (UI + reducer) | Done |
+| Mandatory sink on non-transfer transactions | Done |
+| Sink balance sync on categorize / delete / reassign | Done |
+| "Fund due sinks" batch action (Option A) | Done |
+| Swedish CSV import (delimiter, locale, encoding, headers) | Done |
+| Import rules, internal transfers, virtual slicing | Done |
+| Categories, lifestyle tags, event tags (incl. archive) | Done |
+| Analog Darkroom theme + Recharts chart palette | Done |
+| Overview charts (accounts, sinks, guard-rail, category/sink/tag spend, income vs expenses, monthly trend) | Done |
+| Sinks page charts (allocation, progress, spending) | Done |
+| Ledger aggregators in `budget-core` + unit tests | Done |
+| Sink detail view (`/sinks/$sinkId`) | Done |
+| URL-driven ledger filters + `filterLedgerTransactions` | Done |
+
+### Partial
+
+| Area | Done | Remaining |
+|---|---|---|
+| Entity detail views | Sink detail | Account, category, tag detail pages |
+| Ledger exploration | URL filters, clear-filters link | In-page filter pickers (account, category, sink, tag, dates) |
+| Chart drill-down | — | Click chart segment → filtered ledger or entity detail |
+| Auto-funding | Option A (manual batch on Sinks page) | Overview banner, per-sink toggle, scheduled cron (Option B) |
+| Taxonomy lists | CRUD + archive | Transaction counts, "View activity" links |
+| Workspace admin | Backend memberships | Settings UI (members, roles) |
+
+### Out of scope (dropped)
+
+- Liquid vs non-liquid account distinction
+- Per-account CSV parser configuration UI
+- Workspace-level genesis epoch onboarding
+- Swish / reactive split / net-expense / collaborative reimbursement linking
+
+### Legacy (no UI, cleanup optional)
+
+- `genesisEpoch` and `parserTemplates` fields remain in `budget-core` state schema from earlier design; not exposed in the app.
