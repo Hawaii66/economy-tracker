@@ -47,6 +47,12 @@ function BudgetOverviewPage() {
   const accountsRecord = Object.fromEntries(accounts.map((account) => [account.id, account]))
   const sinksRecord = Object.fromEntries(sinks.map((sink) => [sink.id, sink]))
   const guardRail = guardRailFromState({ accounts: accountsRecord, sinks: sinksRecord })
+  const lifestyleTags = (data.state.lifestyleTags ?? {}) as Record<
+    string,
+    { name: string; color: string }
+  >
+  const eventTags = (data.state.eventTags ?? {}) as Record<string, { name: string; color: string }>
+  const tags = { ...lifestyleTags, ...eventTags }
 
   return (
     <div className="budget-page">
@@ -156,6 +162,7 @@ function BudgetOverviewPage() {
         accounts={accounts}
         sinks={sinks}
         categories={(data.state.categories ?? {}) as Record<string, { name: string; color: string }>}
+        tags={tags}
         ledgerTransactions={data.state.ledgerTransactions}
         guardRail={guardRail}
       />

@@ -16,6 +16,12 @@ export type IncomeExpenseTotals = {
   expenses: number;
 };
 
+export type MonthlyTrendRow = {
+  id: string;
+  income: number;
+  expenses: number;
+};
+
 type LedgerLine = {
   accountId: string;
   date: IsoDate;
@@ -193,4 +199,29 @@ export function aggregateIncomeAndExpenses(
   }
 
   return { income, expenses };
+}
+
+export function aggregateMonthlyTrend(
+  transactions: readonly LedgerTransaction[],
+  options?: LedgerDateRange,
+): MonthlyTrendRow[] {
+  const lines = collectLedgerLines(transactions, options);
+  const byMonth = new Map<string, { income: number; expenses: number }>();
+
+  for (const line of lines) {
+    const month = monthKey(line.date);
+    const entry = byMonth.get(month) ?? { income: 0, expenses: 0 };
+
+    if (line.amount > 0) {
+      entry.income += line.amount;
+    } else if (line.amount < 0) {
+      entry.expenses += Math.abs(line.amount);
+    }
+
+    byMonth.set(month, entry);
+  }
+
+  return [...byMonth.entries()]
+    .map(([id, totals]) => ({ id, ...totals }))
+    .sort((left, right) => left.id.localeCompare(right.id));
 }

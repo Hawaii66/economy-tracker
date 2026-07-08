@@ -4,6 +4,7 @@ import { ArrowDownCircle, ArrowUpCircle, Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '@economy-tracker/convex/api'
 import type { Id } from '@economy-tracker/convex/dataModel'
+import { BudgetSinksChartsClient } from '@/components/sinks/BudgetSinksChartsClient'
 import { SinkIcon } from '@/components/sinks/SinkIcon'
 import { SinkCapEditModal, type CappedReserveEditValues } from '@/components/sinks/SinkCapEditModal'
 import {
@@ -347,6 +348,11 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
           </div>
         </dl>
       </section>
+
+      <BudgetSinksChartsClient
+        sinks={sinks}
+        ledgerTransactions={data.state.ledgerTransactions}
+      />
 
       <section className="budget-panel">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">

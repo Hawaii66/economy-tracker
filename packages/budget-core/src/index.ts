@@ -113,12 +113,14 @@ export {
   aggregateLedgerByMonth,
   aggregateLedgerBySink,
   aggregateLedgerByTag,
+  aggregateMonthlyTrend,
   collectLedgerLines,
 } from "./budget/aggregations.ts";
 export type {
   IncomeExpenseTotals,
   LedgerAggregationRow,
   LedgerDateRange,
+  MonthlyTrendRow,
 } from "./budget/aggregations.ts";
 
 export {
