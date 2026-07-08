@@ -1,10 +1,11 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowDownCircle, ArrowUpCircle, Pencil, Plus } from 'lucide-react'
+import { ArrowDownCircle, ArrowUpCircle, Pencil, Plus, Wallet } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '@economy-tracker/convex/api'
 import type { Id } from '@economy-tracker/convex/dataModel'
 import { SinkIcon } from '@/components/sinks/SinkIcon'
+import { FundDueSinksModal } from '@/components/sinks/FundDueSinksModal'
 import { SinkCapEditModal, type CappedReserveEditValues } from '@/components/sinks/SinkCapEditModal'
 import {
   SinkEditModal,
@@ -23,6 +24,7 @@ import { formatMoney } from '@/lib/format-money'
 import {
   guardRailFromState,
   maxFundableAmount,
+  planDueSinkFunding,
   sinkFundingPromptLabel,
   sinkFundingStatus,
   sinkMonthlyPace,
@@ -132,6 +134,7 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
   const [createModalOpen, setCreateModalOpen] = useState(false)
   const [fundModalOpen, setFundModalOpen] = useState(false)
   const [capModalOpen, setCapModalOpen] = useState(false)
+  const [fundDueModalOpen, setFundDueModalOpen] = useState(false)
   const [activeSink, setActiveSink] = useState<BudgetSink | undefined>()
   const [fundMode, setFundMode] = useState<SinkFundMode>('fund')
   const [mutationError, setMutationError] = useState<string | null>(null)
@@ -153,6 +156,9 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
   const sinksRecord = Object.fromEntries(sinks.map((sink) => [sink.id, sink]))
   const guardRail = guardRailFromState({ accounts: accountsRecord, sinks: sinksRecord })
   const headroom = maxFundableAmount(accountsRecord, sinksRecord)
+  const dueFundingPlan = planDueSinkFunding(accountsRecord, sinksRecord, today)
+  const dueSinkCount = dueFundingPlan.entries.length + dueFundingPlan.skipped.length
+  const sinksById = new Map(sinks.map((sink) => [sink.id, sink]))
 
   async function runMutation(task: () => Promise<void>) {
     setIsSaving(true)
@@ -228,6 +234,35 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
         },
       ]),
     )
+  }
+
+  function openFundDueSinks() {
+    setMutationError(null)
+    setFundDueModalOpen(true)
+  }
+
+  async function handleFundDueSinks() {
+    if (dueFundingPlan.entries.length === 0) {
+      return
+    }
+
+    try {
+      await runMutation(() =>
+        submitEvents(
+          dueFundingPlan.entries.map((entry) => ({
+            eventType: 'SINK_FUNDED',
+            payload: {
+              sinkId: entry.sinkId,
+              amount: entry.amount,
+              ledgerTransactionId: null,
+            },
+          })),
+        ),
+      )
+      setFundDueModalOpen(false)
+    } catch {
+      // Keep modal open so the user can see the error.
+    }
   }
 
   async function handleFundSave(amount: number) {
@@ -348,6 +383,31 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
         </dl>
       </section>
 
+      {dueSinkCount > 0 ? (
+        <section className="budget-panel mb-4 border border-[rgba(94,174,255,0.45)] bg-[rgba(94,174,255,0.08)]">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="m-0 text-sm font-bold tracking-wide text-[var(--accent)] uppercase">
+                {dueSinkCount === 1 ? '1 sink needs funding' : `${dueSinkCount} sinks need funding`}
+              </p>
+              <p className="m-0 mt-1 text-sm text-[var(--text-muted)]">
+                {dueFundingPlan.totalFundable > 0
+                  ? `Suggested catch-up total: ${formatMoney(dueFundingPlan.totalFundable)}${
+                      dueFundingPlan.skipped.length > 0
+                        ? ` (${dueFundingPlan.entries.length} of ${dueSinkCount} can be funded within headroom)`
+                        : ''
+                    }`
+                  : 'No headroom available to fund due sinks right now.'}
+              </p>
+            </div>
+            <Button onClick={openFundDueSinks} disabled={dueFundingPlan.entries.length === 0}>
+              <Wallet />
+              Fund due sinks
+            </Button>
+          </div>
+        </section>
+      ) : null}
+
       <section className="budget-panel">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -357,10 +417,18 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
               whichever account you choose.
             </p>
           </div>
-          <Button onClick={openCreateSink}>
-            <Plus />
-            Add sink
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            {dueSinkCount > 0 ? (
+              <Button variant="outline" onClick={openFundDueSinks}>
+                <Wallet />
+                Fund due sinks
+              </Button>
+            ) : null}
+            <Button onClick={openCreateSink}>
+              <Plus />
+              Add sink
+            </Button>
+          </div>
         </div>
 
         {sinks.length > 0 ? (
@@ -470,6 +538,16 @@ export default function SinksManager({ budgetId }: SinksManagerProps) {
         onOpenChange={setCreateModalOpen}
         onSave={handleCreateSink}
         isSaving={isSaving}
+      />
+
+      <FundDueSinksModal
+        open={fundDueModalOpen}
+        onOpenChange={setFundDueModalOpen}
+        plan={dueFundingPlan}
+        sinksById={sinksById}
+        onConfirm={handleFundDueSinks}
+        isSaving={isSaving}
+        errorMessage={mutationError}
       />
 
       <SinkFundModal

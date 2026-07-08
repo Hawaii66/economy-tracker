@@ -4,6 +4,7 @@ import {
   isGuardRailHealthy,
   maxFundableAmount,
   missedFundingMonths,
+  planDueSinkFunding,
   sinkCatchUpAmount,
   sinkFundingPromptLabel,
   sinkFundingStatus,
@@ -19,6 +20,7 @@ export {
   isGuardRailHealthy,
   maxFundableAmount,
   missedFundingMonths,
+  planDueSinkFunding,
   sinkCatchUpAmount,
   sinkFundingPromptLabel,
   sinkFundingStatus,
@@ -26,7 +28,11 @@ export {
   totalAccountCash,
   totalSinkBalance,
 }
-export type { SinkFundingStatus } from 'budget-core'
+export type {
+  DueSinkFundingEntry,
+  DueSinkFundingPlan,
+  SinkFundingStatus,
+} from 'budget-core'
 
 export type SinkType = Sink['sinkType']
 

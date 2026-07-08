@@ -178,3 +178,78 @@ export function sinkFundingPromptLabel(missedMonths: number): string {
   }
   return `Catch up ${missedMonths} months`;
 }
+
+export type DueSinkFundingEntry = {
+  sinkId: string;
+  amount: number;
+  missedMonths: number;
+  monthlyPace: number;
+  suggestedAmount: number;
+};
+
+export type DueSinkFundingPlan = {
+  /** Sinks that will receive funding, in emission order. */
+  entries: DueSinkFundingEntry[];
+  /** Due sinks that could not be funded within available headroom. */
+  skipped: DueSinkFundingEntry[];
+  /** Sum of suggested amounts for all due sinks. */
+  totalRequested: number;
+  /** Sum of amounts in `entries`. */
+  totalFundable: number;
+  headroom: number;
+};
+
+function dueSinkFundingEntry(sink: Sink, today: IsoDate): DueSinkFundingEntry | null {
+  const status = sinkFundingStatus(sink, today);
+  if (!status.needsFunding) {
+    return null;
+  }
+
+  return {
+    sinkId: sink.id,
+    amount: status.suggestedAmount,
+    missedMonths: status.missedMonths,
+    monthlyPace: status.monthlyPace,
+    suggestedAmount: status.suggestedAmount,
+  };
+}
+
+/** Plan batch funding for due sinks, respecting guard-rail headroom and priority order. */
+export function planDueSinkFunding(
+  accounts: BalanceRecord,
+  sinks: Record<string, Sink>,
+  today: IsoDate,
+): DueSinkFundingPlan {
+  const headroom = maxFundableAmount(accounts, sinks);
+  const dueEntries = Object.values(sinks)
+    .map((sink) => dueSinkFundingEntry(sink, today))
+    .filter((entry): entry is DueSinkFundingEntry => entry !== null)
+    .sort((left, right) => {
+      if (right.missedMonths !== left.missedMonths) {
+        return right.missedMonths - left.missedMonths;
+      }
+      return left.sinkId.localeCompare(right.sinkId);
+    });
+
+  const totalRequested = dueEntries.reduce((sum, entry) => sum + entry.suggestedAmount, 0);
+  const entries: DueSinkFundingEntry[] = [];
+  const skipped: DueSinkFundingEntry[] = [];
+  let remainingHeadroom = headroom;
+
+  for (const entry of dueEntries) {
+    if (entry.suggestedAmount <= remainingHeadroom) {
+      entries.push(entry);
+      remainingHeadroom -= entry.suggestedAmount;
+    } else {
+      skipped.push(entry);
+    }
+  }
+
+  return {
+    entries,
+    skipped,
+    totalRequested,
+    totalFundable: entries.reduce((sum, entry) => sum + entry.amount, 0),
+    headroom,
+  };
+}
