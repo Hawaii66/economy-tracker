@@ -67,6 +67,70 @@ export function assertGuardRailStateHealthy(
   }
 }
 
+export type SinkAllocationAmount = {
+  sinkId: string;
+  amount: number;
+};
+
+export type InsufficientSinkBalance = {
+  sinkId: string;
+  available: number;
+  required: number;
+  shortfall: number;
+};
+
+/** Whether applying allocations would leave every connected sink non-negative. */
+export function findInsufficientSinkBalance(
+  sinks: BalanceRecord,
+  allocations: readonly SinkAllocationAmount[],
+  multiplier: 1 | -1 = 1,
+): InsufficientSinkBalance | null {
+  const balances = new Map<string, number>(
+    Object.entries(sinks).map(([sinkId, sink]) => [sinkId, sink.balance]),
+  );
+
+  for (const { sinkId, amount } of allocations) {
+    const delta = multiplier * amount;
+    if (delta >= 0) {
+      continue;
+    }
+
+    const available = balances.get(sinkId) ?? 0;
+    const required = Math.abs(delta);
+    if (available < required) {
+      return {
+        sinkId,
+        available,
+        required,
+        shortfall: required - available,
+      };
+    }
+
+    balances.set(sinkId, available + delta);
+  }
+
+  return null;
+}
+
+export function assertSinkBalanceCoversAllocation(
+  sink: { id?: string; name?: string; balance: number },
+  amount: number,
+  multiplier: 1 | -1 = 1,
+): void {
+  const delta = multiplier * amount;
+  if (delta >= 0) {
+    return;
+  }
+
+  const required = Math.abs(delta);
+  if (sink.balance < required) {
+    const label = sink.name ?? sink.id ?? "sink";
+    throw new Error(
+      `Insufficient sink balance for "${label}": ${sink.balance} available, ${required} required. Fund the sink before recording this expense.`,
+    );
+  }
+}
+
 export function sinkMonthlyPace(sink: Sink, today: IsoDate): number {
   switch (sink.sinkType) {
     case "target_date": {

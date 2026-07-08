@@ -143,6 +143,7 @@ function ImportPage() {
     name: sink.name,
     color: sink.color,
     icon: sink.icon,
+    balance: sink.balance,
   }))
 
   const reviewRows = flattenReviewRows(reviewBatches)
