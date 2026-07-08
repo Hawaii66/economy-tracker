@@ -5,6 +5,7 @@ import {
   aggregateLedgerByMonth,
   aggregateLedgerBySink,
   aggregateLedgerByTag,
+  aggregateMonthlyTrend,
   type LedgerTransaction,
 } from "budget-core";
 
@@ -168,6 +169,13 @@ describe("ledger aggregations", () => {
     expect(aggregateLedgerByMonth(transactions)).toEqual([
       { id: "2026-03", amount: 195000 },
       { id: "2026-04", amount: -2500 },
+    ]);
+  });
+
+  it("aggregates income and expenses by month", () => {
+    expect(aggregateMonthlyTrend(transactions)).toEqual([
+      { id: "2026-03", income: 200000, expenses: 5000 },
+      { id: "2026-04", income: 0, expenses: 2500 },
     ]);
   });
 });

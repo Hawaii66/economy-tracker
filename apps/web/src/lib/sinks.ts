@@ -82,4 +82,15 @@ export function sinkProgressLabel(sink: Sink): string {
   }
 }
 
+export function sinkGoalAmount(sink: Sink): number {
+  switch (sink.sinkType) {
+    case 'target_date':
+      return sink.targetAmount
+    case 'recurring_bill':
+      return sink.billAmount
+    case 'capped_reserve':
+      return sink.cap
+  }
+}
+
 export { todayIsoDate, DEFAULT_SINK_ICON }

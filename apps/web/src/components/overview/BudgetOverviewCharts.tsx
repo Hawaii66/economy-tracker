@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react'
 import {
   aggregateIncomeAndExpenses,
   aggregateLedgerByCategory,
   aggregateLedgerBySink,
+  aggregateLedgerByTag,
+  aggregateMonthlyTrend,
 } from 'budget-core'
 import { Cell, Label, Pie, PieChart, Bar, BarChart, XAxis, YAxis } from 'recharts'
 import {
@@ -10,6 +11,7 @@ import {
   type BudgetSink,
   getLedgerTransactions,
 } from '@/lib/budget-types'
+import { ChartPanel, formatMonthLabel, SpendingBarChart } from '@/components/charts/chart-panels'
 import { buildChartConfig, toNamedAmounts } from '@/lib/chart-colors'
 import { formatMoney } from '@/lib/format-money'
 import {
@@ -20,11 +22,13 @@ import {
 } from '@/components/ui/chart'
 
 type CategoryRecord = Record<string, { name: string; color: string }>
+type TagRecord = Record<string, { name: string; color: string }>
 
 type BudgetOverviewChartsProps = {
   accounts: BudgetAccount[]
   sinks: BudgetSink[]
   categories: CategoryRecord
+  tags: TagRecord
   ledgerTransactions: unknown
   guardRail: {
     cash: number
@@ -32,34 +36,6 @@ type BudgetOverviewChartsProps = {
     headroom: number
     healthy: boolean
   }
-}
-
-function ChartPanel({
-  title,
-  description,
-  children,
-  emptyMessage,
-  isEmpty,
-}: {
-  title: string
-  description: string
-  children: ReactNode
-  emptyMessage: string
-  isEmpty: boolean
-}) {
-  return (
-    <section className="budget-panel budget-chart-panel">
-      <div className="mb-4">
-        <h2 className="m-0 text-base font-semibold text-[var(--text)]">{title}</h2>
-        <p className="mt-1 mb-0 text-sm text-[var(--text-muted)]">{description}</p>
-      </div>
-      {isEmpty ? (
-        <p className="m-0 py-8 text-center text-sm text-[var(--text-muted)]">{emptyMessage}</p>
-      ) : (
-        children
-      )}
-    </section>
-  )
 }
 
 function BalancePieChart({
@@ -145,57 +121,6 @@ function BalancePieChart({
             />
           </Pie>
         </PieChart>
-      </ChartContainer>
-    </ChartPanel>
-  )
-}
-
-function SpendingBarChart({
-  title,
-  description,
-  rows,
-  emptyMessage,
-}: {
-  title: string
-  description: string
-  rows: ReturnType<typeof toNamedAmounts>
-  emptyMessage: string
-}) {
-  const chartConfig = buildChartConfig(rows) satisfies ChartConfig
-
-  return (
-    <ChartPanel
-      title={title}
-      description={description}
-      emptyMessage={emptyMessage}
-      isEmpty={rows.length === 0}
-    >
-      <ChartContainer config={chartConfig} className="aspect-[4/3] max-h-[280px] w-full">
-        <BarChart data={rows} layout="vertical" margin={{ left: 8, right: 16 }}>
-          <XAxis type="number" hide />
-          <YAxis
-            type="category"
-            dataKey="label"
-            width={96}
-            tickLine={false}
-            axisLine={false}
-            tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
-          />
-          <ChartTooltip
-            cursor={false}
-            content={
-              <ChartTooltipContent
-                hideLabel
-                formatter={(value) => formatMoney(Number(value))}
-              />
-            }
-          />
-          <Bar dataKey="amount" radius={4}>
-            {rows.map((entry) => (
-              <Cell key={entry.id} fill={entry.fill} />
-            ))}
-          </Bar>
-        </BarChart>
       </ChartContainer>
     </ChartPanel>
   )
@@ -327,16 +252,79 @@ function IncomeExpenseChart({
   )
 }
 
+function MonthlyTrendChart({
+  rows,
+}: {
+  rows: ReturnType<typeof aggregateMonthlyTrend>
+}) {
+  const chartConfig = {
+    income: { label: 'Income', color: 'var(--chart-1)' },
+    expenses: { label: 'Expenses', color: 'var(--chart-4)' },
+  } satisfies ChartConfig
+
+  const chartData = rows.map((row) => ({
+    label: formatMonthLabel(row.id),
+    income: row.income,
+    expenses: row.expenses,
+  }))
+
+  const isEmpty = rows.every((row) => row.income === 0 && row.expenses === 0)
+
+  return (
+    <ChartPanel
+      title="Monthly trend"
+      description="Income and expenses over time, excluding internal transfers."
+      emptyMessage="Import and categorize transactions to see monthly trends."
+      isEmpty={isEmpty}
+    >
+      <ChartContainer config={chartConfig} className="aspect-[5/2] max-h-[280px] w-full">
+        <BarChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+          <XAxis
+            dataKey="label"
+            tickLine={false}
+            axisLine={false}
+            tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+            interval="preserveStartEnd"
+          />
+          <YAxis hide />
+          <ChartTooltip
+            cursor={false}
+            content={
+              <ChartTooltipContent
+                formatter={(value, name) => (
+                  <div className="flex w-full items-center justify-between gap-4">
+                    <span className="text-muted-foreground">
+                      {chartConfig[name as keyof typeof chartConfig]?.label ?? name}
+                    </span>
+                    <span className="font-mono font-medium text-foreground tabular-nums">
+                      {formatMoney(Number(value))}
+                    </span>
+                  </div>
+                )}
+              />
+            }
+          />
+          <Bar dataKey="income" fill="var(--color-income)" radius={4} />
+          <Bar dataKey="expenses" fill="var(--color-expenses)" radius={4} />
+        </BarChart>
+      </ChartContainer>
+    </ChartPanel>
+  )
+}
+
 export function BudgetOverviewCharts({
   accounts,
   sinks,
   categories,
+  tags,
   ledgerTransactions,
   guardRail,
 }: BudgetOverviewChartsProps) {
   const ledger = getLedgerTransactions(ledgerTransactions)
   const categoryLookup = (id: string) => categories[id]?.name ?? 'Uncategorized'
   const categoryColor = (id: string) => categories[id]?.color
+  const tagLookup = (id: string) => tags[id]?.name ?? 'Unknown tag'
+  const tagColor = (id: string) => tags[id]?.color
   const sinkLookup = (id: string) => sinks.find((sink) => sink.id === id)?.name ?? 'Unknown sink'
   const sinkColor = (id: string) => sinks.find((sink) => sink.id === id)?.color
   const accountLookup = (id: string) =>
@@ -367,6 +355,13 @@ export function BudgetOverviewCharts({
     sinkColor,
   ).slice(0, 8)
 
+  const spendingByTag = toNamedAmounts(
+    aggregateLedgerByTag(ledger),
+    tagLookup,
+    tagColor,
+  ).slice(0, 8)
+
+  const monthlyTrend = aggregateMonthlyTrend(ledger)
   const { income, expenses } = aggregateIncomeAndExpenses(ledger)
   const hasLedgerData = ledger.length > 0
 
@@ -406,6 +401,17 @@ export function BudgetOverviewCharts({
             : 'Import and categorize transactions to see sink spending.'
         }
       />
+      <SpendingBarChart
+        title="Spending by tag"
+        description="Expenses tagged with lifestyle or event labels."
+        rows={spendingByTag}
+        emptyMessage={
+          hasLedgerData
+            ? 'No tagged spending yet.'
+            : 'Import and categorize transactions to see tag spending.'
+        }
+      />
+      <MonthlyTrendChart rows={monthlyTrend} />
     </div>
   )
 }
