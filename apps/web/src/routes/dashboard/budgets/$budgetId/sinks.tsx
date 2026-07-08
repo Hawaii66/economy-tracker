@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Outlet, useMatch } from '@tanstack/react-router'
 import { Waves } from 'lucide-react'
 import SinksManager from '@/components/sinks/SinksManager'
 import type { Id } from '@economy-tracker/convex/dataModel'
@@ -9,6 +9,14 @@ export const Route = createFileRoute('/dashboard/budgets/$budgetId/sinks')({
 
 function SinksPage() {
   const { budgetId } = Route.useParams()
+  const sinkDetailMatch = useMatch({
+    from: '/dashboard/budgets/$budgetId/sinks/$sinkId',
+    shouldThrow: false,
+  })
+
+  if (sinkDetailMatch) {
+    return <Outlet />
+  }
 
   return (
     <div className="budget-page">
