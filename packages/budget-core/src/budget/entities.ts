@@ -12,13 +12,6 @@ import {
   SinkIconSchema,
 } from "../common.ts";
 
-export const GenesisEpochSchema = z.object({
-  establishedOn: IsoDateSchema,
-  accountOpeningBalances: z.record(EntityIdSchema, MoneyAmountSchema),
-  sinkOpeningBalances: z.record(EntityIdSchema, MoneyAmountSchema),
-});
-export type GenesisEpoch = z.infer<typeof GenesisEpochSchema>;
-
 export const AccountSchema = z.object({
   id: EntityIdSchema,
   name: z.string().min(1),
@@ -28,7 +21,6 @@ export const AccountSchema = z.object({
   balance: MoneyAmountSchema,
   currency: CurrencyCodeSchema,
   genesisDate: IsoDateSchema,
-  parserTemplateId: EntityIdSchema.nullable(),
 });
 
 export const DEFAULT_ACCOUNT_APPEARANCE = {
@@ -102,31 +94,6 @@ export const EventTagSchema = z.object({
 });
 export type EventTag = z.infer<typeof EventTagSchema>;
 
-export const ColumnMappingSchema = z.object({
-  date: z.string().min(1),
-  amount: z.string().min(1),
-  description: z.string().min(1),
-});
-export type ColumnMapping = z.infer<typeof ColumnMappingSchema>;
-
-export const NumberFormatSchema = z.object({
-  decimalSeparator: z.string().min(1),
-  thousandsSeparator: z.string(),
-  negativePrefix: z.string().optional(),
-  negativeSuffix: z.string().optional(),
-});
-export type NumberFormat = z.infer<typeof NumberFormatSchema>;
-
-export const ParserTemplateSchema = z.object({
-  id: EntityIdSchema,
-  accountId: EntityIdSchema,
-  delimiter: z.string().min(1),
-  encoding: z.string().min(1),
-  columnMappings: ColumnMappingSchema,
-  numberFormat: NumberFormatSchema,
-});
-export type ParserTemplate = z.infer<typeof ParserTemplateSchema>;
-
 export const RuleTypeSchema = z.enum(["categorize", "internal_transfer"]);
 export type RuleType = z.infer<typeof RuleTypeSchema>;
 
@@ -175,19 +142,10 @@ export const LedgerTransactionSchema = z.object({
   sinkId: EntityIdSchema.nullable(),
   lifestyleTagIds: z.array(EntityIdSchema),
   eventTagIds: z.array(EntityIdSchema),
-  splitGroupId: EntityIdSchema.nullable(),
   internalTransferGroupId: EntityIdSchema.nullable().default(null),
   virtualSlices: z.array(VirtualSliceSchema),
 });
 export type LedgerTransaction = z.infer<typeof LedgerTransactionSchema>;
-
-export const SplitGroupSchema = z.object({
-  id: EntityIdSchema,
-  parentLedgerTransactionId: EntityIdSchema,
-  linkedLedgerTransactionIds: z.array(EntityIdSchema),
-  initiatedByUserId: EntityIdSchema,
-});
-export type SplitGroup = z.infer<typeof SplitGroupSchema>;
 
 export const InternalTransferGroupSchema = z.object({
   id: EntityIdSchema,

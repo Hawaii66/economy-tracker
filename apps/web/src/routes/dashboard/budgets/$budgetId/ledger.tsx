@@ -16,7 +16,6 @@ import {
   getLedgerTransactions,
   getRawTransactions,
   getSinks,
-  getSplitGroups,
   getTransferCounterpartyId,
   getUnlinkedRawTransactions,
   type BudgetLedgerTransaction,
@@ -105,7 +104,6 @@ function LedgerPageContent({
   const allLedgerTransactions = getLedgerTransactions(state.ledgerTransactions)
   const ledgerTransactions = filterLedgerTransactions(allLedgerTransactions, filters)
   const internalTransferGroups = getInternalTransferGroups(state.internalTransferGroups)
-  const splitGroups = getSplitGroups(state.splitGroups)
   const ledgerById = buildLedgerById(ledgerTransactions)
   const ledgerByRawId = buildLedgerByRawId(ledgerTransactions)
   const unlinkedRawTransactions = getUnlinkedRawTransactions(
@@ -247,7 +245,6 @@ function LedgerPageContent({
           tagsById={tagsById}
           ledgerById={ledgerById}
           internalTransferGroups={internalTransferGroups}
-          splitGroups={splitGroups}
           highlightedId={highlightedLedgerId}
           deletingLedgerId={deletingLedgerId}
           onNavigateToRaw={(rawId) => navigateTo('raw', rawId)}

@@ -9,14 +9,6 @@ import {
   MoneyAmountSchema,
   SinkIconSchema,
 } from "../common.ts";
-import { ColumnMappingSchema, NumberFormatSchema } from "../budget/entities.ts";
-
-export const GenesisEpochSetPayloadSchema = z.object({
-  establishedOn: IsoDateSchema,
-  accountOpeningBalances: z.record(EntityIdSchema, MoneyAmountSchema),
-  sinkOpeningBalances: z.record(EntityIdSchema, MoneyAmountSchema),
-});
-export type GenesisEpochSetPayload = z.infer<typeof GenesisEpochSetPayloadSchema>;
 
 export const AccountAddedPayloadSchema = z.object({
   accountId: EntityIdSchema,
@@ -157,18 +149,6 @@ export const EventTagArchivedPayloadSchema = z.object({
 });
 export type EventTagArchivedPayload = z.infer<typeof EventTagArchivedPayloadSchema>;
 
-export const ParserTemplateConfiguredPayloadSchema = z.object({
-  templateId: EntityIdSchema,
-  accountId: EntityIdSchema,
-  delimiter: z.string().min(1),
-  encoding: z.string().min(1),
-  columnMappings: ColumnMappingSchema,
-  numberFormat: NumberFormatSchema,
-});
-export type ParserTemplateConfiguredPayload = z.infer<
-  typeof ParserTemplateConfiguredPayloadSchema
->;
-
 export const RuleCreatedPayloadSchema = z.object({
   ruleId: EntityIdSchema,
   name: z.string().min(1),
@@ -239,18 +219,6 @@ export const LedgerTransactionDeletedPayloadSchema = z.object({
 export type LedgerTransactionDeletedPayload = z.infer<
   typeof LedgerTransactionDeletedPayloadSchema
 >;
-
-export const SplitInitiatedPayloadSchema = z.object({
-  splitGroupId: EntityIdSchema,
-  parentLedgerTransactionId: EntityIdSchema,
-});
-export type SplitInitiatedPayload = z.infer<typeof SplitInitiatedPayloadSchema>;
-
-export const SplitLinkedPayloadSchema = z.object({
-  splitGroupId: EntityIdSchema,
-  linkedLedgerTransactionId: EntityIdSchema,
-});
-export type SplitLinkedPayload = z.infer<typeof SplitLinkedPayloadSchema>;
 
 export const VirtualSliceDefinedSchema = z.object({
   sliceId: EntityIdSchema,

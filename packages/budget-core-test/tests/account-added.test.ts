@@ -31,7 +31,6 @@ describe("account added", () => {
       balance: 150_000,
       currency: "SEK",
       genesisDate: "2026-01-01",
-      parserTemplateId: null,
     });
   });
 });

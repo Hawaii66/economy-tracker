@@ -6,7 +6,6 @@ import {
 import { DEFAULT_ACCOUNT_APPEARANCE, type Sink } from "./budget/entities.ts";
 import {
   assertGuardRailFundingAllowed,
-  assertGuardRailStateHealthy,
 } from "./budget/sinks.ts";
 import type { BudgetState } from "./budget/state.ts";
 import type { EntityId } from "./common.ts";
@@ -40,14 +39,6 @@ function requireLedgerTransaction(
     throw new Error(`Ledger transaction not found: ${ledgerTransactionId}`);
   }
   return ledgerTransaction;
-}
-
-function requireSplitGroup(draft: DraftBudgetState, splitGroupId: EntityId) {
-  const splitGroup = draft.splitGroups[splitGroupId];
-  if (!splitGroup) {
-    throw new Error(`Split group not found: ${splitGroupId}`);
-  }
-  return splitGroup;
 }
 
 function requireEventTag(draft: DraftBudgetState, tagId: EntityId) {
@@ -186,27 +177,6 @@ function deleteLedgerTransaction(
   requireAccount(draft, ledgerTransaction.accountId).balance -=
     ledgerTransaction.amount;
 
-  if (ledgerTransaction.splitGroupId) {
-    const splitGroup = draft.splitGroups[ledgerTransaction.splitGroupId];
-    if (splitGroup) {
-      if (splitGroup.parentLedgerTransactionId === ledgerTransactionId) {
-        for (const linkedLedgerTransactionId of splitGroup.linkedLedgerTransactionIds) {
-          const linkedLedgerTransaction =
-            draft.ledgerTransactions[linkedLedgerTransactionId];
-          if (linkedLedgerTransaction) {
-            linkedLedgerTransaction.splitGroupId = null;
-          }
-        }
-        delete draft.splitGroups[ledgerTransaction.splitGroupId];
-      } else {
-        splitGroup.linkedLedgerTransactionIds =
-          splitGroup.linkedLedgerTransactionIds.filter(
-            (id) => id !== ledgerTransactionId,
-          );
-      }
-    }
-  }
-
   delete draft.ledgerTransactions[ledgerTransactionId];
 
   for (const counterpartyId of counterpartyIds) {
@@ -253,32 +223,6 @@ function sinkFromCreatedPayload(payload: SinkCreatedPayload): Sink {
 
 export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): void {
   switch (event.eventType) {
-    case "GENESIS_EPOCH_SET": {
-      const { payload } = event;
-      draft.genesisEpoch = {
-        establishedOn: payload.establishedOn,
-        accountOpeningBalances: payload.accountOpeningBalances,
-        sinkOpeningBalances: payload.sinkOpeningBalances,
-      };
-
-      for (const [accountId, balance] of Object.entries(
-        payload.accountOpeningBalances,
-      )) {
-        requireAccount(draft, accountId).balance = balance;
-      }
-
-      for (const [sinkId, balance] of Object.entries(payload.sinkOpeningBalances)) {
-        const sink = requireSink(draft, sinkId);
-        sink.balance = balance;
-        if (balance > 0) {
-          sink.lastFundedOn = payload.establishedOn;
-        }
-      }
-
-      assertGuardRailStateHealthy(draft.accounts, draft.sinks);
-      return;
-    }
-
     case "ACCOUNT_ADDED": {
       const { payload } = event;
       draft.accounts[payload.accountId] = {
@@ -290,7 +234,6 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
         balance: payload.openingBalance,
         currency: payload.currency ?? "SEK",
         genesisDate: payload.genesisDate,
-        parserTemplateId: null,
       };
       return;
     }
@@ -422,20 +365,6 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
       return;
     }
 
-    case "PARSER_TEMPLATE_CONFIGURED": {
-      const { payload } = event;
-      draft.parserTemplates[payload.templateId] = {
-        id: payload.templateId,
-        accountId: payload.accountId,
-        delimiter: payload.delimiter,
-        encoding: payload.encoding,
-        columnMappings: payload.columnMappings,
-        numberFormat: payload.numberFormat,
-      };
-      requireAccount(draft, payload.accountId).parserTemplateId = payload.templateId;
-      return;
-    }
-
     case "RULE_CREATED":
     case "RULE_UPDATED": {
       const { payload } = event;
@@ -498,7 +427,6 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
         sinkId: payload.sinkId,
         lifestyleTagIds: payload.lifestyleTagIds,
         eventTagIds: payload.eventTagIds,
-        splitGroupId: null,
         internalTransferGroupId: null,
         virtualSlices: [],
       };
@@ -537,33 +465,6 @@ export function applyEventToDraft(draft: DraftBudgetState, event: DomainEvent): 
 
     case "LEDGER_TRANSACTION_DELETED": {
       deleteLedgerTransaction(draft, event.payload.ledgerTransactionId);
-      return;
-    }
-
-    case "SPLIT_INITIATED": {
-      const { payload, userId } = event;
-      draft.splitGroups[payload.splitGroupId] = {
-        id: payload.splitGroupId,
-        parentLedgerTransactionId: payload.parentLedgerTransactionId,
-        linkedLedgerTransactionIds: [],
-        initiatedByUserId: userId,
-      };
-      requireLedgerTransaction(
-        draft,
-        payload.parentLedgerTransactionId,
-      ).splitGroupId = payload.splitGroupId;
-      return;
-    }
-
-    case "SPLIT_LINKED": {
-      const { payload } = event;
-      requireSplitGroup(draft, payload.splitGroupId).linkedLedgerTransactionIds.push(
-        payload.linkedLedgerTransactionId,
-      );
-      requireLedgerTransaction(
-        draft,
-        payload.linkedLedgerTransactionId,
-      ).splitGroupId = payload.splitGroupId;
       return;
     }
 

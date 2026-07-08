@@ -13,7 +13,6 @@ import {
   EventTagArchivedPayloadSchema,
   EventTagCreatedPayloadSchema,
   EventTagUpdatedPayloadSchema,
-  GenesisEpochSetPayloadSchema,
   IncomeSlicedPayloadSchema,
   InternalTransferLinkedPayloadSchema,
   InternalTransferRecordedPayloadSchema,
@@ -23,7 +22,6 @@ import {
   LedgerTransactionUpdatedPayloadSchema,
   LifestyleTagCreatedPayloadSchema,
   LifestyleTagUpdatedPayloadSchema,
-  ParserTemplateConfiguredPayloadSchema,
   RuleCreatedPayloadSchema,
   RuleUpdatedPayloadSchema,
   SinkCapUpdatedPayloadSchema,
@@ -31,13 +29,10 @@ import {
   SinkFundedPayloadSchema,
   SinkMonthlyTargetUpdatedPayloadSchema,
   SinkWithdrawnPayloadSchema,
-  SplitInitiatedPayloadSchema,
-  SplitLinkedPayloadSchema,
   TransactionsImportedPayloadSchema,
 } from "./payloads.ts";
 
 export const EVENT_TYPES = [
-  "GENESIS_EPOCH_SET",
   "ACCOUNT_ADDED",
   "ACCOUNT_UPDATED",
   "ACCOUNT_BALANCE_ADJUSTED",
@@ -53,15 +48,12 @@ export const EVENT_TYPES = [
   "EVENT_TAG_CREATED",
   "EVENT_TAG_UPDATED",
   "EVENT_TAG_ARCHIVED",
-  "PARSER_TEMPLATE_CONFIGURED",
   "RULE_CREATED",
   "RULE_UPDATED",
   "TRANSACTIONS_IMPORTED",
   "LEDGER_TRANSACTION_CREATED",
   "LEDGER_TRANSACTION_UPDATED",
   "LEDGER_TRANSACTION_DELETED",
-  "SPLIT_INITIATED",
-  "SPLIT_LINKED",
   "INCOME_SLICED",
   "INTERNAL_TRANSFER_LINKED",
   "INTERNAL_TRANSFER_UNLINKED",
@@ -77,12 +69,6 @@ const domainEventBase = {
   createdAt: IsoDateTimeSchema,
   v: z.number().int().positive(),
 };
-
-export const GenesisEpochSetEventSchema = z.object({
-  eventType: z.literal("GENESIS_EPOCH_SET"),
-  payload: GenesisEpochSetPayloadSchema,
-  ...domainEventBase,
-});
 
 export const AccountAddedEventSchema = z.object({
   eventType: z.literal("ACCOUNT_ADDED"),
@@ -174,12 +160,6 @@ export const EventTagArchivedEventSchema = z.object({
   ...domainEventBase,
 });
 
-export const ParserTemplateConfiguredEventSchema = z.object({
-  eventType: z.literal("PARSER_TEMPLATE_CONFIGURED"),
-  payload: ParserTemplateConfiguredPayloadSchema,
-  ...domainEventBase,
-});
-
 export const RuleCreatedEventSchema = z.object({
   eventType: z.literal("RULE_CREATED"),
   payload: RuleCreatedPayloadSchema,
@@ -216,18 +196,6 @@ export const LedgerTransactionDeletedEventSchema = z.object({
   ...domainEventBase,
 });
 
-export const SplitInitiatedEventSchema = z.object({
-  eventType: z.literal("SPLIT_INITIATED"),
-  payload: SplitInitiatedPayloadSchema,
-  ...domainEventBase,
-});
-
-export const SplitLinkedEventSchema = z.object({
-  eventType: z.literal("SPLIT_LINKED"),
-  payload: SplitLinkedPayloadSchema,
-  ...domainEventBase,
-});
-
 export const IncomeSlicedEventSchema = z.object({
   eventType: z.literal("INCOME_SLICED"),
   payload: IncomeSlicedPayloadSchema,
@@ -253,7 +221,6 @@ export const InternalTransferRecordedEventSchema = z.object({
 });
 
 export const DomainEventSchema = z.discriminatedUnion("eventType", [
-  GenesisEpochSetEventSchema,
   AccountAddedEventSchema,
   AccountUpdatedEventSchema,
   AccountBalanceAdjustedEventSchema,
@@ -269,15 +236,12 @@ export const DomainEventSchema = z.discriminatedUnion("eventType", [
   EventTagCreatedEventSchema,
   EventTagUpdatedEventSchema,
   EventTagArchivedEventSchema,
-  ParserTemplateConfiguredEventSchema,
   RuleCreatedEventSchema,
   RuleUpdatedEventSchema,
   TransactionsImportedEventSchema,
   LedgerTransactionCreatedEventSchema,
   LedgerTransactionUpdatedEventSchema,
   LedgerTransactionDeletedEventSchema,
-  SplitInitiatedEventSchema,
-  SplitLinkedEventSchema,
   IncomeSlicedEventSchema,
   InternalTransferLinkedEventSchema,
   InternalTransferUnlinkedEventSchema,
@@ -298,11 +262,6 @@ const appendEventBase = {
 };
 
 export const AppendEventInputSchema = z.discriminatedUnion("eventType", [
-  z.object({
-    eventType: z.literal("GENESIS_EPOCH_SET"),
-    payload: GenesisEpochSetPayloadSchema,
-    ...appendEventBase,
-  }),
   z.object({
     eventType: z.literal("ACCOUNT_ADDED"),
     payload: AccountAddedPayloadSchema,
@@ -379,11 +338,6 @@ export const AppendEventInputSchema = z.discriminatedUnion("eventType", [
     ...appendEventBase,
   }),
   z.object({
-    eventType: z.literal("PARSER_TEMPLATE_CONFIGURED"),
-    payload: ParserTemplateConfiguredPayloadSchema,
-    ...appendEventBase,
-  }),
-  z.object({
     eventType: z.literal("RULE_CREATED"),
     payload: RuleCreatedPayloadSchema,
     ...appendEventBase,
@@ -411,16 +365,6 @@ export const AppendEventInputSchema = z.discriminatedUnion("eventType", [
   z.object({
     eventType: z.literal("LEDGER_TRANSACTION_DELETED"),
     payload: LedgerTransactionDeletedPayloadSchema,
-    ...appendEventBase,
-  }),
-  z.object({
-    eventType: z.literal("SPLIT_INITIATED"),
-    payload: SplitInitiatedPayloadSchema,
-    ...appendEventBase,
-  }),
-  z.object({
-    eventType: z.literal("SPLIT_LINKED"),
-    payload: SplitLinkedPayloadSchema,
     ...appendEventBase,
   }),
   z.object({
