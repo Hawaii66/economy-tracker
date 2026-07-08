@@ -1,5 +1,6 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '@economy-tracker/convex/api'
@@ -12,6 +13,8 @@ import {
 import { AccountIcon } from '@/components/accounts/AccountIcon'
 import { Button } from '@/components/ui/button'
 import { useAppendBudgetEvents } from '@/hooks/use-append-budget-events'
+import { accountTransactionCount } from '@/lib/entity-ledger-stats'
+import { getLedgerTransactions } from '@/lib/budget-types'
 import { formatMoney } from '@/lib/format-money'
 import { generateEntityId } from '@/lib/taxonomy'
 
@@ -46,6 +49,7 @@ export default function AccountsManager({ budgetId }: AccountsManagerProps) {
   }
 
   const accounts = asAccounts(data.state.accounts)
+  const ledger = getLedgerTransactions(data.state.ledgerTransactions)
 
   async function runMutation(task: () => Promise<void>) {
     setIsSaving(true)
@@ -141,7 +145,11 @@ export default function AccountsManager({ budgetId }: AccountsManagerProps) {
                   className="rounded-xl border border-[var(--border)] bg-[rgba(27,24,23,0.55)] p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-start gap-3">
+                    <Link
+                      to="/dashboard/budgets/$budgetId/accounts/$accountId"
+                      params={{ budgetId, accountId: account.id }}
+                      className="flex min-w-0 flex-1 items-start gap-3 text-[var(--text)] no-underline"
+                    >
                       <div
                         className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-[var(--border)]"
                         style={{ backgroundColor: `${account.color}22`, color: account.color }}
@@ -156,7 +164,7 @@ export default function AccountsManager({ budgetId }: AccountsManagerProps) {
                           {account.description || 'No description'}
                         </p>
                       </div>
-                    </div>
+                    </Link>
                     <Button size="sm" variant="outline" onClick={() => openEditAccount(account)}>
                       <Pencil />
                       Edit
@@ -178,7 +186,33 @@ export default function AccountsManager({ budgetId }: AccountsManagerProps) {
                       </dt>
                       <dd className="m-0 mt-1 text-[var(--text)]">{account.genesisDate}</dd>
                     </div>
+                    <div>
+                      <dt className="text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
+                        Transactions
+                      </dt>
+                      <dd className="m-0 mt-1 text-[var(--text)]">
+                        {accountTransactionCount(ledger, account.id)}
+                      </dd>
+                    </div>
                   </dl>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Link
+                      to="/dashboard/budgets/$budgetId/accounts/$accountId"
+                      params={{ budgetId, accountId: account.id }}
+                      className="text-sm font-semibold text-[var(--accent)] no-underline hover:underline"
+                    >
+                      View activity
+                    </Link>
+                    <Link
+                      to="/dashboard/budgets/$budgetId/ledger"
+                      params={{ budgetId }}
+                      search={{ accountId: account.id }}
+                      className="text-sm text-[var(--text-muted)] no-underline hover:text-[var(--text)] hover:underline"
+                    >
+                      Open in ledger
+                    </Link>
+                  </div>
                 </article>
               ))}
             </div>

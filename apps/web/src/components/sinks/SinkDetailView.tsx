@@ -21,6 +21,7 @@ import {
   type BudgetSink,
 } from '@/lib/budget-types'
 import { formatMoney } from '@/lib/format-money'
+import { FilteredLedgerPanel } from '@/components/ledger/FilteredLedgerPanel'
 import {
   aggregateSinkSpendingByMonth,
   buildSinkActivityTimeline,
@@ -29,6 +30,7 @@ import {
   totalSinkSpending,
   type SinkActivityEvent,
 } from '@/lib/sink-history'
+import { buildLedgerTableContext } from '@/lib/ledger-table-context'
 import {
   maxFundableAmount,
   sinkMonthlyPace,
@@ -244,7 +246,7 @@ export default function SinkDetailView({
   const ledgerEntries = collectSinkLedgerEntries(ledgerTransactions, sinkId)
   const spentTotal = totalSinkSpending(ledgerTransactions, sinkId)
   const activity = buildSinkActivityTimeline(activityEvents, ledgerTransactions, sinkId)
-  const accountNames = Object.fromEntries(accounts.map((account) => [account.id, account.name]))
+  const ledgerContext = buildLedgerTableContext(state)
 
   async function runMutation(task: () => Promise<void>) {
     setIsSaving(true)
@@ -486,42 +488,15 @@ export default function SinkDetailView({
         </section>
 
         {ledgerEntries.length > 0 ? (
-          <section className="budget-panel mt-4">
-            <h2 className="m-0 text-base font-semibold text-[var(--text)]">Transactions</h2>
-            <p className="mt-1 mb-4 text-sm text-[var(--text-muted)]">
-              Ledger entries assigned to this sink.
-            </p>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[520px] border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--border)] text-left text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
-                    <th className="pb-2 pr-4 font-bold">Date</th>
-                    <th className="pb-2 pr-4 font-bold">Description</th>
-                    <th className="pb-2 pr-4 font-bold">Account</th>
-                    <th className="pb-2 text-right font-bold">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ledgerEntries.map((entry) => (
-                    <tr key={entry.id} className="border-b border-[var(--border)]">
-                      <td className="py-2.5 pr-4 text-[var(--text-muted)]">{entry.date}</td>
-                      <td className="py-2.5 pr-4 text-[var(--text)]">{entry.description || '—'}</td>
-                      <td className="py-2.5 pr-4 text-[var(--text-muted)]">
-                        {accountNames[entry.accountId] ?? entry.accountId.slice(-6)}
-                      </td>
-                      <td
-                        className={`py-2.5 text-right font-medium tabular-nums ${
-                          entry.amount < 0 ? 'text-[#E88A8A]' : 'text-[var(--accent)]'
-                        }`}
-                      >
-                        {formatMoney(entry.amount)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          <div className="mt-4">
+            <FilteredLedgerPanel
+              budgetId={budgetId}
+              filters={{ sinkId }}
+              context={ledgerContext}
+              description="Ledger entries assigned to this sink."
+              emptyMessage="No transactions assigned to this sink yet."
+            />
+          </div>
         ) : null}
       </div>
 

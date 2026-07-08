@@ -1,4 +1,5 @@
 import { aggregateLedgerBySink } from 'budget-core'
+import { useNavigate } from '@tanstack/react-router'
 import { Cell, Bar, BarChart, XAxis, YAxis } from 'recharts'
 import { ChartPanel, SpendingBarChart } from '@/components/charts/chart-panels'
 import {
@@ -13,6 +14,7 @@ import { formatMoney } from '@/lib/format-money'
 import { sinkGoalAmount } from '@/lib/sinks'
 
 type BudgetSinksChartsProps = {
+  budgetId: string
   sinks: BudgetSink[]
   ledgerTransactions: unknown
 }
@@ -96,7 +98,8 @@ function SinkProgressChart({ sinks }: { sinks: BudgetSink[] }) {
   )
 }
 
-export function BudgetSinksCharts({ sinks, ledgerTransactions }: BudgetSinksChartsProps) {
+export function BudgetSinksCharts({ budgetId, sinks, ledgerTransactions }: BudgetSinksChartsProps) {
+  const navigate = useNavigate()
   const ledger = getLedgerTransactions(ledgerTransactions)
   const sinkLookup = (id: string) => sinks.find((sink) => sink.id === id)?.name ?? 'Unknown sink'
   const sinkColor = (id: string) => sinks.find((sink) => sink.id === id)?.color
@@ -113,12 +116,19 @@ export function BudgetSinksCharts({ sinks, ledgerTransactions }: BudgetSinksChar
       <SinkProgressChart sinks={sinks} />
       <SpendingBarChart
         title="Spending by sink"
-        description="Expenses assigned to each sink."
+        description="Expenses assigned to each sink. Click a bar to filter the ledger."
         rows={spendingBySink}
         emptyMessage={
           hasLedgerData
             ? 'No sink-assigned spending yet.'
             : 'Import and categorize transactions to see sink spending.'
+        }
+        onItemClick={(sinkId) =>
+          navigate({
+            to: '/dashboard/budgets/$budgetId/ledger',
+            params: { budgetId },
+            search: { sinkId },
+          })
         }
       />
     </div>

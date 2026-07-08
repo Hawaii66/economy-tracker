@@ -1,5 +1,6 @@
 import { convexQuery } from '@convex-dev/react-query'
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { Pencil, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { api } from '@economy-tracker/convex/api'
@@ -11,6 +12,14 @@ import {
 } from '@/components/taxonomy/CategoryEditModal'
 import { TagEditModal, type TagFormValues, type TagKind } from '@/components/taxonomy/TagEditModal'
 import { useAppendBudgetEvents } from '@/hooks/use-append-budget-events'
+import {
+  categorySpendingAmount,
+  categoryTransactionCount,
+  tagSpendingAmount,
+  tagTransactionCount,
+} from '@/lib/entity-ledger-stats'
+import { getLedgerTransactions } from '@/lib/budget-types'
+import { formatMoney } from '@/lib/format-money'
 import { generateEntityId } from '@/lib/taxonomy'
 
 type CategoriesTagsManagerProps = {
@@ -65,6 +74,7 @@ export default function CategoriesTagsManager({ budgetId }: CategoriesTagsManage
   const categories = (
     Object.values(data.state.categories ?? {}) as Category[]
   ).sort((left, right) => left.name.localeCompare(right.name))
+  const ledger = getLedgerTransactions(data.state.ledgerTransactions)
 
   const permanentTags = (
     Object.values(data.state.lifestyleTags ?? {}) as LifestyleTag[]
@@ -220,6 +230,8 @@ export default function CategoriesTagsManager({ budgetId }: CategoriesTagsManage
                   <tr className="border-b border-[var(--border)] bg-[rgba(27,24,23,0.9)] text-left text-xs font-bold tracking-wide text-[var(--text-muted)] uppercase">
                     <th className="px-3 py-2">Color</th>
                     <th className="px-3 py-2">Name</th>
+                    <th className="px-3 py-2">Transactions</th>
+                    <th className="px-3 py-2">Spent</th>
                     <th className="px-3 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -233,17 +245,38 @@ export default function CategoriesTagsManager({ budgetId }: CategoriesTagsManage
                         <ColorSwatch color={category.color} />
                       </td>
                       <td className="px-3 py-2.5 align-middle font-medium text-[var(--text)]">
-                        {category.name}
+                        <Link
+                          to="/dashboard/budgets/$budgetId/categories/$categoryId"
+                          params={{ budgetId, categoryId: category.id }}
+                          className="text-[var(--text)] no-underline hover:text-[var(--accent)]"
+                        >
+                          {category.name}
+                        </Link>
+                      </td>
+                      <td className="px-3 py-2.5 align-middle text-[var(--text-muted)]">
+                        {categoryTransactionCount(ledger, category.id)}
+                      </td>
+                      <td className="px-3 py-2.5 align-middle text-[var(--text-muted)]">
+                        {formatMoney(categorySpendingAmount(ledger, category.id))}
                       </td>
                       <td className="px-3 py-2.5 align-middle text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openEditCategory(category)}
-                        >
-                          <Pencil />
-                          Edit
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Link
+                            to="/dashboard/budgets/$budgetId/categories/$categoryId"
+                            params={{ budgetId, categoryId: category.id }}
+                            className="inline-flex h-8 items-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--text)] no-underline hover:bg-[rgba(27,24,23,0.75)]"
+                          >
+                            View activity
+                          </Link>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => openEditCategory(category)}
+                          >
+                            <Pencil />
+                            Edit
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -289,6 +322,8 @@ export default function CategoriesTagsManager({ budgetId }: CategoriesTagsManage
                     <th className="px-3 py-2">Name</th>
                     <th className="px-3 py-2">Type</th>
                     <th className="px-3 py-2">Status</th>
+                    <th className="px-3 py-2">Transactions</th>
+                    <th className="px-3 py-2">Spent</th>
                     <th className="px-3 py-2 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -304,7 +339,13 @@ export default function CategoriesTagsManager({ budgetId }: CategoriesTagsManage
                       <td
                         className={`px-3 py-2.5 align-middle font-medium ${tag.archived ? 'text-[var(--text-muted)] line-through' : 'text-[var(--text)]'}`}
                       >
-                        {tag.name}
+                        <Link
+                          to="/dashboard/budgets/$budgetId/tags/$tagId"
+                          params={{ budgetId, tagId: tag.id }}
+                          className={`no-underline hover:text-[var(--accent)] ${tag.archived ? 'text-[var(--text-muted)]' : 'text-[var(--text)]'}`}
+                        >
+                          {tag.name}
+                        </Link>
                       </td>
                       <td className="px-3 py-2.5 align-middle">
                         <span className="inline-flex rounded-full border border-[var(--border)] px-2 py-0.5 text-xs font-semibold text-[var(--text-muted)]">
@@ -326,11 +367,26 @@ export default function CategoriesTagsManager({ budgetId }: CategoriesTagsManage
                           <span className="text-xs text-[var(--text-muted)]">Always active</span>
                         )}
                       </td>
+                      <td className="px-3 py-2.5 align-middle text-[var(--text-muted)]">
+                        {tagTransactionCount(ledger, tag.id)}
+                      </td>
+                      <td className="px-3 py-2.5 align-middle text-[var(--text-muted)]">
+                        {formatMoney(tagSpendingAmount(ledger, tag.id))}
+                      </td>
                       <td className="px-3 py-2.5 align-middle text-right">
-                        <Button size="sm" variant="outline" onClick={() => openEditTag(tag)}>
-                          <Pencil />
-                          Edit
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Link
+                            to="/dashboard/budgets/$budgetId/tags/$tagId"
+                            params={{ budgetId, tagId: tag.id }}
+                            className="inline-flex h-8 items-center rounded-lg border border-[var(--border)] px-3 text-sm font-medium text-[var(--text)] no-underline hover:bg-[rgba(27,24,23,0.75)]"
+                          >
+                            View activity
+                          </Link>
+                          <Button size="sm" variant="outline" onClick={() => openEditTag(tag)}>
+                            <Pencil />
+                            Edit
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
